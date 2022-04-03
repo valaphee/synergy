@@ -35,7 +35,8 @@ repositories {
 }
 
 dependencies {
-    implementation("ch.qos.logback:logback-classic:1.2.3")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation("io.ktor:ktor-client-okhttp:2.0.0-beta-1")
     implementation("io.ktor:ktor-network-tls-certificates:2.0.0-beta-1")
     implementation("io.ktor:ktor-serialization-jackson-jvm:2.0.0-beta-1")
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0-beta-1")
@@ -46,6 +47,12 @@ dependencies {
     implementation("io.ktor:ktor-server-locations-jvm:2.0.0-beta-1")
     implementation("io.ktor:ktor-server-netty-jvm:2.0.0-beta-1")
     testImplementation("io.ktor:ktor-server-tests-jvm:2.0.0-beta-1")
+    implementation("io.netty:netty-tcnative:2.0.51.Final")
+    implementation("io.netty:netty-tcnative-boringssl-static:2.0.51.Final")
+    implementation("io.netty:netty-tcnative-boringssl-static:2.0.51.Final:windows-x86_64")
+    implementation("net.java.dev.jna:jna:5.11.0")
+    implementation("net.java.dev.jna:jna-platform:5.11.0")
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
 }
 
