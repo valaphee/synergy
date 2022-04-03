@@ -16,7 +16,10 @@
 
 package com.valaphee.synergy
 
-import com.valaphee.synergy.bnet.BNetProxy
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.valaphee.synergy.bnet.BnetProxy
+import com.valaphee.synergy.http.HttpProxy
+import com.valaphee.synergy.mcbe.McbeProxy
 import com.valaphee.synergy.tcp.TcpProxy
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
@@ -31,12 +34,23 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.netty.channel.EventLoopGroup
+import io.netty.channel.epoll.Epoll
+import io.netty.channel.epoll.EpollDatagramChannel
+import io.netty.channel.epoll.EpollEventLoopGroup
+import io.netty.channel.epoll.EpollServerSocketChannel
+import io.netty.channel.kqueue.KQueue
+import io.netty.channel.kqueue.KQueueDatagramChannel
+import io.netty.channel.kqueue.KQueueEventLoopGroup
+import io.netty.channel.kqueue.KQueueServerSocketChannel
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.DatagramChannel
+import io.netty.channel.socket.ServerSocketChannel
+import io.netty.channel.socket.nio.NioDatagramChannel
+import io.netty.channel.socket.nio.NioServerSocketChannel
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
-import org.bouncycastle.asn1.x509.ExtendedKeyUsage
 import org.bouncycastle.asn1.x509.Extension
-import org.bouncycastle.asn1.x509.KeyPurposeId
-import org.bouncycastle.asn1.x509.KeyUsage
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
@@ -52,10 +66,15 @@ import java.security.SecureRandom
 import java.security.Security
 import java.security.cert.X509Certificate
 import java.util.Calendar
+import java.util.concurrent.ThreadFactory
 import kotlin.random.asKotlinRandom
+import kotlin.reflect.KClass
 
-internal lateinit var rootCertificate: X509Certificate
-internal lateinit var rootContentSigner: ContentSigner
+val underlyingNetworking = if (Epoll.isAvailable()) UnderlyingNetworking.Epoll else if (KQueue.isAvailable()) UnderlyingNetworking.Kqueue else UnderlyingNetworking.Nio
+val bossGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("boss-%d").build())
+val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("worker-%d").build())
+lateinit var rootCertificate: X509Certificate
+lateinit var rootContentSigner: ContentSigner
 
 fun main() {
     Security.addProvider(BouncyCastleProvider())
@@ -65,11 +84,8 @@ fun main() {
     if (!rootFile.exists()) {
         val rootKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
         rootCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(JcaX509v3CertificateBuilder(X500Name("CN=Synergy Root CA"), BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, X500Name("CN=Synergy Root CA"), rootKeyPair.public).apply {
-            addExtension(Extension.keyUsage, true, KeyUsage(KeyUsage.cRLSign or KeyUsage.keyCertSign or KeyUsage.keyAgreement or KeyUsage.digitalSignature))
             addExtension(Extension.basicConstraints, true, BasicConstraints(true))
-            addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootKeyPair.public))
             addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(rootKeyPair.public))
-            addExtension(Extension.extendedKeyUsage, false, ExtendedKeyUsage(arrayOf(KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth)))
         }.build(JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(rootKeyPair.private)))
         KeyStore.getInstance("PKCS12", "BC").apply {
             load(null, null)
@@ -83,36 +99,54 @@ fun main() {
         rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(getKey("synergy-root", null) as PrivateKey)
     }
 
+    val proxyTypes = mapOf<String, KClass<out Proxy>>(
+        "bnet" to BnetProxy::class,
+        "http" to HttpProxy::class,
+        "mcbe" to McbeProxy::class,
+        "tcp" to TcpProxy::class
+    )
     val proxies = mutableMapOf<String, Proxy>()
-    embeddedServer(Netty) {
+    embeddedServer(Netty, port = 8080, host = "localhost") {
         install(ContentNegotiation) { jackson() }
 
         routing {
-            post("/proxy/tcp") {
-                val proxy = call.receive<TcpProxy>()
-                if (proxies.putIfAbsent(proxy.id, proxy) != null) call.respond(HttpStatusCode.BadRequest)
-                if (call.request.queryParameters["autoStart"] == "true") proxy.start()
-                call.respond(HttpStatusCode.OK)
-            }
-            post("/proxy/bnet") {
-                val proxy = call.receive<BNetProxy>()
-                if (proxies.putIfAbsent(proxy.id, proxy) != null) call.respond(HttpStatusCode.BadRequest)
-                if (call.request.queryParameters["autoStart"] == "true") proxy.start()
-                call.respond(HttpStatusCode.OK)
+            post("/proxy/{type}") {
+                proxyTypes[call.parameters["type"]]?.let {
+                    val proxy = call.receive(it)
+                    if (proxies.putIfAbsent(proxy.id, proxy) != null) call.respond(HttpStatusCode.BadRequest)
+                    if (call.request.queryParameters["autoStart"] == "true") proxy.start()
+                    call.respond(HttpStatusCode.OK)
+                } ?: call.respond(HttpStatusCode.NotFound)
             }
             delete("/proxy/{id}") {
-                proxies.remove(call.parameters["id"])?.stop() ?: call.respond(HttpStatusCode.NotFound)
-                call.respond(HttpStatusCode.OK)
+                proxies.remove(call.parameters["id"])?.let {
+                    it.stop()
+                    call.respond(HttpStatusCode.OK)
+                } ?: call.respond(HttpStatusCode.NotFound)
             }
             get("/proxy") { call.respond(proxies.values) }
             get("/proxy/{id}/start") {
-                proxies[call.parameters["id"]]?.start() ?: call.respond(HttpStatusCode.NotFound)
-                call.respond(HttpStatusCode.OK)
+                proxies[call.parameters["id"]]?.let {
+                    it.start()
+                    call.respond(HttpStatusCode.OK)
+                } ?: call.respond(HttpStatusCode.NotFound)
             }
             get("/proxy/{id}/stop") {
-                proxies[call.parameters["id"]]?.stop() ?: call.respond(HttpStatusCode.NotFound)
-                call.respond(HttpStatusCode.OK)
+                proxies[call.parameters["id"]]?.let {
+                    it.stop()
+                    call.respond(HttpStatusCode.OK)
+                } ?: call.respond(HttpStatusCode.NotFound)
             }
         }
     }.start(true)
+}
+
+enum class UnderlyingNetworking(
+    val groupFactory: (Int, ThreadFactory) -> EventLoopGroup,
+    val serverSocketChannel: Class<out ServerSocketChannel>,
+    val datagramChannel: Class<out DatagramChannel>
+) {
+    Epoll({ threadCount, threadFactory -> EpollEventLoopGroup(threadCount, threadFactory) }, EpollServerSocketChannel::class.java, EpollDatagramChannel::class.java),
+    Kqueue({ threadCount, threadFactory -> KQueueEventLoopGroup(threadCount, threadFactory) }, KQueueServerSocketChannel::class.java, KQueueDatagramChannel::class.java),
+    Nio({ threadCount, threadFactory -> NioEventLoopGroup(threadCount, threadFactory) }, NioServerSocketChannel::class.java, NioDatagramChannel::class.java)
 }

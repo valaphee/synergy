@@ -33,8 +33,8 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 /**
  * @author Kevin Ludwig
  */
-class BNetProxyFrontendHandler(
-    private val proxy: BNetProxy
+class BnetProxyFrontendHandler(
+    private val proxy: BnetProxy
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
@@ -43,12 +43,12 @@ class BNetProxyFrontendHandler(
             .group(ctx.channel().eventLoop())
             .channel(ctx.channel()::class.java)
             .handler(object : ChannelInitializer<SocketChannel>() {
-                override fun initChannel(ch: SocketChannel) {
-                    ch.pipeline().addLast(
-                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(ch.alloc()),
+                override fun initChannel(channel: SocketChannel) {
+                    channel.pipeline().addLast(
+                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        BNetProxyBackendHandler(proxy, ctx.channel())
+                        BnetProxyBackendHandler(proxy, ctx.channel())
                     )
                 }
             })
