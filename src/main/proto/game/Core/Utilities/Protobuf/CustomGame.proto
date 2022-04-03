@@ -1,0 +1,180 @@
+syntax = "proto2";
+
+enum CGPerformTeamShuffleRule {
+	EveryMatchPerformRule = 1;
+	OnMapFinishPerformRule = 2;
+	NeverPerformRule = 3;
+}
+enum CGTeamShuffleRule {
+	RandomShuffleRule = 1;
+}
+enum CGNextMapRule {
+	InOrderNextMapRule = 1;
+	RandomNextMapRule = 2;
+	CalculateNextMapRule = 3;
+}
+enum CGMapChangeRule {
+	EveryMapChangeRule = 1;
+	OnMapFinishMapChangeRule = 2;
+	NeverMapChangeRule = 3;
+}
+enum CGBackToLobbyRule {
+	EveryMatchBackToLobbyRule = 1;
+	OnMapFinishBackToLobbyRule = 2;
+	NeverBackToLobbyRule = 3;
+}
+
+message CGGameRulesetBodyVars {
+	repeated .CGGameRulesetVarValuePair bodyVars = 1;
+	optional uint64 heroGUID = 2;
+}
+
+message CGGameRulesetVarValuePair {
+	optional uint64 varGUID = 1;
+	optional int32 intValue = 2;
+	optional uint64 enumGUIDValue = 3;
+	optional bool boolValue = 4;
+	optional float floatValue = 5;
+}
+
+message CGGameRulesetTeam {
+	optional uint32 teamIndex = 1;
+	optional uint32 numTeamMembers = 2;
+	optional bool heroesArrayIsWhitelist = 3;
+	repeated uint64 heroGUIDs = 4;
+	repeated .CGGameRulesetBodyVars bodyVars = 5;
+	repeated .CGGameRulesetVarValuePair allHeroBodyVars = 6;
+	repeated .CGGameRulesetVarValuePair controllerVars = 7;
+}
+
+message CGTeamRules {
+	optional .CGPerformTeamShuffleRule performTeamShuffleRule = 1;
+	optional .CGTeamShuffleRule teamShuffleRule = 2;
+	optional bool swapTeamsIfNoShuffle = 3;
+	optional int32 maxObservers = 4;
+	optional bool pauseOnDisconnect = 5;
+}
+
+message CGMapRules {
+	optional .CGNextMapRule nextMapRule = 1;
+	optional .CGMapChangeRule mapChangeRule = 2;
+	optional .CGBackToLobbyRule backToLobbyRule = 3;
+}
+
+message PBCGLogicTarget {
+	optional int32 type = 1;
+	optional int32 team = 2;
+	optional int32 slot = 3;
+	optional uint64 hero = 4;
+}
+
+message PBCGLogicParam {
+	optional int32 enumVal = 1;
+	optional uint64 val = 2;
+	optional bool isVar = 3;
+	optional bool isGlobalVar = 4;
+	optional int32 valueIdentifier = 5;
+	repeated int32 unusedValueParams = 6;
+	repeated uint64 valueParams = 7;
+	optional string valueStr = 8;
+	repeated string valueStrs = 9;
+}
+
+message PBCGLogicCondition {
+	optional bool invert = 1;
+	optional int32 index = 2;
+	repeated .PBCGLogicParam params = 3;
+	optional bool disabled = 4;
+	optional string comment = 5;
+}
+
+message PBCGLogicAction {
+	optional int32 index = 1;
+	repeated .PBCGLogicParam params = 2;
+	optional bool disabled = 3;
+	optional string comment = 4;
+}
+
+message PBCGLogicEntry {
+	optional .PBCGLogicTarget target = 1;
+	repeated .PBCGLogicCondition conditions = 2;
+	repeated .PBCGLogicAction actions = 3;
+	optional string comment = 4;
+	optional bool disabled = 5;
+}
+
+message PBCGVec3 {
+	optional float x = 1;
+	optional float y = 2;
+	optional float z = 3;
+}
+
+message PBCGEntityEntry {
+	optional int32 type = 1;
+	optional .PBCGVec3 pos = 2;
+	optional .PBCGVec3 facing = 3;
+	optional .PBCGVec3 up = 4;
+	optional .PBCGVec3 scale = 5;
+}
+
+message PBCGVariableEntry {
+	optional string name = 1;
+}
+
+message PBCGSubroutineEntry {
+	optional string name = 1;
+}
+
+message PBCGLogicUserSettingInst {
+	optional string name = 1;
+	optional int32 type = 2;
+	optional .PBCGVec3 val = 3;
+	repeated uint64 heroGUIDs = 4;
+}
+
+message PBCGLogic {
+	optional uint32 dummy = 1;
+	repeated .PBCGLogicEntry entries = 2;
+	repeated .PBCGEntityEntry entities = 3;
+	repeated .PBCGVariableEntry globalVariables = 4;
+	repeated .PBCGVariableEntry playerVariables = 5;
+	repeated .PBCGSubroutineEntry subroutines = 6;
+	repeated .PBCGLogicUserSettingInst userSettingInsts = 7;
+}
+
+message CGGameRuleset {
+	optional uint64 gameModeGUID = 1;
+	optional uint64 gameRulesetGUID = 2;
+	repeated .CGGameRulesetVarValuePair masterVars = 3;
+	repeated .CGGameRulesetVarValuePair globalAdminVars = 4;
+	repeated .CGGameRulesetTeam teams = 5;
+	optional uint32 flags = 6;
+	optional .PBCGLogic logic = 7;
+	optional string logicStr = 8;
+}
+
+message CGGameRulesetMapPair {
+	optional uint64 mapGUID = 1;
+	optional int32 savedGameIndex = 2;
+	optional bool isRulesetCleared = 3;
+}
+
+message CGOptions {
+	optional .CGMapRules mapRules = 1;
+	optional .CGTeamRules teamRules = 2;
+	repeated .CGGameRulesetMapPair rulesetMapPairs = 3;
+	repeated .CGGameRuleset savedGameRulesets = 4;
+	optional bool matchVoiceChatEnabled = 5;
+	optional uint32 datacenterOverride = 6;
+	optional string description = 7;
+	optional .PBCGLogic rootLogic = 8;
+	optional uint64 difficultyGUID = 9;
+	optional bool allowSkirmishers = 10;
+	optional bool useBalanceTestIfAvailable = 11;
+	optional int64 minimumLatencyNS = 13;
+}
+
+message PersistedCGSettings {
+	optional int32 version = 1;
+	optional .CGOptions options = 2;
+}

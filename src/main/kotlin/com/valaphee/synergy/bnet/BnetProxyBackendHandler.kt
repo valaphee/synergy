@@ -37,25 +37,25 @@ class BnetProxyBackendHandler(
     proxy: BnetProxy,
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
-    private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.name}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
+    private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.host}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
     private lateinit var handshakeFuture: ChannelPromise
 
-    override fun handlerAdded(ctx: ChannelHandlerContext) {
-        handshakeFuture = ctx.newPromise()
+    override fun handlerAdded(context: ChannelHandlerContext) {
+        handshakeFuture = context.newPromise()
     }
 
-    override fun channelActive(ctx: ChannelHandlerContext) {
-        handshaker.handshake(ctx.channel())
+    override fun channelActive(context: ChannelHandlerContext) {
+        handshaker.handshake(context.channel())
     }
 
-    override fun channelInactive(ctx: ChannelHandlerContext) {
+    override fun channelInactive(context: ChannelHandlerContext) {
         if (inboundChannel.isActive) inboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 
-    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+    override fun channelRead(context: ChannelHandlerContext, message: Any) {
         if (!handshaker.isHandshakeComplete) {
             try {
-                handshaker.finishHandshake(ctx.channel(), msg as FullHttpResponse)
+                handshaker.finishHandshake(context.channel(), message as FullHttpResponse)
                 handshakeFuture.setSuccess()
             } catch (ex: WebSocketHandshakeException) {
                 handshakeFuture.setFailure(ex)
@@ -63,16 +63,16 @@ class BnetProxyBackendHandler(
             return
         }
 
-        inboundChannel.writeAndFlush(msg).addListener(object : ChannelFutureListener {
+        inboundChannel.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
                 if (!future.isSuccess) future.channel().close()
             }
         })
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+    override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
         if (!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
-        if (ctx.channel().isActive) ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
+        /*if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
     }
 }

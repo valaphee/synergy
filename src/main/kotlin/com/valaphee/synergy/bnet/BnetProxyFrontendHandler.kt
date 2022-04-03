@@ -27,6 +27,7 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 
@@ -38,43 +39,45 @@ class BnetProxyFrontendHandler(
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
-    override fun channelActive(ctx: ChannelHandlerContext) {
+    override fun channelActive(context: ChannelHandlerContext) {
         outboundChannel = Bootstrap()
-            .group(ctx.channel().eventLoop())
-            .channel(ctx.channel()::class.java)
+            .group(context.channel().eventLoop())
+            .channel(context.channel()::class.java)
             .handler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
                         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        BnetProxyBackendHandler(proxy, ctx.channel())
+                        BnetCodec(),
+                        LoggingHandler(),
+                        BnetProxyBackendHandler(proxy, context.channel())
                     )
                 }
             })
-            .localAddress(proxy.interfaceHost, proxy.interfacePort)
+            .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
-                    if (!future.isSuccess) ctx.channel().close()
+                    if (!future.isSuccess) context.channel().close()
                 }
             }).channel()
     }
 
-    override fun channelInactive(ctx: ChannelHandlerContext) {
+    override fun channelInactive(context: ChannelHandlerContext) {
         outboundChannel?.let { if (it.isActive) it.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE) }
     }
 
-    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-        if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(msg).addListener(object : ChannelFutureListener {
+    override fun channelRead(context: ChannelHandlerContext, message: Any) {
+        if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
                 if (!future.isSuccess) future.channel().close()
             }
         })
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+    override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
-        if (ctx.channel().isActive) ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
+        /*if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
     }
 }

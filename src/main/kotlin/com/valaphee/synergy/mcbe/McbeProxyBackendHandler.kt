@@ -17,6 +17,7 @@
 package com.valaphee.synergy.mcbe
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.valaphee.netcode.mcbe.latestProtocolVersion
 import com.valaphee.netcode.mcbe.network.EncryptionInitializer
 import com.valaphee.netcode.mcbe.network.PacketBuffer
 import com.valaphee.netcode.mcbe.network.PacketCodec
@@ -61,6 +62,7 @@ class McbeProxyBackendHandler(
     private val mcbeProxy: McbeProxy,
     private val inboundChannel: Channel
 ) : ChannelDuplexHandler() {
+    private var version = latestProtocolVersion
     private val keyPair = generateKeyPair()
     private lateinit var clientPublicKey: PublicKey
 
@@ -74,6 +76,10 @@ class McbeProxyBackendHandler(
     override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
         super.write(ctx, when (msg) {
             is LoginPacket -> {
+                version = msg.protocolVersion
+                inboundChannel.pipeline()[PacketCodec::class.java].version = version
+                ctx.pipeline()[PacketCodec::class.java].version = version
+
                 val (_, verificationKey, _) = parseAuthJws(msg.authJws)
                 clientPublicKey = verificationKey
                 val (_, user) = parseUserJws(msg.userJws, verificationKey)
@@ -123,7 +129,7 @@ class McbeProxyBackendHandler(
             is WorldPacket -> {
                 val registries = Registries(Registry(), Registry())
                 var runtimeId = 0
-                (McbeProxy.blocks.values + msg.blocks!!).sortedWith(if (486 >= 486) compareBy { it.description.key.lowercase() } else compareBy { it.description.key.split(":", limit = 2)[1].lowercase() }).forEach { it.states.forEach { registries.blockStates[runtimeId++] = it } }
+                (McbeProxy.blocks.values + msg.blocks!!).sortedWith(if (version >= 486) compareBy { it.description.key.lowercase() } else compareBy { it.description.key.split(":", limit = 2)[1].lowercase() }).forEach { it.states.forEach { registries.blockStates[runtimeId++] = it } }
                 msg.items.forEach { registries.items[it.key] = it.value.key }
                 inboundChannel.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }
                 ctx.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }

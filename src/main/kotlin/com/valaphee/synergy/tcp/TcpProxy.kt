@@ -35,9 +35,8 @@ class TcpProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
-    @JsonProperty("interface_host") interfaceHost: String,
-    @JsonProperty("interface_port") interfacePort: Int
-) : TransparentProxy(id, host, port, interfaceHost, interfacePort) {
+    @JsonProperty("interface") `interface`: String,
+) : TransparentProxy(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {

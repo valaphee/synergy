@@ -1,0 +1,40 @@
+syntax = "proto2";
+package bgs.protocol.channel.v1;
+import "bgs/low/pb/client/invitation_types.proto";
+import "bgs/low/pb/client/entity_types.proto";
+import "bgs/low/pb/client/channel_types.proto";
+
+
+message ChannelInvitation {
+	required .bgs.protocol.channel.v1.ChannelDescription channel_description = 1;
+	optional bool reserved = 2 [default = false];
+	optional bool rejoin = 3 [default = false];
+	required uint32 service_type = 4;
+	extend .bgs.protocol.Invitation {
+		optional .bgs.protocol.channel.v1.ChannelInvitation channel_invitation = 105;
+	}
+}
+
+message ChannelInvitationParams {
+	required .bgs.protocol.EntityId channel_id = 1;
+	optional bool reserved = 2;
+	optional bool rejoin = 3;
+	required uint32 service_type = 4;
+	extend .bgs.protocol.InvitationParams {
+		optional .bgs.protocol.channel.v1.ChannelInvitationParams channel_params = 105;
+	}
+}
+
+message InvitationSuggestion {
+	optional .bgs.protocol.EntityId channel_id = 1;
+	required .bgs.protocol.EntityId suggester_id = 2;
+	required .bgs.protocol.EntityId suggestee_id = 3;
+	optional string suggester_name = 4;
+	optional string suggestee_name = 5;
+}
+
+message ChannelCount {
+	optional .bgs.protocol.EntityId channel_id = 1;
+	optional string channel_type = 2 [default = "default"];
+	optional string channel_name = 3;
+}

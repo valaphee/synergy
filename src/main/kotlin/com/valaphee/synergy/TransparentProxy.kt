@@ -18,6 +18,7 @@ package com.valaphee.synergy
 
 import com.sun.jna.platform.win32.Shell32
 import kotlinx.coroutines.delay
+import java.net.InetAddress
 
 /**
  * @author Kevin Ludwig
@@ -26,15 +27,14 @@ abstract class TransparentProxy(
     override val id: String,
     val host: String,
     val port: Int,
-    val interfaceHost: String,
-    val interfacePort: Int
+    val `interface`: String,
 ) : Proxy {
     override suspend fun start() {
-        Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" $host/32\"", null, 0)
+        Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" ${InetAddress.getByName(host).hostAddress}/32\"", null, 0)
         delay(250)
     }
 
     override suspend fun stop() {
-        Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip delete address \"Loopback\" $host\"", null, 0)
+        Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip delete address \"Loopback\" ${InetAddress.getByName(host).hostAddress}\"", null, 0)
     }
 }

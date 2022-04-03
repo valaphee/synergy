@@ -1,0 +1,8 @@
+syntax = "proto2";
+package Blizzard.Telemetry.VoiceClient;
+
+
+message ProviderError {
+	optional int32 status = 1;
+	optional string message_type = 2;
+}

@@ -52,9 +52,8 @@ class HttpProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
-    @JsonProperty("interface_host") interfaceHost: String,
-    @JsonProperty("interface_port") interfacePort: Int
-) : TransparentProxy(id, host, port, interfaceHost, interfacePort) {
+    @JsonProperty("interface") `interface`: String,
+) : TransparentProxy(id, host, port, `interface`) {
     private var applicationEngine: ApplicationEngine? = null
 
     override suspend fun start() {
@@ -74,7 +73,7 @@ class HttpProxy(
                                 socketFactory(object : SocketFactory() {
                                     private val system = getDefault()
 
-                                    override fun createSocket() = system.createSocket().apply { bind(InetSocketAddress(InetAddress.getByName(interfaceHost), interfacePort)) }
+                                    override fun createSocket() = system.createSocket().apply { bind(InetSocketAddress(InetAddress.getByName(`interface`), 0)) }
 
                                     override fun createSocket(host: String, port: Int) = throw NotImplementedError()
 

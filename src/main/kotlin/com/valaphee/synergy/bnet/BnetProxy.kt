@@ -55,10 +55,8 @@ class BnetProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
-    @JsonProperty("interface_host") interfaceHost: String,
-    @JsonProperty("interface_port") interfacePort: Int,
-    @JsonProperty("name") val name: String
-) : TransparentProxy(id, host, port, interfaceHost, interfacePort) {
+    @JsonProperty("interface") `interface`: String,
+) : TransparentProxy(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {
@@ -66,7 +64,7 @@ class BnetProxy(
             super.start()
 
             val serverKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
-            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$name"), serverKeyPair.public).build(rootContentSigner)
+            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$host"), serverKeyPair.public).build(rootContentSigner)
             val sslContextBuilder = SslContextBuilder.forServer(serverKeyPair.private, listOf(JcaX509CertificateConverter().setProvider("BC").getCertificate(X509v3CertificateBuilder(JcaX509CertificateHolder(rootCertificate).subject, BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, serverCsr.subject, serverCsr.subjectPublicKeyInfo).apply {
                 addExtension(Extension.basicConstraints, true, BasicConstraints(false))
                 addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
@@ -79,12 +77,13 @@ class BnetProxy(
                 .channel(underlyingNetworking.serverSocketChannel)
                 .handler(LoggingHandler())
                 .childHandler(object : ChannelInitializer<SocketChannel>() {
-                    override fun initChannel(ch: SocketChannel) {
-                        ch.pipeline().addLast(
-                            sslContextBuilder.newHandler(ch.alloc()),
+                    override fun initChannel(channel: SocketChannel) {
+                        channel.pipeline().addLast(
+                            sslContextBuilder.newHandler(channel.alloc()),
                             HttpServerCodec(),
                             HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                             WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
+                            BnetCodec(),
                             LoggingHandler(),
                             BnetProxyFrontendHandler(this@BnetProxy)
                         )

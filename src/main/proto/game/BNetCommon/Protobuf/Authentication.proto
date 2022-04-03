@@ -1,0 +1,14 @@
+syntax = "proto2";
+package authentication;
+
+
+message LobbyReferralPayload {
+	optional string onlineId = 1;
+	optional uint64 xid = 2;
+	optional bool isTrial = 3;
+	optional uint64 psnAccountId = 4;
+	optional bool hasPsPlus = 5;
+	optional string psnStoreRegion = 6;
+	optional uint64 nxNSAID = 7;
+	optional string nxAccountID = 8;
+}

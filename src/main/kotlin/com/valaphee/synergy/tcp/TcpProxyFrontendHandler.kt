@@ -39,7 +39,7 @@ class TcpProxyFrontendHandler(
             .channel(ctx.channel()::class.java)
             .handler(TcpProxyBackendHandler(ctx.channel()))
             .option(ChannelOption.AUTO_READ, false)
-            .localAddress(proxy.interfaceHost, proxy.interfacePort)
+            .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {

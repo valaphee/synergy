@@ -1,0 +1,20 @@
+syntax = "proto2";
+package bgs.protocol;
+import "google/protobuf/descriptor.proto";
+
+
+enum LogOption {
+  HIDDEN = 1;
+  HEX = 2;
+}
+
+message BGSFieldOptions {
+  optional .bgs.protocol.LogOption log = 1;
+  optional bool shard_key = 2;
+}
+
+extend .google.protobuf.FieldOptions {
+  optional .bgs.protocol.BGSFieldOptions field_options = 90000;
+}
+
+

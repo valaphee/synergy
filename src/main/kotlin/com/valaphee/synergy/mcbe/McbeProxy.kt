@@ -67,10 +67,9 @@ class McbeProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
-    @JsonProperty("interface_host") interfaceHost: String,
-    @JsonProperty("interface_port") interfacePort: Int,
+    @JsonProperty("interface") `interface`: String,
     @JsonProperty("authorization") val authorization: String
-) : TransparentProxy(id, host, port, interfaceHost, interfacePort) {
+) : TransparentProxy(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {

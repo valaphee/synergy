@@ -58,7 +58,7 @@ class McbeProxyFrontendHandler(
             })
             .option(RakNet.MTU, 1_464)
             .option(RakNet.PROTOCOL_VERSION, 10)
-            .localAddress(proxy.interfaceHost, proxy.interfacePort)
+            .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {

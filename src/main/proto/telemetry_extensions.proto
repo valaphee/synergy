@@ -1,0 +1,32 @@
+syntax = "proto2";
+package Blizzard.Telemetry;
+import "google/protobuf/descriptor.proto";
+
+
+message FileOptions {
+	optional string telemetry_message = 1;
+}
+
+message MessageOptions {
+	optional bool realtime = 100;
+	optional bool metric_set = 200;
+	optional bool metric = 201;
+	optional bool entity_time_series = 301;
+	optional bool logging = 401;
+}
+
+message LogMessageOptions {
+	optional string grok = 1;
+	optional bool is_json = 2;
+}
+
+message FieldOptions {
+	optional string mapped_type = 1;
+	optional string elastic_analyzer = 100;
+	optional bool realtime = 200;
+	optional string elastic_path_move = 300;
+}
+
+message LogFieldOptions {
+	optional string syslog_field = 1;
+}

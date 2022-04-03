@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     application
     id("com.github.johnrengelman.shadow") version "7.0.0"
+    /*id("com.google.protobuf") version "0.8.18"*/
     id("com.palantir.git-version") version "0.12.3"
     kotlin("jvm") version "1.6.20"
     signing
@@ -37,6 +38,7 @@ repositories {
 
 dependencies {
     implementation("com.google.guava:guava:31.1-jre")
+    implementation("com.google.protobuf:protobuf-kotlin:3.19.4")
     implementation("com.valaphee:netcode-mcbe:0.1.20")
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("io.ktor:ktor-client-content-negotiation-jvm:2.0.0-beta-1")
@@ -60,6 +62,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
 }
 
+java.sourceSets.getByName("main").java.srcDir("build/generated/source/proto/main/java")
+
 tasks {
     withType<JavaCompile> {
         sourceCompatibility = "16"
@@ -72,6 +76,8 @@ tasks {
 
     shadowJar { archiveName = "synergy.jar" }
 }
+
+/*protobuf { protobuf.protoc { artifact = "com.google.protobuf:protoc:3.19.4" } }*/
 
 application { mainClass.set("com.valaphee.synergy.MainKt") }
 
