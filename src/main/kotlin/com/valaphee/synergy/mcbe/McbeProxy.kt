@@ -33,13 +33,13 @@ import com.valaphee.netcode.mcbe.network.Decompressor
 import com.valaphee.netcode.mcbe.network.PacketBuffer
 import com.valaphee.netcode.mcbe.network.PacketCodec
 import com.valaphee.netcode.mcbe.network.Pong
-import com.valaphee.netcode.mcbe.util.Registry
 import com.valaphee.netcode.mcbe.world.GameMode
 import com.valaphee.netcode.mcbe.world.block.Block
 import com.valaphee.netcode.mcbe.world.block.BlockState
 import com.valaphee.synergy.TransparentProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
+import com.valaphee.synergy.util.ReadWriteLoggingHandler
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
@@ -68,7 +68,8 @@ class McbeProxy(
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
     @JsonProperty("interface_host") interfaceHost: String,
-    @JsonProperty("interface_port") interfacePort: Int
+    @JsonProperty("interface_port") interfacePort: Int,
+    @JsonProperty("authorization") val authorization: String
 ) : TransparentProxy(id, host, port, interfaceHost, interfacePort) {
     private var channel: Channel? = null
 
@@ -105,7 +106,7 @@ class McbeProxy(
                         channel.pipeline().addLast(Decompressor.NAME, Decompressor())
                         channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
                         channel.pipeline().addLast(
-                            LoggingHandler(LogLevel.INFO),
+                            ReadWriteLoggingHandler(),
                             McbeProxyFrontendHandler(this@McbeProxy)
                         )
                     }
@@ -131,16 +132,14 @@ class McbeProxy(
         internal val nbtLeObjectMapper = ObjectMapper(NbtFactory().enable(NbtFactory.Feature.LittleEndian))
         internal val nbtLeVarIntObjectMapper = ObjectMapper(NbtFactory().enable(NbtFactory.Feature.LittleEndian).enable(NbtFactory.Feature.VarInt))
         internal val nbtLeVarIntNoWrapObjectMapper = ObjectMapper(NbtFactory().enable(NbtFactory.Feature.LittleEndian).enable(NbtFactory.Feature.VarInt).enable(NbtFactory.Feature.NoWrap))
-        internal val blockStates = Registry<BlockState>()
+        internal val blocks: Map<String, Block>
 
         init {
             listOf(jsonObjectMapper, nbtObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper).forEach { it.registerKotlinModule().registerModule(SimpleModule().addAbstractTypeMapping(Map::class.java, DeepEqualsLinkedHashMap::class.java)).addHandler(EmbeddedObjectDeserializationProblemHandler).disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES) }
 
             val blockStates = mutableMapOf<String, MutableList<Map<String, Any>>>()
             nbtObjectMapper.readValue<BlockPalette>(GZIPInputStream(McbeProxy::class.java.getResource("/block_palette.nbt")!!.openStream())).blockStates.forEach { blockStates.getOrPut(it.blockKey, ::mutableListOf).add(it.states) }
-            var runtimeId = 0
-            blockStates.mapValues { Block(it.key, it.value) }.values.sortedWith(compareBy { it.description.key.lowercase() }).forEach { it.states.forEach { this.blockStates[runtimeId++] = it } }
-            println(this.blockStates.idToValue.int2ObjectEntrySet().joinToString())
+            blocks = blockStates.mapValues { Block(it.key, it.value) }
         }
 
         private data class BlockPalette(

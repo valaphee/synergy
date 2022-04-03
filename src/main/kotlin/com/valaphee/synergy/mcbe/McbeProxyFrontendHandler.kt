@@ -53,7 +53,7 @@ class McbeProxyFrontendHandler(
                     channel.pipeline().addLast(Compressor.NAME, Compressor(7))
                     channel.pipeline().addLast(Decompressor.NAME, Decompressor())
                     channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper) }, true))
-                    channel.pipeline().addLast(McbeProxyBackendHandler(ctx.channel()))
+                    channel.pipeline().addLast(McbeProxyBackendHandler(proxy, ctx.channel()))
                 }
             })
             .option(RakNet.MTU, 1_464)

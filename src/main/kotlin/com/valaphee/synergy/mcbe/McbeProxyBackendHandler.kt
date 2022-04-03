@@ -58,6 +58,7 @@ import java.util.Base64
  * @author Kevin Ludwig
  */
 class McbeProxyBackendHandler(
+    private val mcbeProxy: McbeProxy,
     private val inboundChannel: Channel
 ) : ChannelDuplexHandler() {
     private val keyPair = generateKeyPair()
@@ -82,7 +83,7 @@ class McbeProxyBackendHandler(
                             header("Content-Type", "application/json")
                             header("User-Agent", "MCPE/Android")
                             header("Client-Version", user.version)
-                            header("Authorization", "")
+                            header("Authorization", mcbeProxy.authorization)
                         }
                         setBody(mapOf("identityPublicKey" to keyPair.public.encoded.encodeBase64()))
                     }.body<Map<*, *>>()["chain"] as List<*>
@@ -120,7 +121,9 @@ class McbeProxyBackendHandler(
             ctx.pipeline().addLast(EncryptionInitializer(keyPair, serverPublicKey, true, salt))
         } else inboundChannel.write(when (msg) {
             is WorldPacket -> {
-                val registries = Registries(McbeProxy.blockStates, Registry())
+                val registries = Registries(Registry(), Registry())
+                var runtimeId = 0
+                (McbeProxy.blocks.values + msg.blocks!!).sortedWith(if (486 >= 486) compareBy { it.description.key.lowercase() } else compareBy { it.description.key.split(":", limit = 2)[1].lowercase() }).forEach { it.states.forEach { registries.blockStates[runtimeId++] = it } }
                 msg.items.forEach { registries.items[it.key] = it.value.key }
                 inboundChannel.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }
                 ctx.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }

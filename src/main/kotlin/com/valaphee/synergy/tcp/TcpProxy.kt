@@ -26,7 +26,6 @@ import io.netty.channel.Channel
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 
 /**
@@ -48,11 +47,11 @@ class TcpProxy(
             channel = ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(underlyingNetworking.serverSocketChannel)
-                .handler(LoggingHandler(LogLevel.INFO))
+                .handler(LoggingHandler())
                 .childHandler(object : ChannelInitializer<SocketChannel>() {
                     override fun initChannel(channel: SocketChannel) {
                         channel.pipeline().addLast(
-                            LoggingHandler(LogLevel.INFO),
+                            LoggingHandler(),
                             TcpProxyFrontendHandler(this@TcpProxy)
                         )
                     }

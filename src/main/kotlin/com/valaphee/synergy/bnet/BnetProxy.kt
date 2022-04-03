@@ -30,7 +30,6 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
-import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContextBuilder
 import org.bouncycastle.asn1.x500.X500Name
@@ -78,7 +77,7 @@ class BnetProxy(
             channel = ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(underlyingNetworking.serverSocketChannel)
-                .handler(LoggingHandler(LogLevel.INFO))
+                .handler(LoggingHandler())
                 .childHandler(object : ChannelInitializer<SocketChannel>() {
                     override fun initChannel(ch: SocketChannel) {
                         ch.pipeline().addLast(
@@ -86,7 +85,7 @@ class BnetProxy(
                             HttpServerCodec(),
                             HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                             WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
-                            LoggingHandler(LogLevel.INFO),
+                            LoggingHandler(),
                             BnetProxyFrontendHandler(this@BnetProxy)
                         )
                     }
