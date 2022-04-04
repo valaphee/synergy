@@ -1,6 +1,9 @@
 syntax = "proto2";
+
 package bgs.protocol;
 
+option java_package = "bnet.protocol";
+option java_outer_classname = "ContentHandleProto";
 
 message ContentHandle {
 	required fixed32 region = 1;
@@ -8,3 +11,4 @@ message ContentHandle {
 	required bytes hash = 3;
 	optional string proto_url = 4;
 }
+

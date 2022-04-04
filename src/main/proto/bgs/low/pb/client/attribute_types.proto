@@ -1,7 +1,11 @@
 syntax = "proto2";
-package bgs.protocol;
+
 import "bgs/low/pb/client/entity_types.proto";
 
+package bgs.protocol;
+
+option java_package = "bnet.protocol";
+option java_outer_classname = "AttributeProto";
 
 message Variant {
 	optional bool bool_value = 2;
@@ -27,6 +31,8 @@ message AttributeFilter {
 		MATCH_ALL = 2;
 		MATCH_ALL_MOST_SPECIFIC = 3;
 	}
-	required .bgs.protocol.AttributeFilter.Operation op = 1;
+
+	required .bgs.protocol.AttributeFilter.Operation op = 1 [default = MATCH_NONE];
 	repeated .bgs.protocol.Attribute attribute = 2;
 }
+

@@ -1,7 +1,9 @@
 syntax = "proto2";
-package bgs.protocol.account.v1;
+
 import "bgs/low/pb/client/entity_types.proto";
 import "bgs/low/pb/client/rpc_types.proto";
+
+package bgs.protocol.account.v1;
 
 enum IdentityVerificationStatus {
 	IDENT_NO_DATA = 0;
@@ -15,7 +17,8 @@ enum IdentityVerificationStatus {
 }
 
 message AccountId {
-	required fixed32 id = 1;
+	option (message_options).custom_select_shard = true;
+	required fixed32 id = 1 [(valid).unsigned.exclude = 0];
 }
 
 message AccountLicense {
@@ -24,9 +27,10 @@ message AccountLicense {
 }
 
 message GameAccountHandle {
-	required fixed32 id = 1;
-	required fixed32 program = 2;
-	required uint32 region = 3;
+	option (message_options).custom_select_shard = true;
+	required fixed32 id = 1 [(valid).unsigned.exclude = 0];
+	required fixed32 program = 2 [(valid).unsigned.exclude = 0];
+	required uint32 region = 3 [(valid).unsigned.limits.min = 1, (valid).unsigned.limits.max = 255];
 }
 
 message AccountReference {
@@ -38,6 +42,7 @@ message AccountReference {
 }
 
 message Identity {
+	option (message_options).custom_validator = true;
 	optional .bgs.protocol.account.v1.AccountId account = 1;
 	optional .bgs.protocol.account.v1.GameAccountHandle game_account = 2;
 }
@@ -108,7 +113,7 @@ message AccountLevelInfo {
 	optional bool muted = 9;
 	optional bool manual_review = 10;
 	optional bool account_paid_any = 11;
-	optional .bgs.protocol.account.v1.IdentityVerificationStatus identity_check_status = 12;
+	optional .bgs.protocol.account.v1.IdentityVerificationStatus identity_check_status = 12 [default = IDENT_NO_DATA];
 	optional string email = 13;
 	optional bool headless_account = 14;
 	optional bool test_account = 15;
@@ -122,6 +127,7 @@ message PrivacyInfo {
 		PRIVACY_FRIENDS = 1;
 		PRIVACY_EVERYONE = 2;
 	}
+
 	optional bool is_using_rid = 3;
 	optional bool is_visible_for_view_friends = 4;
 	optional bool is_hidden_from_friend_finder = 5;
@@ -163,7 +169,7 @@ message GameTimeRemainingInfo {
 	optional uint32 minutes_remaining = 1;
 	optional uint32 parental_daily_minutes_remaining = 2;
 	optional uint32 parental_weekly_minutes_remaining = 3;
-	optional uint32 seconds_remaining_until_kick = 4;
+	optional uint32 seconds_remaining_until_kick = 4 [deprecated = true];
 }
 
 message GameStatus {
@@ -180,7 +186,7 @@ message RAFInfo {
 }
 
 message GameSessionInfo {
-	optional uint32 start_time = 3;
+	optional uint32 start_time = 3 [deprecated = true];
 	optional .bgs.protocol.account.v1.GameSessionLocation location = 4;
 	optional bool has_benefactor = 5;
 	optional bool is_using_igr = 6;
@@ -251,12 +257,14 @@ message AuthorizedData {
 }
 
 message IgrId {
-	optional .bgs.protocol.account.v1.GameAccountHandle game_account = 1;
-	optional fixed32 external_id = 2;
-	optional string uuid = 3;
+	oneof type {
+		.bgs.protocol.account.v1.GameAccountHandle game_account = 1;
+		fixed32 external_id = 2;
+	}
 }
 
 message IgrAddress {
 	optional string client_address = 1;
 	optional uint32 region = 2;
 }
+

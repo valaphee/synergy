@@ -1,15 +1,17 @@
 syntax = "proto2";
-package bgs.protocol.channel.v1;
-import "bgs/low/pb/client/api/client/v1/channel_id.proto";
+
+import public "bgs/low/pb/client/api/client/v1/channel_id.proto";
 import "bgs/low/pb/client/attribute_types.proto";
 import "bgs/low/pb/client/entity_types.proto";
 import "bgs/low/pb/client/account_types.proto";
 import "bgs/low/pb/client/invitation_types.proto";
 import "bgs/low/pb/client/rpc_types.proto";
 
+package bgs.protocol.channel.v1;
 
 message Message {
 	repeated .bgs.protocol.Attribute attribute = 1;
+
 	extensions 100 to 10000;
 }
 
@@ -42,6 +44,7 @@ message ChannelState {
 		PRIVACY_LEVEL_OPEN_INVITATION = 3;
 		PRIVACY_LEVEL_CLOSED = 4;
 	}
+
 	optional uint32 max_members = 1;
 	optional uint32 min_members = 2;
 	repeated .bgs.protocol.Attribute attribute = 3;
@@ -52,6 +55,7 @@ message ChannelState {
 	optional string channel_type = 10 [default = "default"];
 	optional fixed32 program = 11;
 	optional bool subscribe_to_presence = 13 [default = true];
+
 	extensions 100 to 10000;
 }
 
@@ -61,7 +65,7 @@ message MemberAccountInfo {
 
 message MemberState {
 	repeated .bgs.protocol.Attribute attribute = 1;
-	repeated uint32 role = 2;
+	repeated uint32 role = 2 [packed = true];
 	optional uint64 privileges = 3 [default = 0];
 	optional .bgs.protocol.channel.v1.MemberAccountInfo info = 4;
 }
@@ -72,7 +76,9 @@ message Member {
 }
 
 message SubscriberId {
-	optional .bgs.protocol.account.v1.AccountId account = 1;
+	option (message_options).custom_validator = true;
+	optional .bgs.protocol.account.v1.AccountId account = 1 [deprecated = true];
 	optional .bgs.protocol.account.v1.GameAccountHandle game_account = 2;
 	optional .bgs.protocol.ProcessId process = 3;
 }
+

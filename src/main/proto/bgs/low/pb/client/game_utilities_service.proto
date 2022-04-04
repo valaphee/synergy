@@ -1,11 +1,17 @@
 syntax = "proto2";
-package bgs.protocol.game_utilities.v1;
+
 import "bgs/low/pb/client/attribute_types.proto";
 import "bgs/low/pb/client/content_handle_types.proto";
 import "bgs/low/pb/client/entity_types.proto";
 import "bgs/low/pb/client/game_utilities_types.proto";
 import "bgs/low/pb/client/rpc_types.proto";
 
+package bgs.protocol.game_utilities.v1;
+
+option cc_generic_services = false;
+option java_package = "bnet.protocol.game_utilities.v1";
+option java_outer_classname = "GameUtilitiesServiceProto";
+option java_generic_services = true;
 
 message ClientRequest {
 	repeated .bgs.protocol.Attribute attribute = 1;
@@ -89,14 +95,39 @@ message UnregisterUtilitiesRequest {
 }
 
 service GameUtilitiesService {
-	rpc ProcessClientRequest (.bgs.protocol.game_utilities.v1.ClientRequest) returns (.bgs.protocol.game_utilities.v1.ClientResponse);
-	rpc PresenceChannelCreated (.bgs.protocol.game_utilities.v1.PresenceChannelCreatedRequest) returns (.bgs.protocol.NoData);
-	rpc GetPlayerVariables (.bgs.protocol.game_utilities.v1.GetPlayerVariablesRequest) returns (.bgs.protocol.game_utilities.v1.GetPlayerVariablesResponse);
-	rpc ProcessServerRequest (.bgs.protocol.game_utilities.v1.ServerRequest) returns (.bgs.protocol.game_utilities.v1.ServerResponse);
-	rpc OnGameAccountOnline (.bgs.protocol.game_utilities.v1.GameAccountOnlineNotification) returns (.bgs.protocol.NO_RESPONSE);
-	rpc OnGameAccountOffline (.bgs.protocol.game_utilities.v1.GameAccountOfflineNotification) returns (.bgs.protocol.NO_RESPONSE);
-	rpc GetAchievementsFile (.bgs.protocol.game_utilities.v1.GetAchievementsFileRequest) returns (.bgs.protocol.game_utilities.v1.GetAchievementsFileResponse);
-	rpc GetAllValuesForAttribute (.bgs.protocol.game_utilities.v1.GetAllValuesForAttributeRequest) returns (.bgs.protocol.game_utilities.v1.GetAllValuesForAttributeResponse);
-	rpc RegisterUtilities (.bgs.protocol.game_utilities.v1.RegisterUtilitiesRequest) returns (.bgs.protocol.game_utilities.v1.RegisterUtilitiesResponse);
-	rpc UnregisterUtilities (.bgs.protocol.game_utilities.v1.UnregisterUtilitiesRequest) returns (.bgs.protocol.NO_RESPONSE);
+	option (service_options).descriptor_name = "bnet.protocol.game_utilities.GameUtilities";
+	option (service_options).shard_name = "game_utilities";
+	option (sdk_service_options).inbound = true;
+	option (sdk_service_options).outbound = true;
+	rpc ProcessClientRequest (.bgs.protocol.game_utilities.v1.ClientRequest) returns (.bgs.protocol.game_utilities.v1.ClientResponse) {
+		option (method_options).id = 1;
+	}
+	rpc PresenceChannelCreated (.bgs.protocol.game_utilities.v1.PresenceChannelCreatedRequest) returns (.bgs.protocol.NoData) {
+		option (method_options).id = 2;
+	}
+	rpc GetPlayerVariables (.bgs.protocol.game_utilities.v1.GetPlayerVariablesRequest) returns (.bgs.protocol.game_utilities.v1.GetPlayerVariablesResponse) {
+		option (method_options).id = 3;
+	}
+	rpc ProcessServerRequest (.bgs.protocol.game_utilities.v1.ServerRequest) returns (.bgs.protocol.game_utilities.v1.ServerResponse) {
+		option (method_options).id = 6;
+	}
+	rpc OnGameAccountOnline (.bgs.protocol.game_utilities.v1.GameAccountOnlineNotification) returns (.bgs.protocol.NO_RESPONSE) {
+		option (method_options).id = 7;
+	}
+	rpc OnGameAccountOffline (.bgs.protocol.game_utilities.v1.GameAccountOfflineNotification) returns (.bgs.protocol.NO_RESPONSE) {
+		option (method_options).id = 8;
+	}
+	rpc GetAchievementsFile (.bgs.protocol.game_utilities.v1.GetAchievementsFileRequest) returns (.bgs.protocol.game_utilities.v1.GetAchievementsFileResponse) {
+		option (method_options).id = 9;
+	}
+	rpc GetAllValuesForAttribute (.bgs.protocol.game_utilities.v1.GetAllValuesForAttributeRequest) returns (.bgs.protocol.game_utilities.v1.GetAllValuesForAttributeResponse) {
+		option (method_options).id = 10;
+	}
+	rpc RegisterUtilities (.bgs.protocol.game_utilities.v1.RegisterUtilitiesRequest) returns (.bgs.protocol.game_utilities.v1.RegisterUtilitiesResponse) {
+		option (method_options).id = 11;
+	}
+	rpc UnregisterUtilities (.bgs.protocol.game_utilities.v1.UnregisterUtilitiesRequest) returns (.bgs.protocol.NO_RESPONSE) {
+		option (method_options).id = 12;
+	}
 }
+

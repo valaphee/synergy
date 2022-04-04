@@ -16,7 +16,7 @@
 
 package com.valaphee.synergy.bnet
 
-import bgs.protocol.RpcTypes
+import bnet.protocol.RpcProto
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToMessageCodec
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
@@ -43,7 +43,7 @@ class BnetCodec : MessageToMessageCodec<BinaryWebSocketFrame, BnetPacket>() {
 
         val headerSize = buffer.readUnsignedShort()
         if (!buffer.isReadable(headerSize)) return
-        val header = RpcTypes.Header.parseFrom(ByteArray(headerSize).apply { buffer.readBytes(this) })
+        val header = RpcProto.Header.parseFrom(ByteArray(headerSize).apply { buffer.readBytes(this) })
 
         val payloadSize = if (header.hasSize()) header.size else buffer.readableBytes()
         if (!buffer.isReadable(payloadSize)) return

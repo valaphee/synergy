@@ -1,4 +1,5 @@
 syntax = "proto2";
+
 package bgs.protocol;
 
 enum ClientIdentityRoutingType {
@@ -7,3 +8,4 @@ enum ClientIdentityRoutingType {
 	CLIENT_IDENTITY_ROUTING_GAME_ACCOUNT = 2;
 	CLIENT_IDENTITY_ROUTING_INSTANCE_ID = 3;
 }
+

@@ -1,8 +1,14 @@
 syntax = "proto2";
-package bgs.protocol.connection.v1;
+
 import "bgs/low/pb/client/content_handle_types.proto";
 import "bgs/low/pb/client/rpc_types.proto";
 
+package bgs.protocol.connection.v1;
+
+option cc_generic_services = false;
+option java_package = "bnet.protocol.connection.v1";
+option java_outer_classname = "ConnectionServiceProto";
+option java_generic_services = true;
 
 message ConnectRequest {
 	optional .bgs.protocol.ProcessId client_id = 1;
@@ -31,14 +37,14 @@ message BoundService {
 }
 
 message BindRequest {
-	repeated fixed32 deprecated_imported_service_hash = 1;
-	repeated .bgs.protocol.connection.v1.BoundService deprecated_exported_service = 2;
+	repeated fixed32 deprecated_imported_service_hash = 1 [deprecated = true, packed = true];
+	repeated .bgs.protocol.connection.v1.BoundService deprecated_exported_service = 2 [deprecated = true];
 	repeated .bgs.protocol.connection.v1.BoundService exported_service = 3;
 	repeated .bgs.protocol.connection.v1.BoundService imported_service = 4;
 }
 
 message BindResponse {
-	repeated uint32 imported_service_id = 1;
+	repeated uint32 imported_service_id = 1 [deprecated = true, packed = true];
 }
 
 message EchoRequest {
@@ -67,11 +73,32 @@ message EncryptRequest {
 }
 
 service ConnectionService {
-	rpc Connect (.bgs.protocol.connection.v1.ConnectRequest) returns (.bgs.protocol.connection.v1.ConnectResponse);
-	rpc Bind (.bgs.protocol.connection.v1.BindRequest) returns (.bgs.protocol.connection.v1.BindResponse);
-	rpc Echo (.bgs.protocol.connection.v1.EchoRequest) returns (.bgs.protocol.connection.v1.EchoResponse);
-	rpc ForceDisconnect (.bgs.protocol.connection.v1.DisconnectNotification) returns (.bgs.protocol.NO_RESPONSE);
-	rpc KeepAlive (.bgs.protocol.NoData) returns (.bgs.protocol.NO_RESPONSE);
-	rpc Encrypt (.bgs.protocol.connection.v1.EncryptRequest) returns (.bgs.protocol.NoData);
-	rpc RequestDisconnect (.bgs.protocol.connection.v1.DisconnectRequest) returns (.bgs.protocol.NO_RESPONSE);
+	option (service_options).descriptor_name = "bnet.protocol.connection.ConnectionService";
+	option (service_options).shard_name = "connection";
+	option (sdk_service_options).inbound = true;
+	option (sdk_service_options).outbound = true;
+	rpc Connect (.bgs.protocol.connection.v1.ConnectRequest) returns (.bgs.protocol.connection.v1.ConnectResponse) {
+		option (method_options).id = 1;
+	}
+	rpc Bind (.bgs.protocol.connection.v1.BindRequest) returns (.bgs.protocol.connection.v1.BindResponse) {
+		option deprecated = true;
+		option (method_options).id = 2;
+	}
+	rpc Echo (.bgs.protocol.connection.v1.EchoRequest) returns (.bgs.protocol.connection.v1.EchoResponse) {
+		option (method_options).id = 3;
+	}
+	rpc ForceDisconnect (.bgs.protocol.connection.v1.DisconnectNotification) returns (.bgs.protocol.NO_RESPONSE) {
+		option (method_options).id = 4;
+	}
+	rpc KeepAlive (.bgs.protocol.NoData) returns (.bgs.protocol.NO_RESPONSE) {
+		option (method_options).id = 5;
+	}
+	rpc Encrypt (.bgs.protocol.connection.v1.EncryptRequest) returns (.bgs.protocol.NoData) {
+		option deprecated = true;
+		option (method_options).id = 6;
+	}
+	rpc RequestDisconnect (.bgs.protocol.connection.v1.DisconnectRequest) returns (.bgs.protocol.NO_RESPONSE) {
+		option (method_options).id = 7;
+	}
 }
+

@@ -40,10 +40,8 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
-import org.bouncycastle.util.encoders.Hex
 import java.math.BigInteger
 import java.security.KeyPairGenerator
-import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Calendar
 import kotlin.random.asKotlinRandom
@@ -70,7 +68,6 @@ class BnetProxy(
                 addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
                 addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
             }.build(rootContentSigner)), rootCertificate)).build()
-            println(Hex.encode(MessageDigest.getInstance("SHA256", "BC").digest(serverKeyPair.public.encoded)).decodeToString().uppercase())
 
             channel = ServerBootstrap()
                 .group(bossGroup, workerGroup)
