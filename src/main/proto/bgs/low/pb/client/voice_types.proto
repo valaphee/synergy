@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol;
 
+option java_multiple_files = true;
+
 enum VoiceJoinType {
 	VOICE_JOIN_NORMAL = 0;
 	VOICE_JOIN_MUTED = 1;

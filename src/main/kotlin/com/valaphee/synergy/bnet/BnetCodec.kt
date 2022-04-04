@@ -16,7 +16,14 @@
 
 package com.valaphee.synergy.bnet
 
-import bnet.protocol.RpcProto
+
+import bnet.protocol.Header
+import bnet.protocol.MethodOptionsProto
+import bnet.protocol.NO_RESPONSE
+import bnet.protocol.NoData
+import com.google.protobuf.Message
+import com.google.protobuf.Service
+import com.google.protobuf.kotlin.get
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToMessageCodec
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
@@ -24,31 +31,57 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 /**
  * @author Kevin Ludwig
  */
-class BnetCodec : MessageToMessageCodec<BinaryWebSocketFrame, BnetPacket>() {
+class BnetCodec(
+    private val services: Map<Int, Service>
+) : MessageToMessageCodec<BinaryWebSocketFrame, BnetPacket>() {
+    private val responses = mutableMapOf<Int, Message>()
+
     override fun encode(context: ChannelHandlerContext, message: BnetPacket, out: MutableList<Any>) {
         val header = message.header
         val headerSize = header.serializedSize
         val payload = message.payload
-        val payloadSize = payload.size
+        if (payload is ByteArray) {
+            val payloadSize = payload.size
 
-        val buffer = context.alloc().buffer(2 + headerSize + payloadSize)
-        buffer.writeShort(headerSize)
-        buffer.writeBytes(header.toByteArray())
-        buffer.writeBytes(payload)
-        out.add(BinaryWebSocketFrame(buffer))
+            val buffer = context.alloc().buffer(2 + headerSize + payloadSize)
+            buffer.writeShort(headerSize)
+            buffer.writeBytes(header.toByteArray())
+            buffer.writeBytes(payload)
+            out.add(BinaryWebSocketFrame(buffer))
+        } else if (payload is Message) {
+            val payloadSize = payload.serializedSize
+
+            val buffer = context.alloc().buffer(2 + headerSize + payloadSize)
+            buffer.writeShort(headerSize)
+            buffer.writeBytes(header.toByteArray())
+            buffer.writeBytes(payload.toByteArray())
+            out.add(BinaryWebSocketFrame(buffer))
+
+            if (header.serviceId == 0) services[header.serviceHash]?.let { service ->
+                service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor ->
+                    val response = service.getResponsePrototype(methodDescriptor)
+                    if (response !is NO_RESPONSE && response !is NoData) responses[header.token] = response
+                }
+            }
+        }
     }
 
     override fun decode(context: ChannelHandlerContext, `in`: BinaryWebSocketFrame, out: MutableList<Any>) {
         val buffer = `in`.content()
 
+        if (!buffer.isReadable(2)) return
         val headerSize = buffer.readUnsignedShort()
         if (!buffer.isReadable(headerSize)) return
-        val header = RpcProto.Header.parseFrom(ByteArray(headerSize).apply { buffer.readBytes(this) })
+        val header = Header.parseFrom(ByteArray(headerSize).apply { buffer.readBytes(this) })
 
         val payloadSize = if (header.hasSize()) header.size else buffer.readableBytes()
         if (!buffer.isReadable(payloadSize)) return
         val payload = ByteArray(payloadSize).apply { buffer.readBytes(this) }
 
-        out.add(BnetPacket(header, payload))
+        out.add(BnetPacket(header, when (header.serviceId) {
+            0 -> services[header.serviceHash]?.let { service -> service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor -> service.getRequestPrototype(methodDescriptor).parserForType.parseFrom(payload) } }
+            254 -> responses.remove(header.token)?.parserForType?.parseFrom(payload)
+            else -> null
+        } ?: payload))
     }
 }

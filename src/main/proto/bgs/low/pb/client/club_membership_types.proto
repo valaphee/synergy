@@ -8,6 +8,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 message ClubMembershipFilter {
 	optional .bgs.protocol.club.v1.MemberId member_id = 1;
 	optional .bgs.protocol.club.v1.UniqueClubType type = 2;

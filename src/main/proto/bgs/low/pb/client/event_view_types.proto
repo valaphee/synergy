@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol;
 
+option java_multiple_files = true;
+
 enum EventOrder {
 	EVENT_DESCENDING = 0;
 	EVENT_ASCENDING = 1;

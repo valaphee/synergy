@@ -10,6 +10,8 @@ import "bgs/low/pb/client/ets_types.proto";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 message StreamPosition {
 	repeated uint64 stream_id = 1 [packed = true];
 }

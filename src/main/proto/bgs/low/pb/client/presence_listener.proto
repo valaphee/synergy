@@ -6,6 +6,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.presence.v1;
 
+option java_multiple_files = true;
+
 message SubscribeNotification {
 	optional .bgs.protocol.account.v1.AccountId subscriber_id = 1;
 	repeated .bgs.protocol.presence.v1.PresenceState state = 2;

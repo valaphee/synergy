@@ -9,6 +9,7 @@ package bgs.protocol;
 
 option java_package = "bnet.protocol";
 option java_outer_classname = "RpcProto";
+option java_multiple_files = true;
 
 message NO_RESPONSE {
 }

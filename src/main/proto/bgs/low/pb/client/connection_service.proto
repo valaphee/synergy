@@ -9,6 +9,7 @@ option cc_generic_services = false;
 option java_package = "bnet.protocol.connection.v1";
 option java_outer_classname = "ConnectionServiceProto";
 option java_generic_services = true;
+option java_multiple_files = true;
 
 message ConnectRequest {
 	optional .bgs.protocol.ProcessId client_id = 1;

@@ -8,6 +8,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 package bgs.protocol.channel.v1;
 
 option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
 
 message RemoveMemberRequest {
 	optional .bgs.protocol.EntityId agent_id = 1;

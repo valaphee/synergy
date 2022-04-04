@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol;
 
+option java_multiple_files = true;
+
 message EmbedImage {
 	optional string url = 1;
 	optional uint32 width = 2;

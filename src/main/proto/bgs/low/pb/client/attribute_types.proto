@@ -6,6 +6,7 @@ package bgs.protocol;
 
 option java_package = "bnet.protocol";
 option java_outer_classname = "AttributeProto";
+option java_multiple_files = true;
 
 message Variant {
 	optional bool bool_value = 2;

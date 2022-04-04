@@ -5,6 +5,8 @@ import "bgs/low/pb/client/club_types.proto";
 package bgs.protocol.club.v1.membership;
 
 option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
 
 message ClubAddedNotification {
 	option (message_options).client_id_fanout = true;

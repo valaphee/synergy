@@ -9,6 +9,8 @@ import "bgs/low/pb/client/message_types.proto";
 package bgs.protocol.whisper.v1;
 
 option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
 
 message SubscribeRequest {
 	optional .bgs.protocol.account.v1.AccountId agent_id = 1 [(field_options).shard_key = true, (field_options).client_instance_key = true];

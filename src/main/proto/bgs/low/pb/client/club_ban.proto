@@ -5,6 +5,8 @@ import "bgs/low/pb/client/api/client/v2/attribute_types.proto";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 message AddBanOptions {
 	optional .bgs.protocol.club.v1.MemberId target_id = 1;
 	repeated .bgs.protocol.v2.Attribute attribute = 2;

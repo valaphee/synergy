@@ -7,6 +7,8 @@ import "bgs/low/pb/client/invitation_types.proto";
 package bgs.protocol.channel.v2.membership;
 
 option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
 
 message SubscribeRequest {
 	optional .bgs.protocol.account.v1.GameAccountHandle agent_id = 1;

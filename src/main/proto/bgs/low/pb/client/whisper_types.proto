@@ -8,6 +8,8 @@ import "bgs/low/pb/client/message_types.proto";
 
 package bgs.protocol.whisper.v1;
 
+option java_multiple_files = true;
+
 message Whisper {
 	optional .bgs.protocol.account.v1.AccountId sender_id = 1;
 	optional .bgs.protocol.account.v1.AccountId recipient_id = 2;

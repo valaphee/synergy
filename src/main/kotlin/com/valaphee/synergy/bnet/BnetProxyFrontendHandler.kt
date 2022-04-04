@@ -48,7 +48,7 @@ class BnetProxyFrontendHandler(
                         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        BnetCodec(),
+                        BnetCodec(BnetProxy.services),
                         BnetProxyBackendHandler(proxy, context.channel())
                     )
                 }

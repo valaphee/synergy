@@ -5,6 +5,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 package bgs.protocol.challenge.v1;
 
 option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
 
 message ChallengeExternalRequest {
 	optional string request_token = 1;

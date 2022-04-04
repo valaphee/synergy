@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol;
 
+option java_multiple_files = true;
+
 message Role {
 	required uint32 id = 1;
 	required string name = 2;

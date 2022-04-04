@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol.channel.v2;
 
+option java_multiple_files = true;
+
 enum PrivacyLevel {
 	PRIVACY_LEVEL_OPEN = 1;
 	PRIVACY_LEVEL_OPEN_INVITATION = 3;

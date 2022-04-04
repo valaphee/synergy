@@ -7,6 +7,7 @@ package bgs.protocol;
 
 option java_package = "bnet.protocol";
 option java_outer_classname = "MethodOptionsProto";
+option java_multiple_files = true;
 
 extend .google.protobuf.MethodOptions {
 	optional .bgs.protocol.BGSMethodOptions method_options = 90000;

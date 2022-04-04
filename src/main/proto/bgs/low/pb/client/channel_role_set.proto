@@ -4,6 +4,8 @@ import "bgs/low/pb/client/role_types.proto";
 
 package bgs.protocol.channel;
 
+option java_multiple_files = true;
+
 message ChannelPrivilegeSet {
 	optional bool can_invite = 1;
 	optional bool can_invite_with_reservation = 2;

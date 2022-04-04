@@ -12,6 +12,7 @@ option cc_generic_services = false;
 option java_package = "bnet.protocol.game_utilities.v1";
 option java_outer_classname = "GameUtilitiesServiceProto";
 option java_generic_services = true;
+option java_multiple_files = true;
 
 message ClientRequest {
 	repeated .bgs.protocol.Attribute attribute = 1;

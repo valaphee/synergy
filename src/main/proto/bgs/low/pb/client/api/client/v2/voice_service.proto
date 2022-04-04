@@ -6,6 +6,10 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.voice.v2.client;
 
+option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
+
 message CreateLoginCredentialsRequest {
 	option (message_options).custom_select_shard = true;
 	optional .bgs.protocol.account.v1.AccountId account_id = 1 [(valid).message.needed = true];

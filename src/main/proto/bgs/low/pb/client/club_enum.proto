@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 enum PrivacyLevel {
 	PRIVACY_LEVEL_CLOSED = 0;
 	PRIVACY_LEVEL_OPEN_INVITATION = 1;

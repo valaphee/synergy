@@ -5,6 +5,8 @@ import "bgs/low/pb/client/account_types.proto";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 message MemberId {
 	option (message_options).custom_select_shard = true;
 	optional .bgs.protocol.account.v1.AccountId account_id = 1;

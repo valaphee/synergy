@@ -4,6 +4,8 @@ import "bgs/low/pb/client/account_types.proto";
 
 package bgs.protocol.session.v1;
 
+option java_multiple_files = true;
+
 message SessionOptions {
 	optional bool billing = 1 [default = true];
 	optional bool presence = 2 [default = true];

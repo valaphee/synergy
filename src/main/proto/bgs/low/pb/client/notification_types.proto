@@ -7,6 +7,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.notification.v1;
 
+option java_multiple_files = true;
+
 message Target {
 	optional .bgs.protocol.account.v1.Identity identity = 1;
 	optional string type = 2;

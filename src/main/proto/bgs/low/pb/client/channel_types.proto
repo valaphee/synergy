@@ -9,6 +9,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.channel.v1;
 
+option java_multiple_files = true;
+
 message Message {
 	repeated .bgs.protocol.Attribute attribute = 1;
 

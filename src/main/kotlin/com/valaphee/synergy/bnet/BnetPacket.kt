@@ -16,14 +16,14 @@
 
 package com.valaphee.synergy.bnet
 
-import bnet.protocol.RpcProto
+import bnet.protocol.Header
 
 /**
  * @author Kevin Ludwig
  */
 class BnetPacket(
-    val header: RpcProto.Header,
-    val payload: ByteArray
+    val header: Header,
+    val payload: Any?
 ) {
-    override fun toString() = "BnetPacket(header=$header, payload=${payload.contentToString()})"
+    override fun toString() = "BnetPacket(header=$header, payload=$payload)"
 }

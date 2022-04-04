@@ -8,7 +8,9 @@ import "bgs/low/pb/client/voice_types.proto";
 
 package bgs.protocol.channel.v2;
 
+option java_multiple_files = true;
 option cc_generic_services = false;
+option java_generic_services = true;
 
 message CreateChannelRequest {
 	optional .bgs.protocol.account.v1.GameAccountHandle agent_id = 1;

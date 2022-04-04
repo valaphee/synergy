@@ -4,6 +4,7 @@ package bgs.protocol;
 
 option java_package = "bnet.protocol";
 option java_outer_classname = "ContentHandleProto";
+option java_multiple_files = true;
 
 message ContentHandle {
 	required fixed32 region = 1;

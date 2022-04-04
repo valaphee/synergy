@@ -7,6 +7,7 @@ package bgs.protocol.game_utilities.v1;
 
 option java_package = "bnet.protocol.game_utilities.v1";
 option java_outer_classname = "GameUtilitiesTypesProto";
+option java_multiple_files = true;
 
 message PlayerVariables {
 	required .bgs.protocol.Identity identity = 1;

@@ -6,6 +6,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 package bgs.protocol.resources.v1;
 
 option cc_generic_services = false;
+option java_generic_services = true;
+option java_multiple_files = true;
 
 message ContentHandleRequest {
 	option (message_options).custom_validator = true;

@@ -4,6 +4,8 @@ import "bgs/low/pb/client/global_extensions/range.proto";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 message ClubTypeRangeSet {
 	optional .bgs.protocol.UnsignedIntRange name_range = 2;
 	optional .bgs.protocol.UnsignedIntRange description_range = 3;

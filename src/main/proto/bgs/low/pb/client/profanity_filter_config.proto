@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package bgs.protocol.profanity.v1;
 
+option java_multiple_files = true;
+
 message WordFilter {
 	required string type = 1;
 	required string regex = 2;

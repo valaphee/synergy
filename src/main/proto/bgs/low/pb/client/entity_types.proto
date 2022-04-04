@@ -7,6 +7,7 @@ package bgs.protocol;
 
 option java_package = "bnet.protocol";
 option java_outer_classname = "EntityProto";
+option java_multiple_files = true;
 
 message EntityId {
 	option (message_options).custom_select_shard = true;

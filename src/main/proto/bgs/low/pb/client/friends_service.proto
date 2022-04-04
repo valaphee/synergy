@@ -9,9 +9,10 @@ import "bgs/low/pb/client/rpc_types.proto";
 package bgs.protocol.friends.v1;
 
 option cc_generic_services = false;
+option java_generic_services = true;
 option java_package = "bnet.protocol.friends.v1";
 option java_outer_classname = "FriendsServiceProto";
-option java_generic_services = true;
+option java_multiple_files = true;
 
 message SubscribeRequest {
 	optional .bgs.protocol.EntityId agent_id = 1 [(field_options).client_instance_key = true];

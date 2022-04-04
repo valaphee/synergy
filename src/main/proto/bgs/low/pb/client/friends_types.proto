@@ -9,6 +9,7 @@ package bgs.protocol.friends.v1;
 
 option java_package = "bnet.protocol.friends.v1";
 option java_outer_classname = "FriendsTypesProto";
+option java_multiple_files = true;
 
 message Friend {
 	required .bgs.protocol.EntityId account_id = 1;

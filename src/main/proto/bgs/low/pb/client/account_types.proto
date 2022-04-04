@@ -5,6 +5,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.account.v1;
 
+option java_multiple_files = true;
+
 enum IdentityVerificationStatus {
 	IDENT_NO_DATA = 0;
 	IDENT_PENDING = 1;

@@ -4,6 +4,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.channel.v1;
 
+option java_multiple_files = true;
+
 message ChannelId {
 	option (message_options).custom_select_shard = true;
 	optional uint32 type = 1;

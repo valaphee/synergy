@@ -8,6 +8,8 @@ import "bgs/low/pb/client/rpc_types.proto";
 
 package bgs.protocol.club.v1;
 
+option java_multiple_files = true;
+
 message Member {
 	optional .bgs.protocol.club.v1.MemberId id = 1;
 	optional string battle_tag = 2;
