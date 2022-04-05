@@ -48,6 +48,9 @@ import io.netty.channel.socket.DatagramChannel
 import io.netty.channel.socket.ServerSocketChannel
 import io.netty.channel.socket.nio.NioDatagramChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
 import org.bouncycastle.asn1.x509.Extension
@@ -55,16 +58,13 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.operator.ContentSigner
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import java.io.File
 import java.math.BigInteger
 import java.security.KeyPairGenerator
 import java.security.KeyStore
-import java.security.PrivateKey
 import java.security.SecureRandom
 import java.security.Security
-import java.security.cert.X509Certificate
 import java.util.Calendar
 import java.util.concurrent.ThreadFactory
 import kotlin.random.asKotlinRandom
@@ -73,31 +73,33 @@ import kotlin.reflect.KClass
 val underlyingNetworking = if (Epoll.isAvailable()) UnderlyingNetworking.Epoll else if (KQueue.isAvailable()) UnderlyingNetworking.Kqueue else UnderlyingNetworking.Nio
 val bossGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("boss-%d").build())
 val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("worker-%d").build())
-lateinit var rootCertificate: X509Certificate
-lateinit var rootContentSigner: ContentSigner
+lateinit var keyStoreFile: File
+lateinit var keyStore: KeyStore
 
-fun main() {
+fun main(arguments: Array<String>) {
+    val argumentParser = ArgParser("synergy")
+    val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
+    val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
+    argumentParser.parse(arguments)
+
     Security.addProvider(BouncyCastleProvider())
 
     val path = File(System.getProperty("user.home"), ".valaphee/synergy").also(File::mkdirs)
-    val rootFile = File(path, "root.pfx")
-    if (!rootFile.exists()) {
+    keyStoreFile = File(path, "key_store.pfx")
+    keyStore = if (!keyStoreFile.exists()) {
         val rootKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
-        rootCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(JcaX509v3CertificateBuilder(X500Name("CN=Synergy Root CA"), BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, X500Name("CN=Synergy Root CA"), rootKeyPair.public).apply {
+        val rootCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(JcaX509v3CertificateBuilder(X500Name("CN=Synergy"), BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, X500Name("CN=Synergy"), rootKeyPair.public).apply {
             addExtension(Extension.basicConstraints, true, BasicConstraints(true))
             addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(rootKeyPair.public))
         }.build(JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(rootKeyPair.private)))
         KeyStore.getInstance("PKCS12", "BC").apply {
             load(null, null)
-            setKeyEntry("synergy-root", rootKeyPair.private, null, arrayOf(rootCertificate))
-            rootFile.outputStream().use { store(it, "".toCharArray()) }
+            setKeyEntry("synergy", rootKeyPair.private, null, arrayOf(rootCertificate))
+            keyStoreFile.outputStream().use { store(it, "".toCharArray()) }
         }
-        rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(rootKeyPair.private)
-    } else KeyStore.getInstance("PKCS12", "BC").apply {
-        rootFile.inputStream().use { load(it, "".toCharArray()) }
-        rootCertificate = getCertificate("synergy-root") as X509Certificate
-        rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(getKey("synergy-root", null) as PrivateKey)
-    }
+    } else KeyStore.getInstance("PKCS12", "BC").apply { keyStoreFile.inputStream().use { load(it, "".toCharArray()) } }
+
+    //SecurityUtil.patch(File("C:\\Program Files (x86)\\Overwatch\\_retail_\\Overwatch.exe"))
 
     val proxyTypes = mapOf<String, KClass<out Proxy>>(
         "bnet" to BnetProxy::class,
@@ -106,7 +108,7 @@ fun main() {
         "tcp" to TcpProxy::class
     )
     val proxies = mutableMapOf<String, Proxy>()
-    embeddedServer(Netty, port = 8080, host = "localhost") {
+    embeddedServer(Netty, port, host) {
         install(ContentNegotiation) { jackson() }
 
         routing {

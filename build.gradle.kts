@@ -60,6 +60,7 @@ dependencies {
     implementation("net.java.dev.jna:jna-platform:5.11.0")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.4")
 }
 
 java.sourceSets.getByName("main").java.srcDir("build/generated/source/proto/main/java")
