@@ -16,9 +16,10 @@
 
 package com.valaphee.synergy.bnet
 
-
+import bgs.protocol.Header
 import bgs.protocol.MethodOptionsProto
-import bgs.protocol.RpcProto
+import bgs.protocol.NO_RESPONSE
+import bgs.protocol.NoData
 import com.google.protobuf.Message
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
@@ -58,7 +59,7 @@ class BnetCodec(
             if (header.serviceId == 0) services[header.serviceHash]?.let { service ->
                 service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor ->
                     val response = service.getResponsePrototype(methodDescriptor)
-                    if (response !is RpcProto.NO_RESPONSE && response !is RpcProto.NoData) responses[header.token] = response
+                    if (response !is NO_RESPONSE && response !is NoData) responses[header.token] = response
                 }
             }
         }
@@ -70,7 +71,7 @@ class BnetCodec(
         if (!buffer.isReadable(2)) return
         val headerSize = buffer.readUnsignedShort()
         if (!buffer.isReadable(headerSize)) return
-        val header = RpcProto.Header.parseFrom(ByteArray(headerSize).apply { buffer.readBytes(this) })
+        val header = Header.parseFrom(ByteArray(headerSize).apply { buffer.readBytes(this) })
 
         val payloadSize = if (header.hasSize()) header.size else buffer.readableBytes()
         if (!buffer.isReadable(payloadSize)) return

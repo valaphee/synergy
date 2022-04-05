@@ -50,7 +50,6 @@ import java.security.KeyPairGenerator
 import java.security.SecureRandom
 import java.util.Calendar
 import kotlin.random.asKotlinRandom
-import kotlin.reflect.KClass
 
 /**
  * @author Kevin Ludwig
@@ -108,6 +107,38 @@ class BnetProxy(
 
     companion object {
         private val rpcChannel = RpcChannel { _, _, _, _, _ -> }
-        internal val services = listOf<KClass<out Service>>().associate { (it.java.getDeclaredMethod("getDescriptor")(null) as Descriptors.ServiceDescriptor).options[ServiceOptionsProto.serviceOptions].descriptorName.hashFnv1a() to it.java.getDeclaredMethod("newStub", RpcChannel::class.java)(null, rpcChannel) as Service }
+        internal val services = listOf(
+            bgs.protocol.account.v1.AccountListener::class,
+            bgs.protocol.account.v1.AccountService::class,
+            bgs.protocol.authentication.v1.AuthenticationListener::class,
+            bgs.protocol.authentication.v1.AuthenticationService::class,
+            bgs.protocol.challenge.v1.ChallengeListener::class,
+            bgs.protocol.channel.v1.ChannelListener::class,
+            bgs.protocol.channel.v1.ChannelService::class,
+            bgs.protocol.channel.v1.ChannelVoiceService::class,
+            bgs.protocol.channel.v2.ChannelListener::class,
+            bgs.protocol.channel.v2.ChannelService::class,
+            bgs.protocol.channel.v2.membership.ChannelMembershipListener::class,
+            bgs.protocol.channel.v2.membership.ChannelMembershipService::class,
+            bgs.protocol.club.v1.membership.ClubMembershipListener::class,
+            bgs.protocol.club.v1.membership.ClubMembershipService::class,
+            bgs.protocol.connection.v1.ConnectionService::class,
+            bgs.protocol.diag.v1.DiagService::class,
+            bgs.protocol.friends.v1.FriendsListener::class,
+            bgs.protocol.friends.v1.FriendsService::class,
+            bgs.protocol.presence.v1.PresenceListener::class,
+            bgs.protocol.presence.v1.PresenceService::class,
+            bgs.protocol.report.v1.ReportService::class,
+            bgs.protocol.report.v2.ReportService::class,
+            bgs.protocol.resources.v1.ResourcesService::class,
+            bgs.protocol.session.v1.SessionListener::class,
+            bgs.protocol.session.v1.SessionService::class,
+            bgs.protocol.sns.v1.SocialNetworkListener::class,
+            bgs.protocol.sns.v1.SocialNetworkService::class,
+            bgs.protocol.user_manager.v1.UserManagerListener::class,
+            bgs.protocol.user_manager.v1.UserManagerService::class,
+            bgs.protocol.whisper.v1.WhisperListener::class,
+            bgs.protocol.whisper.v1.WhisperService::class
+        ).associate { (it.java.getDeclaredMethod("getDescriptor")(null) as Descriptors.ServiceDescriptor).options[ServiceOptionsProto.serviceOptions].descriptorName.hashFnv1a() to it.java.getDeclaredMethod("newStub", RpcChannel::class.java)(null, rpcChannel) as Service }
     }
 }
