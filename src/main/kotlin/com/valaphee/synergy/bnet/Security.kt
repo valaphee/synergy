@@ -26,7 +26,10 @@ import java.security.KeyPairGenerator
 import java.security.Signature
 import java.security.interfaces.RSAPublicKey
 
-object SecurityUtil {
+/**
+ * @author Kevin Ludwig
+ */
+object Security {
     fun patch(file: File) {
         log.info("Patching {}", file)
         val bytes = file.readBytes()
@@ -60,8 +63,7 @@ object SecurityUtil {
         } ?: log.warn("Unable to find modulus")
     }
 
-    private val log = LoggerFactory.getLogger(SecurityUtil::class.java)
+    private val log = LoggerFactory.getLogger(Security::class.java)
     private const val prefix = "{\"Created\":"
     private const val infix = "}NGIS"
 }
-

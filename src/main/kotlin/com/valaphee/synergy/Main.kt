@@ -99,8 +99,6 @@ fun main(arguments: Array<String>) {
         }
     } else KeyStore.getInstance("PKCS12", "BC").apply { keyStoreFile.inputStream().use { load(it, "".toCharArray()) } }
 
-    //SecurityUtil.patch(File("C:\\Program Files (x86)\\Overwatch\\_retail_\\Overwatch.exe"))
-
     val proxyTypes = mapOf<String, KClass<out Proxy>>(
         "bnet" to BnetProxy::class,
         "http" to HttpProxy::class,
