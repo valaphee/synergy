@@ -49,6 +49,7 @@ class BnetProxyFrontendHandler(
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         BnetCodec(BnetProxy.services),
+                        BnetLoggingHandler(BnetProxy.services, true),
                         BnetProxyBackendHandler(proxy, context.channel())
                     )
                 }

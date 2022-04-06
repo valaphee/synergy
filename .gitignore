@@ -44,8 +44,3 @@ gradle-app.setting
 .idea
 *.iws
 *.iml
-
-# Auto generated
-src/main/proto
-!src/main/proto/bgs/low/pb/client/api/client/v2/channel_types.proto
-!src/main/proto/bgs/low/pb/client/global_extensions/field_options.proto.proto

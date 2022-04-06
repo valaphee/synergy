@@ -97,7 +97,6 @@ class BnetProxy(
                             HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                             WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
                             BnetCodec(services),
-                            BnetLoggingHandler(),
                             BnetProxyFrontendHandler(this@BnetProxy)
                         )
                     }

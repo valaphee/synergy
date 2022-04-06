@@ -31,9 +31,9 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
  * @author Kevin Ludwig
  */
 class BnetCodec(
-    internal val services: Map<Int, Service>
+    private val services: Map<Int, Service>
 ) : MessageToMessageCodec<BinaryWebSocketFrame, BnetPacket>() {
-    internal val responses = mutableMapOf<Int, Message>()
+    private val responses = mutableMapOf<Int, Message>()
 
     override fun encode(context: ChannelHandlerContext, message: BnetPacket, out: MutableList<Any>) {
         val header = message.header

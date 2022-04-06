@@ -31,54 +31,45 @@ import org.slf4j.LoggerFactory
 /**
  * @author Kevin Ludwig
  */
-class BnetLoggingHandler : ChannelDuplexHandler() {
-    private lateinit var codec: BnetCodec
+class BnetLoggingHandler(
+    private val services: Map<Int, Service>,
+    private val client: Boolean
+) : ChannelDuplexHandler() {
     internal val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
 
-    override fun channelActive(ctx: ChannelHandlerContext) {
-        codec = ctx.pipeline().get(BnetCodec::class.java)
-        ctx.fireChannelActive()
-    }
-
-    override fun channelRead(context: ChannelHandlerContext, message: Any) {
+    override fun channelRead(context: ChannelHandlerContext, message: Any?) {
         if (message is BnetPacket) when (message.header.serviceId) {
             0 -> {
-                codec.services[message.header.serviceHash]?.let { service ->
+                services[message.header.serviceHash]?.let { service ->
                     service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == message.header.methodId }?.let { methodDescriptor ->
                         val response = service.getResponsePrototype(methodDescriptor)
                         if (response !is NO_RESPONSE && response !is NoData) responses[message.header.token] = service to methodDescriptor
-                        serviceLoggers.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("RPC #{}: {}\n{}", message.header.token, methodDescriptor.name, message.payload)
+                        serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{}: {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload)
                     }
                 }
             }
-            254 -> {
-                val (service, methodDescriptor) = checkNotNull(responses.remove(message.header.token))
-                serviceLoggers.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("RPC #{} returned {}\n{}", message.header.token, methodDescriptor.name, message.payload)
-            }
+            254 -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload) }
         }
         context.fireChannelRead(message)
     }
 
-    override fun write(context: ChannelHandlerContext, message: Any, promise: ChannelPromise?) {
+    override fun write(context: ChannelHandlerContext, message: Any?, promise: ChannelPromise?) {
         if (message is BnetPacket) when (message.header.serviceId) {
             0 -> {
-                codec.services[message.header.serviceHash]?.let { service ->
+                services[message.header.serviceHash]?.let { service ->
                     service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == message.header.methodId }?.let { methodDescriptor ->
                         val response = service.getResponsePrototype(methodDescriptor)
                         if (response !is NO_RESPONSE && response !is NoData) responses[message.header.token] = service to methodDescriptor
-                        serviceLoggers.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("RPC #{}: {}\n{}", message.header.token, methodDescriptor.name, message.payload)
+                        serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{}: {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload)
                     }
                 }
             }
-            254 -> {
-                val (service, methodDescriptor) = checkNotNull(responses.remove(message.header.token))
-                serviceLoggers.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("RPC #{} returned {}\n{}", message.header.token, methodDescriptor.name, message.payload)
-            }
+            254 -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload) }
         }
         context.write(message, promise)
     }
 
     companion object {
-        private val serviceLoggers = mutableMapOf<String, Logger>()
+        private val serviceLogs = mutableMapOf<String, Logger>()
     }
 }

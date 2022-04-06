@@ -18,6 +18,12 @@ package com.valaphee.synergy.bnet
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.synergy.keyStore
+import io.ktor.util.encodeBase64
+import kotlinx.cli.ArgType
+import kotlinx.cli.ExperimentalCli
+import kotlinx.cli.Subcommand
+import kotlinx.cli.multiple
+import kotlinx.cli.required
 import okhttp3.internal.toHexString
 import org.bouncycastle.asn1.ASN1Sequence
 import org.slf4j.LoggerFactory
@@ -29,10 +35,19 @@ import java.security.interfaces.RSAPublicKey
 /**
  * @author Kevin Ludwig
  */
-object Security {
-    fun patch(file: File) {
-        log.info("Patching {}", file)
-        val bytes = file.readBytes()
+@OptIn(ExperimentalCli::class)
+object PatchSecuritySubcommand : Subcommand("patch-security", "Patches the security module, and updates the certificate bundle") {
+    private val input by option(ArgType.String, "input", "i", "Input file").required()
+    private val output by option(ArgType.String, "output", "o", "Output file")
+    private val aliases by option(ArgType.String, "alias", "a", "Certificate alias").multiple()
+
+    override fun execute() {
+        val inputFile = File(input)
+        log.info("Patching {}", inputFile)
+
+        val serverCertificates = aliases.mapNotNull { alias -> keyStore.getCertificate(alias)?.let { alias to it } }
+
+        val bytes = inputFile.readBytes()
         bytes.occurrencesOf(blizzardKey.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
             log.info("Modulus found at 0x{}", modulusIndex.toHexString().uppercase())
             bytes.occurrencesOf(prefix.toByteArray()).singleOrNull()?.let { certificateBundleIndex ->
@@ -40,7 +55,7 @@ object Security {
 
                 val certificateBundleEnd = bytes.occurrencesOf(infix.toByteArray()).single() + 1
                 val certificateBundle = objectMapper.readValue<CertificateBundle>(bytes.copyOfRange(certificateBundleIndex, certificateBundleEnd))
-                val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, certificateBundle.certificates.map { if (it.uri == "eu.actual.battle.net") CertificateBundle.UriKeyPair(it.uri, (ASN1Sequence.fromByteArray(keyStore.getCertificate("eu.actual.battle.net").encoded) as ASN1Sequence).hash()) else it }, certificateBundle.publicKeys.map { if (it.uri == "eu.actual.battle.net") CertificateBundle.UriKeyPair(it.uri, (ASN1Sequence.fromByteArray(keyStore.getCertificate("eu.actual.battle.net").encoded) as ASN1Sequence).hash()) else it }, certificateBundle.signingCertificates, certificateBundle.rootCaPublicKeyShas))
+                val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${keyStore.getCertificate("synergy").encoded.encodeBase64()}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
                 val certificateBundleSize = certificateBundleEnd - certificateBundleIndex
                 if (certificateBundleSize >= certificateBundleBytes.size) {
                     val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
@@ -49,21 +64,23 @@ object Security {
                     publicKey.publicExponent.toByteArray().swap().copyInto(bytes, modulusIndex + 256)
                     log.info("Modulus and exponent overwritten")
 
-                    certificateBundleBytes.copyInto(bytes, certificateBundleIndex)
-                    repeat(certificateBundleSize - certificateBundleBytes.size) { bytes[certificateBundleIndex + certificateBundleBytes.size + it] = ' '.code.toByte() }
+                    val certificateBundleBytesPadded = ByteArray(certificateBundleSize) { 0x20 }
+                    certificateBundleBytes.copyInto(certificateBundleBytesPadded)
+                    certificateBundleBytesPadded.copyInto(bytes, certificateBundleIndex)
+
                     Signature.getInstance("SHA256withRSA").apply {
                         initSign(keyPair.private)
-                        update(certificateBundleBytes)
+                        update(certificateBundleBytesPadded)
                         update(module.toByteArray())
                     }.sign().swap().copyInto(bytes, certificateBundleEnd + 4)
                     log.info("Signed certificate bundle overwritten (size: {}, new size: {})", certificateBundleSize, certificateBundleBytes.size)
                 } else log.warn("Unable to patch, too large")
             }
-            file.writeBytes(bytes)
+            File(output ?: input).writeBytes(bytes)
         } ?: log.warn("Unable to find modulus")
     }
 
-    private val log = LoggerFactory.getLogger(Security::class.java)
+    private val log = LoggerFactory.getLogger(PatchSecuritySubcommand::class.java)
     private const val prefix = "{\"Created\":"
     private const val infix = "}NGIS"
 }

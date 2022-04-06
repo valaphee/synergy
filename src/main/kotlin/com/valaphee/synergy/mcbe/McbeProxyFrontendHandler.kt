@@ -21,6 +21,7 @@ import com.valaphee.netcode.mcbe.network.Decompressor
 import com.valaphee.netcode.mcbe.network.PacketBuffer
 import com.valaphee.netcode.mcbe.network.PacketCodec
 import com.valaphee.synergy.underlyingNetworking
+import com.valaphee.synergy.util.ReadWriteLoggingHandler
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -53,7 +54,10 @@ class McbeProxyFrontendHandler(
                     channel.pipeline().addLast(Compressor.NAME, Compressor(7))
                     channel.pipeline().addLast(Decompressor.NAME, Decompressor())
                     channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper) }, true))
-                    channel.pipeline().addLast(McbeProxyBackendHandler(proxy, ctx.channel()))
+                    channel.pipeline().addLast(
+                        ReadWriteLoggingHandler(),
+                        McbeProxyBackendHandler(proxy, ctx.channel())
+                    )
                 }
             })
             .option(RakNet.MTU, 1_464)

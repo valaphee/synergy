@@ -18,6 +18,7 @@ package com.valaphee.synergy
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.valaphee.synergy.bnet.BnetProxy
+import com.valaphee.synergy.bnet.PatchSecuritySubcommand
 import com.valaphee.synergy.http.HttpProxy
 import com.valaphee.synergy.mcbe.McbeProxy
 import com.valaphee.synergy.tcp.TcpProxy
@@ -50,6 +51,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.default
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
@@ -76,12 +78,8 @@ val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().se
 lateinit var keyStoreFile: File
 lateinit var keyStore: KeyStore
 
+@OptIn(ExperimentalCli::class)
 fun main(arguments: Array<String>) {
-    val argumentParser = ArgParser("synergy")
-    val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
-    val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
-    argumentParser.parse(arguments)
-
     Security.addProvider(BouncyCastleProvider())
 
     val path = File(System.getProperty("user.home"), ".valaphee/synergy").also(File::mkdirs)
@@ -98,6 +96,13 @@ fun main(arguments: Array<String>) {
             keyStoreFile.outputStream().use { store(it, "".toCharArray()) }
         }
     } else KeyStore.getInstance("PKCS12", "BC").apply { keyStoreFile.inputStream().use { load(it, "".toCharArray()) } }
+
+    val argumentParser = ArgParser("synergy")
+    val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
+    val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
+
+    argumentParser.subcommands(PatchSecuritySubcommand)
+    argumentParser.parse(arguments)
 
     val proxyTypes = mapOf<String, KClass<out Proxy>>(
         "bnet" to BnetProxy::class,

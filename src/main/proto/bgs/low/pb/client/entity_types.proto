@@ -1,0 +1,29 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bgs.protocol;
+
+import "bgs/low/pb/client/global_extensions/field_options.proto";
+import "bgs/low/pb/client/global_extensions/message_options.proto";
+
+option java_multiple_files = true;
+
+option java_package = "bnet.protocol";
+option java_outer_classname = "EntityProto";
+
+message EntityId {
+  option (message_options).custom_select_shard = true;
+  
+  Unresolvable field .google.protobuf.FieldOptions 90000
+  required fixed64 high = 1;
+  Unresolvable field .google.protobuf.FieldOptions 90000
+  required fixed64 low = 2;
+}
+
+message Identity {
+  Unresolvable field .google.protobuf.FieldOptions 90001
+  optional .bgs.protocol.EntityId account_id = 1;
+  Unresolvable field .google.protobuf.FieldOptions 90001
+  optional .bgs.protocol.EntityId game_account_id = 2;
+}

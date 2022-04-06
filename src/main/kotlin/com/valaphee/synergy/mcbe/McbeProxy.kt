@@ -39,7 +39,6 @@ import com.valaphee.netcode.mcbe.world.block.BlockState
 import com.valaphee.synergy.TransparentProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
-import com.valaphee.synergy.util.ReadWriteLoggingHandler
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
@@ -104,10 +103,7 @@ class McbeProxy(
                         channel.pipeline().addLast(Compressor.NAME, Compressor(7))
                         channel.pipeline().addLast(Decompressor.NAME, Decompressor())
                         channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
-                        channel.pipeline().addLast(
-                            ReadWriteLoggingHandler(),
-                            McbeProxyFrontendHandler(this@McbeProxy)
-                        )
+                        channel.pipeline().addLast(McbeProxyFrontendHandler(this@McbeProxy))
                     }
                 })
                 .localAddress(host, port)
