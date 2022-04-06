@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.http
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
@@ -33,8 +33,8 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 /**
  * @author Kevin Ludwig
  */
-class BnetProxyFrontendHandler(
-    private val proxy: BnetProxy
+class HttpProxyFrontendHandler(
+    private val proxy: HttpProxy
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
@@ -47,10 +47,8 @@ class BnetProxyFrontendHandler(
                     channel.pipeline().addLast(
                         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
-                        HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        BnetCodec(BnetProxy.services),
-                        BnetLoggingHandler(BnetProxy.services, true),
-                        BnetProxyBackendHandler(proxy, context.channel())
+                        HttpObjectAggregator(1 * 1024 * 1024),
+                        HttpProxyBackendHandler(context.channel())
                     )
                 }
             })
@@ -58,7 +56,8 @@ class BnetProxyFrontendHandler(
             .remoteAddress(proxy.host, proxy.port)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
-                    if (!future.isSuccess) context.channel().close()
+                    if (future.isSuccess) context.channel().read()
+                    else context.channel().close()
                 }
             }).channel()
     }
@@ -70,13 +69,14 @@ class BnetProxyFrontendHandler(
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
         if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
-                if (!future.isSuccess) future.channel().close()
+                if (future.isSuccess) context.channel().read()
+                else future.channel().close()
             }
         })
     }
 
     override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
-        /*if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
+        if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 }

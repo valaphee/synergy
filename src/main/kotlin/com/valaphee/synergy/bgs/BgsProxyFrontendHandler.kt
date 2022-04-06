@@ -14,59 +14,51 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.mcbe
+package com.valaphee.synergy.bgs
 
-import com.valaphee.netcode.mcbe.network.Compressor
-import com.valaphee.netcode.mcbe.network.Decompressor
-import com.valaphee.netcode.mcbe.network.PacketBuffer
-import com.valaphee.netcode.mcbe.network.PacketCodec
-import com.valaphee.synergy.underlyingNetworking
-import com.valaphee.synergy.util.ReadWriteLoggingHandler
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
-import io.netty.channel.ChannelFactory
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.channel.ChannelInitializer
-import network.ycc.raknet.RakNet
-import network.ycc.raknet.client.channel.RakNetClientChannel
-import network.ycc.raknet.pipeline.UserDataCodec
+import io.netty.channel.socket.SocketChannel
+import io.netty.handler.codec.http.HttpClientCodec
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 
 /**
  * @author Kevin Ludwig
  */
-class McbeProxyFrontendHandler(
-    private val proxy: McbeProxy
+class BgsProxyFrontendHandler(
+    private val proxy: BgsProxy
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
     override fun channelActive(context: ChannelHandlerContext) {
-        context.channel().config().isAutoRead = false
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
-            .channelFactory(ChannelFactory { RakNetClientChannel(underlyingNetworking.datagramChannel) })
-            .handler(object : ChannelInitializer<Channel>() {
-                override fun initChannel(channel: Channel) {
-                    channel.pipeline().addLast(UserDataCodec.NAME, McbeProxy.userDataCodec)
-                    channel.pipeline().addLast(Compressor.NAME, Compressor(7))
-                    channel.pipeline().addLast(Decompressor.NAME, Decompressor())
-                    channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper) }, true))
+            .channel(context.channel()::class.java)
+            .handler(object : ChannelInitializer<SocketChannel>() {
+                override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
-                        ReadWriteLoggingHandler(),
-                        McbeProxyBackendHandler(proxy, context.channel())
+                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
+                        HttpClientCodec(),
+                        HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
+                        BgsCodec(BgsProxy.services),
+                        BgsLoggingHandler(BgsProxy.services, true),
+                        BgsProxyBackendHandler(proxy, context.channel())
                     )
                 }
             })
-            .option(RakNet.MTU, 1_464)
-            .option(RakNet.PROTOCOL_VERSION, 10)
             .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
-                    if (future.isSuccess) context.channel().config().isAutoRead = true
+                    if (future.isSuccess) context.channel().read()
                     else context.channel().close()
                 }
             }).channel()
@@ -77,15 +69,16 @@ class McbeProxyFrontendHandler(
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        if (outboundChannel!!.isActive) outboundChannel!!.write(message).addListener(object : ChannelFutureListener {
+        if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
-                if (!future.isSuccess) future.channel().close()
+                if (future.isSuccess) context.channel().read()
+                else future.channel().close()
             }
         })
     }
 
     override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
-        /*if (ctx.channel().isActive) ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
+        if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 }

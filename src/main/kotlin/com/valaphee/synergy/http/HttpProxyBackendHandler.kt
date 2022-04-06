@@ -14,47 +14,31 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.tcp
+package com.valaphee.synergy.http
 
-import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.channel.ChannelOption
 
 /**
  * @author Kevin Ludwig
  */
-class TcpProxyFrontendHandler(
-    private val proxy: TcpProxy
+class HttpProxyBackendHandler(
+    private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
-    private var outboundChannel: Channel? = null
-
     override fun channelActive(context: ChannelHandlerContext) {
-        outboundChannel = Bootstrap()
-            .group(context.channel().eventLoop())
-            .channel(context.channel()::class.java)
-            .handler(TcpProxyBackendHandler(context.channel()))
-            .option(ChannelOption.AUTO_READ, false)
-            .localAddress(proxy.`interface`, 0)
-            .remoteAddress(proxy.host, proxy.port)
-            .connect().addListener(object : ChannelFutureListener {
-                override fun operationComplete(future: ChannelFuture) {
-                    if (future.isSuccess) context.channel().read()
-                    else context.channel().close()
-                }
-            }).channel()
+        context.read()
     }
 
-    override fun channelInactive(context: ChannelHandlerContext) {
-        outboundChannel?.let { if (it.isActive) it.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE) }
+    override fun channelInactive(ctx: ChannelHandlerContext) {
+        if (inboundChannel.isActive) inboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(message).addListener(object : ChannelFutureListener {
+        inboundChannel.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
                 if (future.isSuccess) context.channel().read()
                 else future.channel().close()

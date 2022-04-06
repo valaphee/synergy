@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
 import bgs.protocol.ServiceOptionsProto
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -40,6 +40,8 @@ import io.netty.handler.ssl.SslContextBuilder
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
 import org.bouncycastle.asn1.x509.Extension
+import org.bouncycastle.asn1.x509.GeneralName
+import org.bouncycastle.asn1.x509.GeneralNames
 import org.bouncycastle.cert.X509v3CertificateBuilder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
@@ -57,7 +59,7 @@ import kotlin.random.asKotlinRandom
 /**
  * @author Kevin Ludwig
  */
-class BnetProxy(
+class BgsProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int = 1119,
@@ -78,6 +80,7 @@ class BnetProxy(
                     addExtension(Extension.basicConstraints, true, BasicConstraints(false))
                     addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
                     addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
+                    addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, host)))
                 }.build(rootContentSigner))
                 keyStore.setKeyEntry(host, serverKeyPair.private, null, arrayOf(serverCertificate))
                 keyStoreFile.outputStream().use { keyStore.store(it, "".toCharArray()) }
@@ -96,8 +99,8 @@ class BnetProxy(
                             HttpServerCodec(),
                             HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                             WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
-                            BnetCodec(services),
-                            BnetProxyFrontendHandler(this@BnetProxy)
+                            BgsCodec(services),
+                            BgsProxyFrontendHandler(this@BgsProxy)
                         )
                     }
                 })

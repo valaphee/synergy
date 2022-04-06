@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.synergy.keyStore

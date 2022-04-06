@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
 import bgs.protocol.MethodOptionsProto
 import bgs.protocol.NO_RESPONSE
@@ -31,14 +31,14 @@ import org.slf4j.LoggerFactory
 /**
  * @author Kevin Ludwig
  */
-class BnetLoggingHandler(
+class BgsLoggingHandler(
     private val services: Map<Int, Service>,
     private val client: Boolean
 ) : ChannelDuplexHandler() {
     internal val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
 
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
-        if (message is BnetPacket) when (message.header.serviceId) {
+        if (message is BgsPacket) when (message.header.serviceId) {
             0 -> {
                 services[message.header.serviceHash]?.let { service ->
                     service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == message.header.methodId }?.let { methodDescriptor ->
@@ -54,7 +54,7 @@ class BnetLoggingHandler(
     }
 
     override fun write(context: ChannelHandlerContext, message: Any?, promise: ChannelPromise?) {
-        if (message is BnetPacket) when (message.header.serviceId) {
+        if (message is BgsPacket) when (message.header.serviceId) {
             0 -> {
                 services[message.header.serviceHash]?.let { service ->
                     service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == message.header.methodId }?.let { methodDescriptor ->
@@ -70,7 +70,7 @@ class BnetLoggingHandler(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(BnetLoggingHandler::class.java)
+        private val log = LoggerFactory.getLogger(BgsLoggingHandler::class.java)
         private val serviceLogs = mutableMapOf<String, Logger>()
     }
 }

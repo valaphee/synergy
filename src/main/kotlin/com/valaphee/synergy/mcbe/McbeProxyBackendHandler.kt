@@ -140,7 +140,7 @@ class McbeProxyBackendHandler(
         })
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+    override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
         /*if (ctx.channel().isActive) ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
     }

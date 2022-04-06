@@ -1,4 +1,4 @@
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
 /**
  * For each i in [0, length), this function computes

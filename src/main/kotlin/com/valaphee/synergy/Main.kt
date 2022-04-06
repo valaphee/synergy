@@ -17,8 +17,8 @@
 package com.valaphee.synergy
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.valaphee.synergy.bnet.BnetProxy
-import com.valaphee.synergy.bnet.PatchSecuritySubcommand
+import com.valaphee.synergy.bgs.BgsProxy
+import com.valaphee.synergy.bgs.PatchSecuritySubcommand
 import com.valaphee.synergy.http.HttpProxy
 import com.valaphee.synergy.mcbe.McbeProxy
 import com.valaphee.synergy.tcp.TcpProxy
@@ -105,10 +105,10 @@ fun main(arguments: Array<String>) {
     argumentParser.parse(arguments)
 
     val proxyTypes = mapOf<String, KClass<out Proxy>>(
-        "bnet" to BnetProxy::class,
+        "tcp" to TcpProxy::class,
         "http" to HttpProxy::class,
         "mcbe" to McbeProxy::class,
-        "tcp" to TcpProxy::class
+        "bgs" to BgsProxy::class,
     )
     val proxies = mutableMapOf<String, Proxy>()
     embeddedServer(Netty, port, host) {

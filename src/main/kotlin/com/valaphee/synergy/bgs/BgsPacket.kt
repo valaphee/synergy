@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
-fun String.hashFnv1a() = toByteArray().hashFnv1a()
+import bgs.protocol.Header
 
-fun ByteArray.hashFnv1a(): Int {
-    var hash = fnv1aInit
-    forEach {
-        hash = hash xor (it.toInt() and 0xFF)
-        hash *= fnv1aPrime
-    }
-    return hash
+/**
+ * @author Kevin Ludwig
+ */
+class BgsPacket(
+    val header: Header,
+    val payload: Any?
+) {
+    override fun toString() = "BnetPacket(header=$header, payload=$payload)"
 }
-
-private const val fnv1aInit = 0x811C9DC5.toInt()
-private const val fnv1aPrime = 16777619

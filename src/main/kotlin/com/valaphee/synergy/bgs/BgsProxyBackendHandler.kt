@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -33,8 +33,8 @@ import java.net.URI
 /**
  * @author Kevin Ludwig
  */
-class BnetProxyBackendHandler(
-    private val proxy: BnetProxy,
+class BgsProxyBackendHandler(
+    private val proxy: BgsProxy,
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
     private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.host}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
@@ -53,26 +53,24 @@ class BnetProxyBackendHandler(
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        if (!handshaker.isHandshakeComplete) {
-            try {
-                handshaker.finishHandshake(context.channel(), message as FullHttpResponse)
-                handshakeFuture.setSuccess()
-            } catch (ex: WebSocketHandshakeException) {
-                handshakeFuture.setFailure(ex)
-            }
-            return
-        }
-
-        inboundChannel.writeAndFlush(message).addListener(object : ChannelFutureListener {
+        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
-                if (!future.isSuccess) future.channel().close()
+                if (future.isSuccess) context.channel().read()
+                else context.channel().close()
             }
-        })
+        }) else try {
+            handshaker.finishHandshake(context.channel(), message as FullHttpResponse)
+            handshakeFuture.setSuccess()
+            context.channel().read()
+        } catch (ex: WebSocketHandshakeException) {
+            handshakeFuture.setFailure(ex)
+            context.channel().close()
+        }
     }
 
     override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
         if (!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
-        /*if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
+        if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 }

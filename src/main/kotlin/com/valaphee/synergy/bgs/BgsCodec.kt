@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bnet
+package com.valaphee.synergy.bgs
 
 import bgs.protocol.Header
 import bgs.protocol.MethodOptionsProto
@@ -30,12 +30,12 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 /**
  * @author Kevin Ludwig
  */
-class BnetCodec(
+class BgsCodec(
     private val services: Map<Int, Service>
-) : MessageToMessageCodec<BinaryWebSocketFrame, BnetPacket>() {
+) : MessageToMessageCodec<BinaryWebSocketFrame, BgsPacket>() {
     private val responses = mutableMapOf<Int, Message>()
 
-    override fun encode(context: ChannelHandlerContext, message: BnetPacket, out: MutableList<Any>) {
+    override fun encode(context: ChannelHandlerContext, message: BgsPacket, out: MutableList<Any>) {
         val header = message.header
         val payload = message.payload
         if (payload is ByteArray) {
@@ -78,7 +78,7 @@ class BnetCodec(
         if (!buffer.isReadable(payloadSize)) return
         val payload = ByteArray(payloadSize).apply { buffer.readBytes(this) }
 
-        out.add(BnetPacket(header, when (header.serviceId) {
+        out.add(BgsPacket(header, when (header.serviceId) {
             0 -> services[header.serviceHash]?.let { service -> service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor -> service.getRequestPrototype(methodDescriptor).parserForType.parseFrom(payload) } }
             254 -> responses.remove(header.token)?.parserForType?.parseFrom(payload)
             else -> null
