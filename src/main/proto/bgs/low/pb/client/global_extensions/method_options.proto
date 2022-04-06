@@ -9,7 +9,7 @@ import "bgs/low/pb/client/global_extensions/routing.proto";
 
 option java_multiple_files = true;
 
-option java_package = "bnet.protocol";
+option java_package = "bgs.protocol";
 option java_outer_classname = "MethodOptionsProto";
 
 extend .google.protobuf.MethodOptions {

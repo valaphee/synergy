@@ -1,0 +1,23 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "GameRegionChange";
+
+message GameRegionChange {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  optional string product = 1;
+  optional string product_variant = 2;
+  optional string product_group = 3;
+  optional string selected_region = 4;
+  optional string previous_region = 5;
+  optional string default_region = 6;
+  optional string location = 7;
+}

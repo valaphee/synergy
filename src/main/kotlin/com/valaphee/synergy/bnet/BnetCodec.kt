@@ -37,22 +37,23 @@ class BnetCodec(
 
     override fun encode(context: ChannelHandlerContext, message: BnetPacket, out: MutableList<Any>) {
         val header = message.header
-        val headerSize = header.serializedSize
         val payload = message.payload
         if (payload is ByteArray) {
-            val payloadSize = payload.size
-
-            val buffer = context.alloc().buffer(2 + headerSize + payloadSize)
+            val headerSize = header.serializedSize
+            val buffer = context.alloc().buffer(2 + headerSize + payload.size)
             buffer.writeShort(headerSize)
             buffer.writeBytes(header.toByteArray())
             buffer.writeBytes(payload)
             out.add(BinaryWebSocketFrame(buffer))
         } else if (payload is Message) {
             val payloadSize = payload.serializedSize
-
+            val modifiedHeader = if (header.hasSize() && payloadSize != header.size) {
+                header.toBuilder().setSize(payloadSize).build()
+            } else header
+            val headerSize = modifiedHeader.serializedSize
             val buffer = context.alloc().buffer(2 + headerSize + payloadSize)
             buffer.writeShort(headerSize)
-            buffer.writeBytes(header.toByteArray())
+            buffer.writeBytes(modifiedHeader.toByteArray())
             buffer.writeBytes(payload.toByteArray())
             out.add(BinaryWebSocketFrame(buffer))
 

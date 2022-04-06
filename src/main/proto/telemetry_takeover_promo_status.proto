@@ -1,0 +1,38 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "TakeoverPromoStatus";
+
+message TakeoverPromoStatus {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  enum Status {
+    Available = 0;
+    Seen = 1;
+    Suppressed = 2;
+    Dismissed = 3;
+    Expired = 4;
+  }
+  
+  enum SuppressionReason {
+    UnknownReason = 0;
+    FeatureDisabled = 1;
+    GlobalPromoExists = 2;
+    ExceededPromoLimit = 3;
+    LicenseMismatch = 4;
+  }
+  
+  optional string game = 1;
+  optional int32 id = 2;
+  optional string locale = 3;
+  optional .Blizzard.Telemetry.App.TakeoverPromoStatus.Status status = 4;
+  optional .Blizzard.Telemetry.App.TakeoverPromoStatus.SuppressionReason suppression_reason = 5;
+  optional int32 global_id = 6;
+}

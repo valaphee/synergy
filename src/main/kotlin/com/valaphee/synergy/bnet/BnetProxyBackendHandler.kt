@@ -34,7 +34,7 @@ import java.net.URI
  * @author Kevin Ludwig
  */
 class BnetProxyBackendHandler(
-    proxy: BnetProxy,
+    private val proxy: BnetProxy,
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
     private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.host}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())

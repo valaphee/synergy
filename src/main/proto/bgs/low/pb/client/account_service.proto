@@ -14,7 +14,6 @@ option java_generic_services = true;
 option cc_generic_services = false;
 
 message ResolveAccountRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.account.v1.AccountReference ref = 1;
   optional bool fetch_id = 12;
 }
@@ -38,7 +37,6 @@ message SubscriptionUpdateResponse {
 }
 
 message GetAccountStateRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.EntityId entity_id = 1;
   optional uint32 program = 2;
   optional uint32 region = 3;
@@ -52,7 +50,6 @@ message GetAccountStateResponse {
 }
 
 message GetSignedAccountStateRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.account.v1.AccountId account = 1;
 }
 
@@ -62,7 +59,6 @@ message GetSignedAccountStateResponse {
 
 message GetGameAccountStateRequest {
   optional .bgs.protocol.EntityId account_id = 1 [deprecated = true];
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.EntityId game_account_id = 2;
   optional .bgs.protocol.account.v1.GameAccountFieldOptions options = 10;
   optional .bgs.protocol.account.v1.GameAccountFieldTags tags = 11;
@@ -74,7 +70,6 @@ message GetGameAccountStateResponse {
 }
 
 message GetLicensesRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.EntityId target_id = 1;
   optional bool fetch_account_licenses = 2;
   optional bool fetch_game_account_licenses = 3;
@@ -106,7 +101,6 @@ message GetGameTimeRemainingInfoResponse {
 }
 
 message GetCAISInfoRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.EntityId entity_id = 1;
 }
 
@@ -115,7 +109,6 @@ message GetCAISInfoResponse {
 }
 
 message GetAuthorizedDataRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional .bgs.protocol.EntityId entity_id = 1;
   repeated string tag = 2;
   optional bool privileged_network = 3;
@@ -202,6 +195,7 @@ service AccountService {
 
 service AccountListener {
   option (service_options).descriptor_name = "bnet.protocol.account.AccountNotify";
+  option (service_options).type = SERVICE_TYPE_RPC_DIRECT;
   option (sdk_service_options).inbound = true;
   
   rpc OnAccountStateUpdated (.bgs.protocol.account.v1.AccountStateNotification) returns (.bgs.protocol.NO_RESPONSE) {

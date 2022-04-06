@@ -66,23 +66,20 @@ class McbeProxyBackendHandler(
     private val keyPair = generateKeyPair()
     private lateinit var clientPublicKey: PublicKey
 
-    override fun channelActive(ctx: ChannelHandlerContext) {
-    }
-
-    override fun channelInactive(ctx: ChannelHandlerContext) {
+    override fun channelInactive(context: ChannelHandlerContext) {
         if (inboundChannel.isActive) inboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 
-    override fun write(ctx: ChannelHandlerContext, msg: Any, promise: ChannelPromise) {
-        super.write(ctx, when (msg) {
+    override fun write(context: ChannelHandlerContext, message: Any, promise: ChannelPromise) {
+        super.write(context, when (message) {
             is LoginPacket -> {
-                version = msg.protocolVersion
+                version = message.protocolVersion
                 inboundChannel.pipeline()[PacketCodec::class.java].version = version
-                ctx.pipeline()[PacketCodec::class.java].version = version
+                context.pipeline()[PacketCodec::class.java].version = version
 
-                val (_, verificationKey, _) = parseAuthJws(msg.authJws)
+                val (_, verificationKey, _) = parseAuthJws(message.authJws)
                 clientPublicKey = verificationKey
-                val (_, user) = parseUserJws(msg.userJws, verificationKey)
+                val (_, user) = parseUserJws(message.userJws, verificationKey)
                 val authJwsChain = runBlocking {
                     httpClient.post("https://multiplayer.minecraft.net/authentication") {
                         headers {
@@ -96,7 +93,7 @@ class McbeProxyBackendHandler(
                 }
                 val authJwtContext = JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").apply { setSkipSignatureVerification() }.build().process(authJwsChain.first() as String)
                 LoginPacket(
-                    msg.protocolVersion, McbeProxy.jsonObjectMapper.writeValueAsString(
+                    message.protocolVersion, McbeProxy.jsonObjectMapper.writeValueAsString(
                         mapOf(
                             "chain" to listOf(JsonWebSignature().apply {
                                 setHeader("alg", "ES384")
@@ -114,28 +111,28 @@ class McbeProxyBackendHandler(
                     }.compactSerialization
                 )
             }
-            else -> msg
+            else -> message
         }, promise)
     }
 
-    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
-        if (msg is ServerToClientHandshakePacket) {
-            val (serverPublicKey, salt) = parseServerToClientHandshakeJws(msg.jws)
+    override fun channelRead(context: ChannelHandlerContext, message: Any) {
+        if (message is ServerToClientHandshakePacket) {
+            val (serverPublicKey, salt) = parseServerToClientHandshakeJws(message.jws)
             val encryptionInitializer = EncryptionInitializer(keyPair, clientPublicKey, true, salt)
             inboundChannel.write(encryptionInitializer.serverToClientHandshakePacket)
             inboundChannel.pipeline().addLast(encryptionInitializer)
-            ctx.pipeline().addLast(EncryptionInitializer(keyPair, serverPublicKey, true, salt))
-        } else inboundChannel.write(when (msg) {
+            context.pipeline().addLast(EncryptionInitializer(keyPair, serverPublicKey, true, salt))
+        } else inboundChannel.write(when (message) {
             is WorldPacket -> {
                 val registries = Registries(Registry(), Registry())
                 var runtimeId = 0
-                (McbeProxy.blocks.values + msg.blocks!!).sortedWith(if (version >= 486) compareBy { it.description.key.lowercase() } else compareBy { it.description.key.split(":", limit = 2)[1].lowercase() }).forEach { it.states.forEach { registries.blockStates[runtimeId++] = it } }
-                msg.items.forEach { registries.items[it.key] = it.value.key }
+                (McbeProxy.blocks.values + message.blocks!!).sortedWith(if (version >= 486) compareBy { it.description.key.lowercase() } else compareBy { it.description.key.split(":", limit = 2)[1].lowercase() }).forEach { it.states.forEach { registries.blockStates[runtimeId++] = it } }
+                message.items.forEach { registries.items[it.key] = it.value.key }
                 inboundChannel.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }
-                ctx.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }
-                msg
+                context.pipeline()[PacketCodec::class.java].wrapBuffer = { PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper, registries) }
+                message
             }
-            else -> msg
+            else -> message
         }).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
                 if (!future.isSuccess) future.channel().close()

@@ -1,0 +1,156 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "Settings";
+
+message SettingsGeneral {
+  enum Behavior {
+    MinToSysTray = 0;
+    Exit = 1;
+    KeepItOpen = 2;
+    Minimize = 3;
+  }
+  
+  optional string app_language = 1 [(TelemetryFieldOptions).elastic_analyzer = "keyword"];
+  optional bool launch_on_startup = 2;
+  optional bool launch_minimized_on_startup = 3;
+  optional bool multiple_instances = 4;
+  optional .Blizzard.Telemetry.App.SettingsGeneral.Behavior close_behavior = 5;
+  optional .Blizzard.Telemetry.App.SettingsGeneral.Behavior game_launch_behavior = 6;
+  optional bool remember_email_address = 7;
+  optional bool keep_me_logged_in = 8;
+  optional bool browser_hardware_accel = 9;
+}
+
+message SettingsNotifications {
+  enum Config {
+    Disabled = 0;
+    Enabled = 1;
+    FavOnly = 2;
+  }
+  
+  optional bool enable_toasts = 1;
+  optional string toast_position = 2 [(TelemetryFieldOptions).elastic_analyzer = "keyword"];
+  optional uint32 toast_monitor = 3;
+  optional bool enable_sound = 4;
+  optional uint32 sound_volume = 5;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_friend_online = 6;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_friend_online = 7;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_friend_offline = 8;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_friend_offline = 9;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_friend_starts_game = 10;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_friend_starts_game = 11;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_friend_request = 12;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_friend_request = 13;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_group_invite = 14;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_group_invite = 15;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_new_whisper = 16;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_new_whisper = 17;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_whisper_message = 18;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_whisper_message = 19;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_whisper_message_in_active = 20;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_outgoing_whisper_message = 21;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_unread_whisper_message = 22;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_unread_whisper_message = 23;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_channel_invite = 24;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_channel_invite = 25;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_channel_message = 26;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_channel_message_in_active = 27;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_outgoing_channel_message = 28;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_voice_chat_self_join_leave = 29;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_voice_chat_others_join_leave = 30;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_voice_chat_mute_toggle = 31;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_voice_chat_push_to_talk = 32;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_at_mention = 33;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_at_mention = 34;
+  optional bool hide_toast_in_games = 35;
+  optional bool dont_popup_chat_window_in_games = 36;
+  optional bool mute_sound_in_games = 37;
+  optional bool hide_toast_in_fullscreen_mode = 38;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config toast_one_on_one_voice_call = 39;
+  optional .Blizzard.Telemetry.App.SettingsNotifications.Config sound_one_on_one_voice_call = 40;
+}
+
+message SettingsFriendsChat {
+  enum HideOfflineFriends {
+    Disabled = 0;
+    MoreThanDays = 1;
+    All = 2;
+  }
+  
+  enum FriendsListViewMode {
+    Compact = 1;
+    Normal = 2;
+  }
+  
+  optional bool hide_friends_real_id = 1;
+  optional bool show_suggested_friends = 2;
+  optional .Blizzard.Telemetry.App.SettingsFriendsChat.HideOfflineFriends hide_offline_friends = 3;
+  optional bool flash_alert = 4;
+  optional bool filter_mature_language = 5;
+  optional bool typing_notification = 6;
+  optional bool preview_image = 7;
+  optional bool auto_popout = 8;
+  optional .Blizzard.Telemetry.App.SettingsFriendsChat.FriendsListViewMode view_mode = 9;
+  optional bool show_battletag_and_realid = 10;
+  optional bool sort_by_activity = 11;
+  optional bool group_favorites = 12;
+}
+
+message SettingsVoice {
+  enum TxMode {
+    OpenMic = 0;
+    PushToTalk = 1;
+  }
+  
+  optional string speaker_device_name = 1;
+  optional uint32 speaker_volume = 2;
+  optional string mic_device_name = 3;
+  optional uint32 mic_volume = 4;
+  optional .Blizzard.Telemetry.App.SettingsVoice.TxMode transmission_mode = 5;
+  optional string push_to_talk_key = 6;
+  optional string toggle_mute_key = 7;
+}
+
+message SettingsGameInstall {
+  enum AutoUpdate {
+    Never = 0;
+    Latest = 1;
+    LatestFuture = 2;
+    GameSpecific = 3;
+    NA = 4;
+  }
+  
+  message AutoUpdatePerUid {
+    optional string uid = 1;
+    optional .Blizzard.Telemetry.App.SettingsGameInstall.AutoUpdate auto_update = 2;
+  }
+  
+  optional bool create_desktop_icon = 1;
+  optional bool create_desktop_icon_for_all_users = 2;
+  optional bool scan_when_app_launches = 3;
+  optional bool pause_update_when_game_launches = 4;
+  optional bool notify_game_begin_updating = 5;
+  optional .Blizzard.Telemetry.App.SettingsGameInstall.AutoUpdate auto_game_update = 6;
+  repeated .Blizzard.Telemetry.App.SettingsGameInstall.AutoUpdatePerUid auto_game_update_per_uid = 7;
+  optional bool download_schedule_enabled = 8;
+  optional uint32 download_schedule_start_time = 9;
+  optional uint32 download_schedule_end_time = 10;
+}
+
+message Settings {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  optional .Blizzard.Telemetry.App.SettingsGeneral general = 1;
+  optional .Blizzard.Telemetry.App.SettingsNotifications notifications = 2;
+  optional .Blizzard.Telemetry.App.SettingsFriendsChat friends_chat = 3;
+  optional .Blizzard.Telemetry.App.SettingsVoice voice = 4;
+  optional .Blizzard.Telemetry.App.SettingsGameInstall game_install = 6;
+}

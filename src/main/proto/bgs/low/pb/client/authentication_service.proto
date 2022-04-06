@@ -33,7 +33,6 @@ message LogonRequest {
   optional string program = 1;
   optional string platform = 2;
   optional string locale = 3;
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional string email = 4;
   optional string version = 5;
   optional int32 application_version = 6;
@@ -42,7 +41,6 @@ message LogonRequest {
   optional bytes cached_web_credentials = 12;
   optional string user_agent = 14;
   optional string device_id = 15;
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional string phone_number = 16;
 }
 
@@ -50,11 +48,9 @@ message LogonResult {
   required uint32 error_code = 1;
   optional .bgs.protocol.EntityId account_id = 2;
   repeated .bgs.protocol.EntityId game_account_id = 3;
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional string email = 4;
   repeated uint32 available_region = 5;
   optional uint32 connected_region = 6;
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional string battle_tag = 7;
   optional string geoip_country = 8;
   optional bytes session_key = 9;
@@ -138,6 +134,7 @@ message VerifyWebCredentialsRequest {
 
 service AuthenticationListener {
   option (service_options).descriptor_name = "bnet.protocol.authentication.AuthenticationClient";
+  option (service_options).type = SERVICE_TYPE_RPC_DIRECT;
   option (sdk_service_options).inbound = true;
   
   rpc OnModuleLoad (.bgs.protocol.authentication.v1.ModuleLoadRequest) returns (.bgs.protocol.NO_RESPONSE) {

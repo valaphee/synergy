@@ -64,7 +64,6 @@ message ChannelState {
 }
 
 message MemberAccountInfo {
-  Unresolvable field .google.protobuf.FieldOptions 90000
   optional string battle_tag = 3;
 }
 

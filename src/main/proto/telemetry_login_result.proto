@@ -1,0 +1,22 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "LoginResult";
+
+message LoginResult {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  optional bool used_cached_credentials = 1;
+  optional uint32 result_code = 2;
+  optional uint32 server_port = 3;
+  optional string server_address = 4 [(TelemetryFieldOptions).elastic_analyzer = "keyword"];
+  optional string tassadar_error = 5 [(TelemetryFieldOptions).elastic_analyzer = "keyword"];
+  optional bool is_retry = 6;
+}

@@ -11,7 +11,7 @@ import public "bgs/low/pb/client/global_extensions/service_options.proto";
 
 option java_multiple_files = true;
 
-option java_package = "bnet.protocol";
+option java_package = "bgs.protocol";
 option java_outer_classname = "RpcProto";
 
 message NO_RESPONSE {
@@ -23,7 +23,6 @@ message Address {
 }
 
 message ProcessId {
-  Unresolvable field .google.protobuf.FieldOptions 90001
   required uint32 label = 1;
   required uint32 epoch = 2;
 }

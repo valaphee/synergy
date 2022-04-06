@@ -1,0 +1,1474 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+import "common_types.proto";
+import "social_service_types.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message SocialServiceEvent {
+  optional uint32 id = 1;
+  optional string type = 2;
+  optional string data = 3;
+}
+
+message SendServiceEventRequest {
+  optional string type = 1;
+  optional string data = 2;
+  optional bool propogate_all = 3;
+  optional bool focus_social = 4;
+}
+
+message AcknowledgeServiceEventRequest {
+  repeated uint32 ids = 1;
+}
+
+message GetServiceEventsResponse {
+  repeated .bna.rpc.SocialServiceEvent events = 1;
+}
+
+message SubscribeClubsResponse {
+  optional .bna.rpc.ClubMembershipState state = 1;
+}
+
+message GetClubMembershipStateResponse {
+  optional .bna.rpc.ClubMembershipState state = 1;
+}
+
+message CreateClubRequest {
+  optional .bna.rpc.ClubCreateOptions options = 1;
+}
+
+message CreateClubResponse {
+  optional string club_id = 1;
+  optional string member_id = 2;
+}
+
+message DestroyClubRequest {
+  optional string club_id = 1;
+}
+
+message JoinClubRequest {
+  optional string club_id = 1;
+}
+
+message LeaveClubRequest {
+  optional string club_id = 1;
+}
+
+message ReorderClubsRequest {
+  repeated string club_ids = 1;
+}
+
+message GetClubProfileRequest {
+  optional string club_id = 1;
+}
+
+message GetClubProfileResponse {
+  optional .bna.rpc.ClubDescription description = 1;
+}
+
+message UpdateClubProfileRequest {
+  optional string club_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional .bna.rpc.ClubAvatarId avatar = 4;
+}
+
+message SetClubBroadcastRequest {
+  optional string club_id = 1;
+  optional .bna.rpc.SetClubBroadcastOptions options = 2;
+}
+
+message SetClubPrivacyLevelRequest {
+  optional string club_id = 1;
+  optional uint32 privacy_level = 2;
+}
+
+message ReorderClubStreamsRequest {
+  optional string club_id = 1;
+  repeated string stream_ids = 2;
+}
+
+message UpdateClubSettingsRequest {
+  optional string club_id = 1;
+  repeated .bna.rpc.ClubStreamSettings streams = 2;
+  optional bool notifications_enabled = 3;
+  optional bool push_notifications_enabled = 4;
+}
+
+message GetClubTypeDescriptionRequest {
+  optional bool group = 1;
+  optional bool multichat = 2;
+}
+
+message GetClubTypeDescriptionResponse {
+  optional .bna.rpc.ClubTypeDescription group = 1;
+  optional .bna.rpc.ClubTypeDescription multichat = 2;
+}
+
+message GetClubMembersRequest {
+  optional string club_id = 1;
+}
+
+message GetClubMembersResponse {
+  repeated .bna.rpc.ClubMemberPair members = 1;
+}
+
+message GetClubMemberRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+}
+
+message GetClubMemberResponse {
+  optional .bna.rpc.ClubMember club_member = 1;
+  optional .bna.rpc.ChatMember chat_member = 2;
+}
+
+message KickClubMemberRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+}
+
+message SetClubMemberRoleRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+  optional uint32 role = 3;
+}
+
+message SetClubMemberStateRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+  optional .bna.rpc.ClubMemberStateOptions options = 3;
+}
+
+message SetClubMemberModeratorMuteRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+  optional bool moderator_mute = 3;
+}
+
+message SendClubInvitationRequest {
+  optional string club_id = 1;
+  optional .bna.rpc.ClubSendInvitationOptions options = 2;
+}
+
+message AcceptClubInvitationRequest {
+  optional string invitation_id = 1;
+}
+
+message DeclineClubInvitationRequest {
+  optional string invitation_id = 1;
+}
+
+message RevokeClubInvitationRequest {
+  optional string club_id = 1;
+  optional string invitation_id = 2;
+}
+
+message GetClubInvitationsRequest {
+  optional string club_id = 1;
+}
+
+message GetClubInvitationsResponse {
+  repeated .bna.rpc.ClubInvitation invitations = 1;
+}
+
+message CreateClubTicketRequest {
+  optional string club_id = 1;
+  optional .bna.rpc.CreateClubTicketOptions options = 2;
+}
+
+message CreateClubTicketResponse {
+  optional .bna.rpc.ClubTicket ticket = 1;
+}
+
+message DestroyClubTicketRequest {
+  optional string club_id = 1;
+  optional string ticket_id = 2;
+}
+
+message RedeemClubTicketRequest {
+  optional string ticket_id = 1;
+}
+
+message GetClubTicketsRequest {
+  optional string club_id = 1;
+}
+
+message GetClubTicketsResponse {
+  repeated .bna.rpc.ClubTicket tickets = 1;
+}
+
+message SendClubSuggestionRequest {
+  optional string club_id = 1;
+  optional .bna.rpc.ClubSendSuggestionOptions options = 2;
+}
+
+message AcceptClubSuggestionRequest {
+  optional string club_id = 1;
+  optional string suggestion_id = 2;
+}
+
+message DeclineClubSuggestionRequest {
+  optional string club_id = 1;
+  optional string suggestion_id = 2;
+}
+
+message GetClubSuggestionsRequest {
+  optional string club_id = 1;
+}
+
+message GetClubSuggestionsResponse {
+  repeated .bna.rpc.ClubSuggestion suggestions = 1;
+}
+
+message AddClubBanRequest {
+  optional string club_id = 1;
+  optional .bna.rpc.AddClubBanOptions options = 2;
+}
+
+message RemoveClubBanRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+}
+
+message GetClubBanRequest {
+  optional string club_id = 1;
+  optional string member_id = 2;
+}
+
+message GetClubBanResponse {
+  optional .bna.rpc.ClubBan ban = 1;
+}
+
+message GetClubBansRequest {
+  optional string club_id = 1;
+}
+
+message GetClubBansResponse {
+  repeated .bna.rpc.ClubBan bans = 1;
+}
+
+message SubscribeWhispersResponse {
+  repeated .bna.rpc.WhisperPresencePair streams = 1;
+}
+
+message GetWhisperStreamsResponse {
+  repeated .bna.rpc.ChatStream streams = 1;
+}
+
+message CreateWhisperStreamRequest {
+  optional string target_id = 1;
+}
+
+message CreateWhisperStreamResponse {
+  optional .bna.rpc.ChatStream stream = 1;
+  optional .bna.rpc.ChatMember member = 2;
+}
+
+message DismissWhisperStreamRequest {
+  optional string stream_id = 1;
+}
+
+message ExpandWhisperStreamRequest {
+  optional string stream_id = 1;
+}
+
+message ClearStreamHistoryRequest {
+  optional string stream_id = 1;
+}
+
+message StartWhisperChatRequest {
+  optional string target_id = 1;
+}
+
+message StartWhisperChatResponse {
+  optional string stream_id = 1;
+}
+
+message SubscribeMultiChatsResponse {
+  repeated .bna.rpc.ChatStream streams = 1;
+}
+
+message GetMultiChatStreamsResponse {
+  repeated .bna.rpc.ChatStream streams = 1;
+}
+
+message CreateMultiChatStreamRequest {
+  optional .bna.rpc.MultiChatCreateOptions options = 1;
+}
+
+message CreateMultiChatStreamResponse {
+  optional .bna.rpc.ChatStream stream = 1;
+}
+
+message DismissMultiChatStreamRequest {
+  optional string stream_id = 1;
+}
+
+message GetClubStreamsRequest {
+  optional string club_id = 1;
+}
+
+message GetClubStreamsResponse {
+  repeated .bna.rpc.ChatStream streams = 1;
+}
+
+message CreateClubStreamRequest {
+  optional string club_id = 1;
+  optional .bna.rpc.CreateClubStreamOptions options = 2;
+}
+
+message CreateClubStreamResponse {
+  optional string stream_id = 1;
+}
+
+message DestroyClubStreamRequest {
+  optional string stream_id = 1;
+}
+
+message UpdateClubStreamRequest {
+  optional string stream_id = 1;
+  optional string name = 2;
+  optional string subject = 3;
+  optional .bna.rpc.ClubStreamAccess access = 4;
+  optional uint32 voice_level = 5;
+}
+
+message SetActiveChatStreamRequest {
+  optional string stream_id = 1;
+}
+
+message GetChatStreamRequest {
+  optional string stream_id = 1;
+}
+
+message GetChatStreamResponse {
+  optional .bna.rpc.ChatStream stream = 1;
+}
+
+message SubscribeChatStreamRequest {
+  optional string stream_id = 1;
+}
+
+message UnsubscribeChatStreamRequest {
+  optional string stream_id = 1;
+}
+
+message GetChatStreamMessagesRequest {
+  optional string stream_id = 1;
+  optional string fetch_from = 2;
+  optional string fetch_until = 3;
+  optional uint32 max_messages = 4;
+  optional uint32 direction = 5;
+}
+
+message GetChatStreamMessagesResponse {
+  repeated .bna.rpc.ChatStreamMessage messages = 1;
+  optional string continuation = 2;
+}
+
+message SendChatStreamMessageRequest {
+  optional string stream_id = 1;
+  optional string content = 2;
+  optional .bna.rpc.MentionContent mentions = 3;
+}
+
+message SendChatStreamMessageResponse {
+  optional .bna.rpc.ChatStreamMessage message = 1;
+}
+
+message DeleteChatMessageRequest {
+  optional string stream_id = 1;
+  optional string message_id = 2;
+}
+
+message EditChatMessageRequest {
+  optional string stream_id = 1;
+  optional string message_id = 2;
+  optional string content = 3;
+  optional .bna.rpc.MentionContent mentions = 4;
+}
+
+message EditChatMessageResponse {
+  optional .bna.rpc.ChatStreamMessage message = 1;
+}
+
+message SetTypingIndicatorRequest {
+  optional string stream_id = 1;
+  optional bool typing = 2;
+}
+
+message ClearStreamNotificationsRequest {
+  optional bool whispers = 1;
+  optional bool clubs = 2;
+  optional string club_id = 3;
+  optional string stream_id = 4;
+}
+
+message ActivateStreamRequest {
+  optional string stream_id = 1;
+  optional string source = 2;
+}
+
+message GetFriendsResponse {
+  repeated .bna.rpc.ChatMember friends = 1;
+}
+
+message RemoveFriendRequest {
+  optional string member_id = 1;
+  optional string source = 2;
+  optional bool quietly = 3;
+}
+
+message UpdateFavoriteFriendsRequest {
+  repeated string member_ids = 1;
+  optional bool favorite = 2;
+}
+
+message OpenFriendNoteWindowRequest {
+  optional string member_id = 1;
+}
+
+message SetFriendNoteRequest {
+  optional string member_id = 1;
+  optional string friend_note = 2;
+}
+
+message SubscribeFriendsResponse {
+  repeated .bna.rpc.ChatMember friends = 1;
+  repeated .bna.rpc.ReceivedFriendInvitation received_invitations = 2;
+  repeated .bna.rpc.SentFriendInvitation sent_invitations = 3;
+  optional .bna.rpc.FriendsListSettings settings = 4;
+}
+
+message FriendsInitializedNotification {
+  repeated .bna.rpc.ChatMember friends = 1;
+  repeated .bna.rpc.ReceivedFriendInvitation received_invitations = 2;
+  repeated .bna.rpc.SentFriendInvitation sent_invitations = 3;
+  optional .bna.rpc.FriendsListSettings settings = 4;
+}
+
+message FriendAddedNotification {
+  optional .bna.rpc.ChatMember member = 1;
+}
+
+message FriendRemovedNotification {
+  optional string member_id = 1;
+}
+
+message GetFriendsListSettingsResponse {
+  optional .bna.rpc.FriendsListSettings settings = 1;
+}
+
+message FriendsListSettingsChangedNotification {
+  optional .bna.rpc.FriendsListSettings settings = 1;
+}
+
+message SetFriendsListSettingsRequest {
+  optional .bna.rpc.FriendsListSettings settings = 1;
+}
+
+message SentFriendInvitationAddedNotification {
+  optional .bna.rpc.SentFriendInvitation invitation = 1;
+}
+
+message SentFriendInvitationRemovedNotification {
+  optional string invitation_id = 1;
+}
+
+message GetSentFriendInvitationsResponse {
+  repeated .bna.rpc.SentFriendInvitation invitations = 1;
+}
+
+message GetReceivedFriendInvitationsResponse {
+  repeated .bna.rpc.ReceivedFriendInvitation invitations = 1;
+}
+
+message ReceivedFriendInvitationAddedNotification {
+  optional .bna.rpc.ReceivedFriendInvitation invitation = 1;
+}
+
+message ReceivedFriendInvitationRemovedNotification {
+  optional string invitation_id = 1;
+}
+
+message AcceptFriendInvitationRequest {
+  optional string invitation_id = 1;
+  optional bool as_real_id = 2;
+  optional string source = 3;
+}
+
+message DeclineFriendInvitationRequest {
+  optional string invitation_id = 1;
+  optional string source = 2;
+}
+
+message CollapseFriendsListRequest {
+  optional bool collapse = 1;
+}
+
+message DetachFriendsListRequest {
+  optional bool detach = 1;
+}
+
+message RevokeFriendInvitationRequest {
+  optional string invitation_id = 1;
+}
+
+message GetChatMemberRequest {
+  optional string member_id = 1;
+}
+
+message GetChatMemberResponse {
+  optional .bna.rpc.ChatMember member = 1;
+}
+
+message SetAppearOfflineStateRequest {
+  optional bool appear_offline = 1;
+}
+
+message SetAvailabilityRequest {
+  optional .bna.rpc.Availability availability = 1;
+}
+
+message SetCustomMessageRequest {
+  optional string custom_message = 1;
+}
+
+message SetPersonalAvatarRequest {
+  optional uint32 avatar = 1;
+}
+
+message GetGamePresenceAssetsResponse {
+  repeated .bna.rpc.GamePresenceAssets assets = 1;
+}
+
+message ShowProfileTooltipRequest {
+  optional bool show = 1;
+  optional string member_id = 2;
+  optional string club_id = 3;
+  optional .bna.rpc.Rectangle anchor_rect = 4;
+}
+
+message OpenProfileWindowRequest {
+  optional string member_id = 1;
+  optional string source = 2;
+}
+
+message OpenViewFriendsWindowRequest {
+  optional string member_id = 1;
+}
+
+message OpenReportUserWindowRequest {
+  optional string member_id = 1;
+}
+
+message SetChatMemberBlockStateRequest {
+  optional string member_id = 1;
+  optional bool blocked = 2;
+  optional bool quietly = 3;
+}
+
+message GetBlockListResponse {
+  repeated string blocked_member_ids = 1;
+}
+
+message OpenAvatarSelectWindowRequest {
+  optional string source = 1;
+}
+
+message SubscribeVoiceResponse {
+  repeated .bna.rpc.VoiceStream streams = 1;
+  optional .bna.rpc.VoiceState state = 2;
+}
+
+message GetVoiceStreamsRequest {
+  optional string stream_id = 1;
+}
+
+message GetVoiceStreamsResponse {
+  repeated .bna.rpc.VoiceStream streams = 1;
+}
+
+message GetVoiceMemberRequest {
+  optional string stream_id = 1;
+  optional string member_id = 2;
+}
+
+message GetVoiceMemberResponse {
+  optional .bna.rpc.VoiceChatMember member = 1;
+}
+
+message GetVoiceStateResponse {
+  optional .bna.rpc.VoiceState state = 1;
+}
+
+message JoinVoiceRequest {
+  optional string stream_id = 1;
+}
+
+message LeaveVoiceRequest {
+  optional string stream_id = 1;
+}
+
+message KickFromVoiceRequest {
+  optional string stream_id = 1;
+  optional string member_id = 2;
+}
+
+message ClearVoiceNotificationRequest {
+}
+
+message SetVoiceSettingsRequest {
+  optional .bna.rpc.SetVoiceSettingsOptions options = 1;
+}
+
+message SetVoiceChatMemberMuteRequest {
+  optional string stream_id = 1;
+  optional string member_id = 2;
+  optional bool muted = 3;
+}
+
+message AcknowledgeVoiceCallRequest {
+  optional string stream_id = 1;
+}
+
+message CancelVoiceCallRequest {
+  optional string stream_id = 2;
+}
+
+message SubscribeStreamMentionsRequest {
+  optional string stream_id = 1;
+}
+
+message UnsubscribeStreamMentionsRequest {
+  optional string stream_id = 1;
+}
+
+message SubscribeStreamMentionsResponse {
+  repeated .bna.rpc.ClubStreamMention mentions = 1;
+  optional uint64 mention_last_message_time = 2;
+  optional uint64 mention_last_read_time = 3;
+}
+
+message GetStreamMentionsRequest {
+  optional string stream_id = 1;
+}
+
+message GetStreamMentionsResponse {
+  repeated .bna.rpc.ClubStreamMention mentions = 1;
+}
+
+message DismissStreamMentionsRequest {
+  repeated string mention_ids = 1;
+  optional string stream_id = 2;
+  optional bool all = 3;
+}
+
+message SubscribeTranscriptsResponse {
+  repeated .bna.rpc.ChatStream streams = 1;
+}
+
+message GetTranscriptStreamsResponse {
+  repeated .bna.rpc.ChatStream streams = 1;
+}
+
+message OpenTranscriptRequest {
+  optional string stream_id = 1;
+}
+
+message OpenTranscriptResponse {
+  optional .bna.rpc.ChatStream stream = 1;
+}
+
+message CloseTranscriptRequest {
+  optional string stream_id = 1;
+}
+
+message SocialServiceStateNotification {
+  optional .bna.rpc.SocialServiceState state = 1;
+}
+
+message ActivateChatStreamNotification {
+  optional string stream_id = 1;
+  optional string message_id = 2;
+}
+
+message ClubAddedNotification {
+  optional .bna.rpc.ClubMembershipDescription membership = 1;
+}
+
+message ClubRemovedNotification {
+  optional string club_id = 1;
+  optional uint32 reason = 2;
+}
+
+message ClubPropertyNotification {
+  optional string club_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional .bna.rpc.ClubBroadcast broadcast = 4;
+  optional .bna.rpc.ClubAvatarId avatar = 5;
+  optional uint32 privacy_level = 6;
+  optional bool has_unread_message = 7;
+  optional uint64 join_time = 8;
+  repeated string stream_positions = 9;
+}
+
+message ClubSettingsNotification {
+  optional string club_id = 1;
+  repeated .bna.rpc.ClubStreamSettings streams = 2;
+  optional bool notifications_enabled = 3;
+  optional bool push_notifications_enabled = 4;
+}
+
+message ClubsReorderedNotification {
+  repeated string club_ids = 1;
+}
+
+message ClubInvitationAddedNotification {
+  optional string club_id = 1;
+  optional .bna.rpc.ClubInvitation invitation = 2;
+}
+
+message ClubInvitationRemovedNotification {
+  optional string club_id = 1;
+  optional string invitation_id = 2;
+}
+
+message ClubInvitationsUpdatedNotification {
+  optional string club_id = 1;
+}
+
+message ClubSuggestionAddedNotification {
+  optional string club_id = 1;
+  optional .bna.rpc.ClubSuggestion suggestion = 2;
+}
+
+message ClubSuggestionRemovedNotification {
+  optional string club_id = 1;
+  optional string suggestion_id = 2;
+}
+
+message ClubSuggestionsUpdatedNotification {
+  optional string club_id = 1;
+}
+
+message ClubMemberAddedNotification {
+  optional string club_id = 1;
+  optional .bna.rpc.ClubMember member = 2;
+  optional .bna.rpc.ChatMember chat_member = 3;
+}
+
+message ClubMemberRemovedNotification {
+  optional string club_id = 1;
+  optional string member_id = 2;
+  optional uint32 reason = 3;
+}
+
+message ClubMembersUpdatedNotification {
+  optional string club_id = 1;
+}
+
+message ClubMemberChangedNotification {
+  optional string club_id = 1;
+  optional .bna.rpc.ClubMember member = 2;
+}
+
+message StreamMentionAddedNotification {
+  optional .bna.rpc.ClubStreamMention mention = 1;
+}
+
+message StreamMentionRemovedNotification {
+  repeated .bna.rpc.RemovedStreamMention mentions = 1;
+}
+
+message StreamMentionReadTimeUpdatedNotification {
+  optional uint64 mention_read_time = 1;
+}
+
+message ClubReceivedInvitationAddedNotification {
+  optional .bna.rpc.ClubInvitation invitation = 1;
+}
+
+message ClubReceivedInvitationRemovedNotification {
+  optional string invitation_id = 1;
+  optional uint32 reason = 2;
+}
+
+message WhisperStreamAddedNotification {
+  optional .bna.rpc.ChatStream stream = 1;
+  optional .bna.rpc.ChatMember member = 2;
+}
+
+message WhisperStreamRemovedNotification {
+  optional string stream_id = 1;
+}
+
+message MultiChatStreamAddedNotification {
+  optional .bna.rpc.ChatStream stream = 1;
+}
+
+message MultiChatStreamRemovedNotification {
+  optional string stream_id = 1;
+  optional string club_id = 2;
+  optional uint32 reason = 3;
+}
+
+message ClubStreamAddedNotification {
+  optional string club_id = 1;
+  optional .bna.rpc.ChatStream stream = 2;
+}
+
+message ClubStreamRemovedNotification {
+  optional string club_id = 1;
+  optional string stream_id = 2;
+}
+
+message ClubStreamsUpdatedNotification {
+  optional string club_id = 1;
+}
+
+message ChatStreamChangedNotification {
+  optional .bna.rpc.ChatStream stream = 1;
+}
+
+message ChatStreamSubscriptionLostNotification {
+  optional string stream_id = 1;
+}
+
+message ChatStreamMessageAddedNotification {
+  optional string stream_id = 1;
+  optional .bna.rpc.ChatStreamMessage message = 2;
+}
+
+message ChatStreamHistoryClearedNotification {
+  optional string stream_id = 1;
+}
+
+message ChatStreamMessageUpdatedNotification {
+  optional string stream_id = 1;
+  optional .bna.rpc.ChatStreamMessage message = 2;
+}
+
+message ChatStreamTypingIndicatorNotification {
+  optional string stream_id = 1;
+  repeated string member_ids = 2;
+}
+
+message ChatMemberChangedNotification {
+  optional .bna.rpc.ChatMember member = 1;
+}
+
+message GamePresenceAssetsChangedNotification {
+  optional string program_id = 1;
+  optional .bna.rpc.GamePresenceAssets assets = 2;
+}
+
+message SubscribeSelfPresenceResponse {
+  optional .bna.rpc.ChatMember self = 1;
+}
+
+message SelfPresenceChangedNotification {
+  optional .bna.rpc.ChatMember self = 1;
+}
+
+message BlockListChangedNotification {
+  optional string member_id = 1;
+}
+
+message VoiceStateChangedNotification {
+  optional .bna.rpc.VoiceState state = 1;
+}
+
+message VoiceChatMemberAddedNotification {
+  optional string stream_id = 1;
+  optional .bna.rpc.VoiceChatMember member = 2;
+}
+
+message VoiceChatMemberRemovedNotification {
+  optional string stream_id = 1;
+  optional string member_id = 2;
+}
+
+message VoiceChatMemberStateChangedNotification {
+  optional string stream_id = 1;
+  optional .bna.rpc.VoiceChatMember member = 2;
+}
+
+message TranscriptStreamAddedNotification {
+  optional .bna.rpc.ChatStream stream = 1;
+}
+
+message TranscriptStreamRemovedNotification {
+  optional string stream_id = 1;
+}
+
+service SocialService {
+  rpc SendServiceEvent (.bna.rpc.SendServiceEventRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AcknowledgeServiceEvent (.bna.rpc.AcknowledgeServiceEventRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetServiceEvents (.bna.rpc.NoData) returns (.bna.rpc.GetServiceEventsResponse) {
+  }
+  
+  rpc RequestFocus (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubscribeClubs (.bna.rpc.NoData) returns (.bna.rpc.SubscribeClubsResponse) {
+  }
+  
+  rpc UnsubscribeClubs (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubMembershipState (.bna.rpc.NoData) returns (.bna.rpc.GetClubMembershipStateResponse) {
+  }
+  
+  rpc CreateClub (.bna.rpc.CreateClubRequest) returns (.bna.rpc.CreateClubResponse) {
+  }
+  
+  rpc DestroyClub (.bna.rpc.DestroyClubRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc JoinClub (.bna.rpc.JoinClubRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc LeaveClub (.bna.rpc.LeaveClubRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ReorderClubs (.bna.rpc.ReorderClubsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubTypeDescription (.bna.rpc.GetClubTypeDescriptionRequest) returns (.bna.rpc.GetClubTypeDescriptionResponse) {
+  }
+  
+  rpc GetClubProfile (.bna.rpc.GetClubProfileRequest) returns (.bna.rpc.GetClubProfileResponse) {
+  }
+  
+  rpc UpdateClubProfile (.bna.rpc.UpdateClubProfileRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetClubBroadcast (.bna.rpc.SetClubBroadcastRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetClubPrivacyLevel (.bna.rpc.SetClubPrivacyLevelRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ReorderClubStreams (.bna.rpc.ReorderClubStreamsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc UpdateClubSettings (.bna.rpc.UpdateClubSettingsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubMembers (.bna.rpc.GetClubMembersRequest) returns (.bna.rpc.GetClubMembersResponse) {
+  }
+  
+  rpc GetClubMember (.bna.rpc.GetClubMemberRequest) returns (.bna.rpc.GetClubMemberResponse) {
+  }
+  
+  rpc KickClubMember (.bna.rpc.KickClubMemberRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetClubMemberRole (.bna.rpc.SetClubMemberRoleRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetClubMemberState (.bna.rpc.SetClubMemberStateRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetClubMemberModeratorMute (.bna.rpc.SetClubMemberModeratorMuteRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CreateClubStream (.bna.rpc.CreateClubStreamRequest) returns (.bna.rpc.CreateClubStreamResponse) {
+  }
+  
+  rpc DestroyClubStream (.bna.rpc.DestroyClubStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubStreams (.bna.rpc.GetClubStreamsRequest) returns (.bna.rpc.GetClubStreamsResponse) {
+  }
+  
+  rpc UpdateClubStream (.bna.rpc.UpdateClubStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SendClubInvitation (.bna.rpc.SendClubInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AcceptClubInvitation (.bna.rpc.AcceptClubInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc DeclineClubInvitation (.bna.rpc.DeclineClubInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc RevokeClubInvitation (.bna.rpc.RevokeClubInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubInvitations (.bna.rpc.GetClubInvitationsRequest) returns (.bna.rpc.GetClubInvitationsResponse) {
+  }
+  
+  rpc CreateClubTicket (.bna.rpc.CreateClubTicketRequest) returns (.bna.rpc.CreateClubTicketResponse) {
+  }
+  
+  rpc DestroyClubTicket (.bna.rpc.DestroyClubTicketRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc RedeemClubTicket (.bna.rpc.RedeemClubTicketRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubTicket (.bna.rpc.GetClubTicketRequest) returns (.bna.rpc.GetClubTicketResponse) {
+  }
+  
+  rpc GetClubTickets (.bna.rpc.GetClubTicketsRequest) returns (.bna.rpc.GetClubTicketsResponse) {
+  }
+  
+  rpc SendClubSuggestion (.bna.rpc.SendClubSuggestionRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AcceptClubSuggestion (.bna.rpc.AcceptClubSuggestionRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc DeclineClubSuggestion (.bna.rpc.DeclineClubSuggestionRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubSuggestions (.bna.rpc.GetClubSuggestionsRequest) returns (.bna.rpc.GetClubSuggestionsResponse) {
+  }
+  
+  rpc AddClubBan (.bna.rpc.AddClubBanRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc RemoveClubBan (.bna.rpc.RemoveClubBanRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetClubBan (.bna.rpc.GetClubBanRequest) returns (.bna.rpc.GetClubBanResponse) {
+  }
+  
+  rpc GetClubBans (.bna.rpc.GetClubBansRequest) returns (.bna.rpc.GetClubBansResponse) {
+  }
+  
+  rpc SubscribeWhispers (.bna.rpc.NoData) returns (.bna.rpc.SubscribeWhispersResponse) {
+  }
+  
+  rpc UnsubscribeWhispers (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetWhisperStreams (.bna.rpc.NoData) returns (.bna.rpc.GetWhisperStreamsResponse) {
+  }
+  
+  rpc CreateWhisperStream (.bna.rpc.CreateWhisperStreamRequest) returns (.bna.rpc.CreateWhisperStreamResponse) {
+  }
+  
+  rpc DismissWhisperStream (.bna.rpc.DismissWhisperStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ExpandWhisperStream (.bna.rpc.ExpandWhisperStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ClearStreamHistory (.bna.rpc.ClearStreamHistoryRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc StartWhisperChat (.bna.rpc.StartWhisperChatRequest) returns (.bna.rpc.StartWhisperChatResponse) {
+  }
+  
+  rpc SubscribeMultiChats (.bna.rpc.NoData) returns (.bna.rpc.SubscribeMultiChatsResponse) {
+  }
+  
+  rpc UnsubscribeMultiChats (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CreateMultiChatStream (.bna.rpc.CreateMultiChatStreamRequest) returns (.bna.rpc.CreateMultiChatStreamResponse) {
+  }
+  
+  rpc DismissMultiChatStream (.bna.rpc.DismissMultiChatStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetMultiChatStreams (.bna.rpc.NoData) returns (.bna.rpc.GetMultiChatStreamsResponse) {
+  }
+  
+  rpc SubscribeChatStream (.bna.rpc.SubscribeChatStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc UnsubscribeChatStream (.bna.rpc.UnsubscribeChatStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetActiveChatStream (.bna.rpc.SetActiveChatStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetChatStream (.bna.rpc.GetChatStreamRequest) returns (.bna.rpc.GetChatStreamResponse) {
+  }
+  
+  rpc GetChatMessages (.bna.rpc.GetChatStreamMessagesRequest) returns (.bna.rpc.GetChatStreamMessagesResponse) {
+  }
+  
+  rpc SendChatMessage (.bna.rpc.SendChatStreamMessageRequest) returns (.bna.rpc.SendChatStreamMessageResponse) {
+  }
+  
+  rpc DeleteChatMessage (.bna.rpc.DeleteChatMessageRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc EditChatMessage (.bna.rpc.EditChatMessageRequest) returns (.bna.rpc.EditChatMessageResponse) {
+  }
+  
+  rpc SetTypingIndicator (.bna.rpc.SetTypingIndicatorRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ClearStreamNotifications (.bna.rpc.ClearStreamNotificationsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ActivateStream (.bna.rpc.ActivateStreamRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetFriends (.bna.rpc.NoData) returns (.bna.rpc.GetFriendsResponse) {
+  }
+  
+  rpc SendFriendInvitation (.bna.rpc.SendFriendInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubscribeFriends (.bna.rpc.NoData) returns (.bna.rpc.SubscribeFriendsResponse) {
+  }
+  
+  rpc UnsubscribeFriends (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc RemoveFriend (.bna.rpc.RemoveFriendRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc UpdateFavoriteFriends (.bna.rpc.UpdateFavoriteFriendsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenFriendNoteWindow (.bna.rpc.OpenFriendNoteWindowRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetFriendNote (.bna.rpc.SetFriendNoteRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetReceivedFriendInvitations (.bna.rpc.NoData) returns (.bna.rpc.GetReceivedFriendInvitationsResponse) {
+  }
+  
+  rpc GetSentFriendInvitations (.bna.rpc.NoData) returns (.bna.rpc.GetSentFriendInvitationsResponse) {
+  }
+  
+  rpc GetFriendsListSettings (.bna.rpc.NoData) returns (.bna.rpc.GetFriendsListSettingsResponse) {
+  }
+  
+  rpc SetFriendsListSettings (.bna.rpc.SetFriendsListSettingsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenSentFriendInvitationsDialog (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AcceptFriendInvitation (.bna.rpc.AcceptFriendInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc DeclineFriendInvitation (.bna.rpc.DeclineFriendInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenAddFriendWindow (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CollapseFriendsList (.bna.rpc.CollapseFriendsListRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc DetachFriendsList (.bna.rpc.DetachFriendsListRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc RevokeFriendInvitation (.bna.rpc.RevokeFriendInvitationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetChatMember (.bna.rpc.GetChatMemberRequest) returns (.bna.rpc.GetChatMemberResponse) {
+  }
+  
+  rpc SetAppearOfflineState (.bna.rpc.SetAppearOfflineStateRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetPersonalAvatar (.bna.rpc.SetPersonalAvatarRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetGamePresenceAssets (.bna.rpc.NoData) returns (.bna.rpc.GetGamePresenceAssetsResponse) {
+  }
+  
+  rpc ShowProfileTooltip (.bna.rpc.ShowProfileTooltipRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubscribeSelfPresence (.bna.rpc.NoData) returns (.bna.rpc.SubscribeSelfPresenceResponse) {
+  }
+  
+  rpc UnsubscribeSelfPresence (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetAvailability (.bna.rpc.SetAvailabilityRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetCustomMessage (.bna.rpc.SetCustomMessageRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenProfileWindow (.bna.rpc.OpenProfileWindowRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenViewFriendsWindow (.bna.rpc.OpenViewFriendsWindowRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenReportUserWindow (.bna.rpc.OpenReportUserWindowRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubmitReport (.bna.rpc.SubmitReportRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetChatMemberBlockState (.bna.rpc.SetChatMemberBlockStateRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetBlockList (.bna.rpc.NoData) returns (.bna.rpc.GetBlockListResponse) {
+  }
+  
+  rpc OpenAvatarSelectWindow (.bna.rpc.OpenAvatarSelectWindowRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubscribeVoice (.bna.rpc.NoData) returns (.bna.rpc.SubscribeVoiceResponse) {
+  }
+  
+  rpc UnsubscribeVoice (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetVoiceState (.bna.rpc.NoData) returns (.bna.rpc.GetVoiceStateResponse) {
+  }
+  
+  rpc GetVoiceStreams (.bna.rpc.GetVoiceStreamsRequest) returns (.bna.rpc.GetVoiceStreamsResponse) {
+  }
+  
+  rpc GetVoiceMember (.bna.rpc.GetVoiceMemberRequest) returns (.bna.rpc.GetVoiceMemberResponse) {
+  }
+  
+  rpc JoinVoice (.bna.rpc.JoinVoiceRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc LeaveVoice (.bna.rpc.LeaveVoiceRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc KickFromVoice (.bna.rpc.KickFromVoiceRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ClearVoiceNotification (.bna.rpc.ClearVoiceNotificationRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenVoiceSettings (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetVoiceSettings (.bna.rpc.SetVoiceSettingsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetVoiceChatMemberMute (.bna.rpc.SetVoiceChatMemberMuteRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AcknowledgeVoiceCall (.bna.rpc.AcknowledgeVoiceCallRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CancelVoiceCall (.bna.rpc.CancelVoiceCallRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubscribeStreamMentions (.bna.rpc.SubscribeStreamMentionsRequest) returns (.bna.rpc.SubscribeStreamMentionsResponse) {
+  }
+  
+  rpc UnsubscribeStreamMentions (.bna.rpc.UnsubscribeStreamMentionsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetStreamMentions (.bna.rpc.GetStreamMentionsRequest) returns (.bna.rpc.GetStreamMentionsResponse) {
+  }
+  
+  rpc DismissStreamMentions (.bna.rpc.DismissStreamMentionsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc UpdateStreamMentionsReadTime (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SubscribeTranscripts (.bna.rpc.NoData) returns (.bna.rpc.SubscribeTranscriptsResponse) {
+  }
+  
+  rpc UnsubscribeTranscripts (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetTranscriptStreams (.bna.rpc.NoData) returns (.bna.rpc.GetTranscriptStreamsResponse) {
+  }
+  
+  rpc OpenTranscript (.bna.rpc.OpenTranscriptRequest) returns (.bna.rpc.OpenTranscriptResponse) {
+  }
+  
+  rpc CloseTranscript (.bna.rpc.CloseTranscriptRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ServiceStateChanged (.bna.rpc.NoData) returns (.bna.rpc.SocialServiceState) {
+  }
+  
+  rpc ServiceEvent (.bna.rpc.NoData) returns (.bna.rpc.SocialServiceEvent) {
+  }
+  
+  rpc ActivateChatStream (.bna.rpc.NoData) returns (.bna.rpc.ActivateChatStreamNotification) {
+  }
+  
+  rpc ClubAdded (.bna.rpc.NoData) returns (.bna.rpc.ClubAddedNotification) {
+  }
+  
+  rpc ClubRemoved (.bna.rpc.NoData) returns (.bna.rpc.ClubRemovedNotification) {
+  }
+  
+  rpc ClubReceivedInvitationAdded (.bna.rpc.NoData) returns (.bna.rpc.ClubReceivedInvitationAddedNotification) {
+  }
+  
+  rpc ClubReceivedInvitationRemoved (.bna.rpc.NoData) returns (.bna.rpc.ClubReceivedInvitationRemovedNotification) {
+  }
+  
+  rpc ClubsReordered (.bna.rpc.NoData) returns (.bna.rpc.ClubsReorderedNotification) {
+  }
+  
+  rpc ClubPropertyChanged (.bna.rpc.NoData) returns (.bna.rpc.ClubPropertyNotification) {
+  }
+  
+  rpc ClubSettingsChanged (.bna.rpc.NoData) returns (.bna.rpc.ClubSettingsNotification) {
+  }
+  
+  rpc ClubSuggestionAdded (.bna.rpc.NoData) returns (.bna.rpc.ClubSuggestionAddedNotification) {
+  }
+  
+  rpc ClubSuggestionRemoved (.bna.rpc.NoData) returns (.bna.rpc.ClubSuggestionRemovedNotification) {
+  }
+  
+  rpc ClubSuggestionsUpdated (.bna.rpc.NoData) returns (.bna.rpc.ClubSuggestionsUpdatedNotification) {
+  }
+  
+  rpc ClubInvitationAdded (.bna.rpc.NoData) returns (.bna.rpc.ClubInvitationAddedNotification) {
+  }
+  
+  rpc ClubInvitationRemoved (.bna.rpc.NoData) returns (.bna.rpc.ClubInvitationRemovedNotification) {
+  }
+  
+  rpc ClubInvitationsUpdated (.bna.rpc.NoData) returns (.bna.rpc.ClubInvitationsUpdatedNotification) {
+  }
+  
+  rpc ClubMemberAdded (.bna.rpc.NoData) returns (.bna.rpc.ClubMemberAddedNotification) {
+  }
+  
+  rpc ClubMemberRemoved (.bna.rpc.NoData) returns (.bna.rpc.ClubMemberRemovedNotification) {
+  }
+  
+  rpc ClubMembersUpdated (.bna.rpc.NoData) returns (.bna.rpc.ClubMembersUpdatedNotification) {
+  }
+  
+  rpc ClubMemberChanged (.bna.rpc.NoData) returns (.bna.rpc.ClubMemberChangedNotification) {
+  }
+  
+  rpc ClubStreamAdded (.bna.rpc.NoData) returns (.bna.rpc.ClubStreamAddedNotification) {
+  }
+  
+  rpc ClubStreamRemoved (.bna.rpc.NoData) returns (.bna.rpc.ClubStreamRemovedNotification) {
+  }
+  
+  rpc ClubStreamsUpdated (.bna.rpc.NoData) returns (.bna.rpc.ClubStreamsUpdatedNotification) {
+  }
+  
+  rpc WhisperStreamAdded (.bna.rpc.NoData) returns (.bna.rpc.WhisperStreamAddedNotification) {
+  }
+  
+  rpc WhisperStreamRemoved (.bna.rpc.NoData) returns (.bna.rpc.WhisperStreamRemovedNotification) {
+  }
+  
+  rpc MultiChatStreamAdded (.bna.rpc.NoData) returns (.bna.rpc.MultiChatStreamAddedNotification) {
+  }
+  
+  rpc MultiChatStreamRemoved (.bna.rpc.NoData) returns (.bna.rpc.MultiChatStreamRemovedNotification) {
+  }
+  
+  rpc ChatStreamChanged (.bna.rpc.NoData) returns (.bna.rpc.ChatStreamChangedNotification) {
+  }
+  
+  rpc ChatStreamSubscriptionLost (.bna.rpc.NoData) returns (.bna.rpc.ChatStreamSubscriptionLostNotification) {
+  }
+  
+  rpc ChatStreamHistoryCleared (.bna.rpc.NoData) returns (.bna.rpc.ChatStreamHistoryClearedNotification) {
+  }
+  
+  rpc ChatStreamMessageAdded (.bna.rpc.NoData) returns (.bna.rpc.ChatStreamMessageAddedNotification) {
+  }
+  
+  rpc ChatStreamMessageUpdated (.bna.rpc.NoData) returns (.bna.rpc.ChatStreamMessageUpdatedNotification) {
+  }
+  
+  rpc TypingIndicatorNotification (.bna.rpc.NoData) returns (.bna.rpc.ChatStreamTypingIndicatorNotification) {
+  }
+  
+  rpc ChatMemberChanged (.bna.rpc.NoData) returns (.bna.rpc.ChatMemberChangedNotification) {
+  }
+  
+  rpc GamePresenceAssetsChanged (.bna.rpc.NoData) returns (.bna.rpc.GamePresenceAssetsChangedNotification) {
+  }
+  
+  rpc BlockListEntryAdded (.bna.rpc.NoData) returns (.bna.rpc.BlockListChangedNotification) {
+  }
+  
+  rpc BlockListEntryRemoved (.bna.rpc.NoData) returns (.bna.rpc.BlockListChangedNotification) {
+  }
+  
+  rpc SelfPresenceChanged (.bna.rpc.NoData) returns (.bna.rpc.SelfPresenceChangedNotification) {
+  }
+  
+  rpc VoiceStateChanged (.bna.rpc.NoData) returns (.bna.rpc.VoiceStateChangedNotification) {
+  }
+  
+  rpc VoiceChatMemberAdded (.bna.rpc.NoData) returns (.bna.rpc.VoiceChatMemberAddedNotification) {
+  }
+  
+  rpc VoiceChatMemberRemoved (.bna.rpc.NoData) returns (.bna.rpc.VoiceChatMemberRemovedNotification) {
+  }
+  
+  rpc VoiceChatMemberStateChanged (.bna.rpc.NoData) returns (.bna.rpc.VoiceChatMemberStateChangedNotification) {
+  }
+  
+  rpc StreamMentionAdded (.bna.rpc.NoData) returns (.bna.rpc.StreamMentionAddedNotification) {
+  }
+  
+  rpc StreamMentionRemoved (.bna.rpc.NoData) returns (.bna.rpc.StreamMentionRemovedNotification) {
+  }
+  
+  rpc StreamMentionsUpdated (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc StreamMentionReadTimeUpdated (.bna.rpc.NoData) returns (.bna.rpc.StreamMentionReadTimeUpdatedNotification) {
+  }
+  
+  rpc FriendAdded (.bna.rpc.NoData) returns (.bna.rpc.FriendAddedNotification) {
+  }
+  
+  rpc FriendRemoved (.bna.rpc.NoData) returns (.bna.rpc.FriendRemovedNotification) {
+  }
+  
+  rpc ReceivedFriendInvitationAdded (.bna.rpc.NoData) returns (.bna.rpc.ReceivedFriendInvitationAddedNotification) {
+  }
+  
+  rpc ReceivedFriendInvitationRemoved (.bna.rpc.NoData) returns (.bna.rpc.ReceivedFriendInvitationRemovedNotification) {
+  }
+  
+  rpc FriendsListSettingsChanged (.bna.rpc.NoData) returns (.bna.rpc.FriendsListSettingsChangedNotification) {
+  }
+  
+  rpc SentFriendInvitationAdded (.bna.rpc.NoData) returns (.bna.rpc.SentFriendInvitationAddedNotification) {
+  }
+  
+  rpc SentFriendInvitationRemoved (.bna.rpc.NoData) returns (.bna.rpc.SentFriendInvitationRemovedNotification) {
+  }
+  
+  rpc FriendsInitialized (.bna.rpc.NoData) returns (.bna.rpc.FriendsInitializedNotification) {
+  }
+  
+  rpc TranscriptStreamAdded (.bna.rpc.NoData) returns (.bna.rpc.TranscriptStreamAddedNotification) {
+  }
+  
+  rpc TranscriptStreamRemoved (.bna.rpc.NoData) returns (.bna.rpc.TranscriptStreamRemovedNotification) {
+  }
+}

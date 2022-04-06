@@ -1,0 +1,24 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message GetActiveServicesResponse {
+  repeated .bna.rpc.ServiceId_Enum serviceIds = 1;
+}
+
+service RouterService {
+  rpc SubscribeListener (.bna.rpc.NoData) returns (.bna.rpc.ResponseMessage) {
+  }
+  
+  rpc GetActiveServices (.bna.rpc.NoData) returns (.bna.rpc.GetActiveServicesResponse) {
+  }
+}

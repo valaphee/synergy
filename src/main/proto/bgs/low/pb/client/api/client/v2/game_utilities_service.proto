@@ -22,7 +22,6 @@ message ProcessTaskResponse {
 }
 
 message GetAllValuesForAttributeRequest {
-  Unresolvable field .google.protobuf.FieldOptions 90001
   optional string attribute_key = 1;
 }
 

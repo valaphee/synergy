@@ -1,0 +1,25 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "UrlMappedEvent";
+
+message UrlMappedEvent {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  enum EndpointType {
+    NydusService = 0;
+    Website = 1;
+  }
+  
+  optional string key = 1;
+  optional string endpoint = 2;
+  optional .Blizzard.Telemetry.App.UrlMappedEvent.EndpointType endpoint_type = 3;
+  optional bool is_endpoint_internal = 4;
+}

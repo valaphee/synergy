@@ -1,0 +1,25 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "AutoUpdateCriteriaStatus";
+
+message AutoUpdateCriteriaStatus {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  optional string uid = 1;
+  optional bool last_played_rule_passed = 2;
+  optional bool last_actioned_rule_passed = 3;
+  optional bool has_game_time_passed = 4;
+  optional bool criteria_passed = 5;
+  optional int32 days_since_last_played = 6;
+  optional int32 days_since_last_actioned = 7;
+  optional int32 days_since_last_installed = 8;
+  optional bool last_installed_rule_passed = 9;
+}

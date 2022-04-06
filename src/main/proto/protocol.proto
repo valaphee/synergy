@@ -1,0 +1,34 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.ipc;
+
+import "google/protobuf/descriptor.proto";
+
+option java_multiple_files = true;
+
+extend .google.protobuf.FileOptions {
+  optional .bna.ipc.Package package_id = 20000;
+}
+
+extend .google.protobuf.MessageOptions {
+  optional int32 message_id = 20000;
+  optional bool elevation_required = 20001 [default = true];
+  optional bool hidden_from_logs = 20002 [default = false];
+}
+
+extend .google.protobuf.FieldOptions {
+  optional .bna.ipc.LogOption log = 20000;
+}
+
+enum Package {
+  PACKAGE_APP = 1000;
+  PACKAGE_LOGGING = 1001;
+  PACKAGE_VOICE = 1100;
+}
+
+enum LogOption {
+  HIDDEN = 1;
+  HEX = 2;
+}

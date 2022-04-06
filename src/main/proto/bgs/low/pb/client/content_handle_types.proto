@@ -6,7 +6,7 @@ package bgs.protocol;
 
 option java_multiple_files = true;
 
-option java_package = "bnet.protocol";
+option java_package = "bgs.protocol";
 option java_outer_classname = "ContentHandleProto";
 
 message ContentHandle {

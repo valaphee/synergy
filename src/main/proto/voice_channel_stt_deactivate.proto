@@ -1,0 +1,15 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.VoiceClient;
+
+option java_multiple_files = true;
+
+message ChannelSttDeactivate {
+  optional string channel_uri = 1;
+  optional string member_uri = 2;
+  optional uint64 stt_duration_ms = 3;
+  optional uint32 stt_message_count = 4;
+  optional bool isUserInitiated = 5;
+}

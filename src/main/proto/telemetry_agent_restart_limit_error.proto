@@ -1,0 +1,27 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "AgentRestartLimitExceeded";
+
+message AgentRestartLimitExceeded {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  message AgentSessionData {
+    optional uint64 delta_time_ms = 1;
+    optional bool passed_authentication = 2;
+  }
+  
+  optional uint64 total_time_between_sessions_ms = 1;
+  optional uint32 total_passed_authentication = 2;
+  optional uint32 total_agent_sessions = 3;
+  optional uint64 delta_since_first_session_ms = 4;
+  repeated .Blizzard.Telemetry.App.AgentRestartLimitExceeded.AgentSessionData session = 5;
+  optional uint32 agent_build = 6;
+}

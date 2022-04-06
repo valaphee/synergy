@@ -1,0 +1,502 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+import "games_service_types.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message GamesServiceSubscribeResponse {
+  repeated .bna.rpc.ProductGroup product_groups = 1;
+  optional .bna.rpc.ProductGroupPreferences preferences = 2;
+  repeated .bna.rpc.Product products = 3;
+  repeated .bna.rpc.ProductCategory categories = 4;
+  repeated .bna.rpc.InstallInfo install_infos = 5;
+  optional .bna.rpc.InstallState install_state = 6;
+  optional .bna.rpc.GamesLoadingState loading_state = 7;
+  optional .bna.rpc.InstallInfoSortOrder install_info_sort_order = 8;
+}
+
+message GetGamesLoadingStateResponse {
+  optional .bna.rpc.GamesLoadingState loading_state = 1;
+}
+
+message GamesLoadingStateChangedNotification {
+  optional .bna.rpc.GamesLoadingState loading_state = 1;
+}
+
+message GamesResetNotification {
+  optional .bna.rpc.GamesLoadingState loading_state = 1;
+}
+
+message GamesInitializedNotification {
+  repeated .bna.rpc.ProductGroup product_groups = 1;
+  optional .bna.rpc.ProductGroupPreferences preferences = 2;
+  repeated .bna.rpc.Product products = 3;
+  repeated .bna.rpc.ProductCategory categories = 4;
+  repeated .bna.rpc.InstallInfo install_infos = 5;
+  optional .bna.rpc.InstallState install_state = 6;
+  optional .bna.rpc.GamesLoadingState loading_state = 7;
+  optional .bna.rpc.InstallInfoSortOrder install_info_sort_order = 8;
+}
+
+message GetProductGroupsResponse {
+  repeated .bna.rpc.ProductGroup product_groups = 1;
+  optional .bna.rpc.ProductGroupPreferences preferences = 2;
+}
+
+message GetProductGroupRequest {
+  optional string product_group_id = 1;
+}
+
+message GetProductGroupResponse {
+  optional .bna.rpc.ProductGroup product_group = 1;
+}
+
+message SetProductGroupSortPrioritiesRequest {
+  repeated string sort_order = 1;
+}
+
+message SetProductGroupVisibilitiesRequest {
+  repeated .bna.rpc.ProductGroupPreference preferences = 1;
+}
+
+message SetActiveProductGroupRequest {
+  optional string product_group_id = 1;
+}
+
+message SelectAccountAndRegionRequest {
+  optional string product_group_id = 1;
+  optional string account_id = 2;
+  optional string region_id = 3;
+}
+
+message AcknowledgeProductGroupsSeenRequest {
+  repeated string product_group_ids = 1;
+}
+
+message ProductGroupAddedNotification {
+  optional .bna.rpc.ProductGroup product_group = 1;
+}
+
+message ProductGroupRemovedNotification {
+  optional string product_group_id = 1;
+}
+
+message ProductGroupUpdatedNotification {
+  optional .bna.rpc.ProductGroup product_group = 1;
+}
+
+message ActiveProductGroupChangedNotification {
+  optional string product_group_id = 1;
+}
+
+message ProductGroupSortPrioritiesChangedNotification {
+  repeated string sort_order = 1;
+}
+
+message ProductGroupVisibilitiesChangedNotification {
+  repeated .bna.rpc.ProductGroupPreference preferences = 1;
+}
+
+message ProductGroupLastSelectionsChangedNotification {
+  optional .bna.rpc.ProductGroupPreference preference = 1;
+}
+
+message AccountAddedNotification {
+  optional string product_group_id = 1;
+  optional .bna.rpc.Account account = 2;
+}
+
+message AccountRemovedNotification {
+  optional string product_group_id = 1;
+  optional string account_id = 2;
+}
+
+message AccountUpdatedNotification {
+  optional string product_group_id = 1;
+  optional .bna.rpc.Account account = 2;
+}
+
+message SelectedAccountChangedNotification {
+  optional string product_group_id = 1;
+  optional string product_id = 2;
+  optional string account_id = 3;
+  optional string region_id = 4;
+}
+
+message GetProductsResponse {
+  repeated .bna.rpc.Product products = 1;
+  repeated .bna.rpc.ProductCategory categories = 2;
+}
+
+message GetProductRequest {
+  optional string product_id = 1;
+}
+
+message GetProductResponse {
+  optional .bna.rpc.Product product = 1;
+}
+
+message ProductAddedNotification {
+  optional .bna.rpc.Product product = 1;
+}
+
+message ProductRemovedNotification {
+  optional string product_id = 1;
+}
+
+message ProductUpdatedNotification {
+  optional .bna.rpc.Product product = 1;
+}
+
+message ProductCategoryModifiedNotification {
+  optional .bna.rpc.ProductCategory category = 1;
+}
+
+message GetInstallInfosResponse {
+  repeated .bna.rpc.InstallInfo install_infos = 1;
+}
+
+message SetActiveProductByInstallIdRequest {
+  optional string install_id = 1;
+}
+
+message InstallInfoChangedNotification {
+  repeated .bna.rpc.InstallInfo install_infos = 1;
+}
+
+message InstallStateChangedNotification {
+  optional .bna.rpc.InstallState install_state = 1;
+}
+
+message ProductStateChangedNotification {
+  optional string product_group_id = 1;
+  optional string product_id = 2;
+  optional string account_id = 3;
+  optional .bna.rpc.ProductState product_state = 4;
+  optional string tooltip = 5;
+}
+
+message StartInstallRequest {
+  optional string install_id = 1;
+  optional string telemetry_source = 2;
+}
+
+message StartUpdateRequest {
+  optional string install_id = 1;
+  optional bool update_now = 2;
+}
+
+message PlayGameRequest {
+  optional string product_group_id = 1;
+  optional string account_id = 2;
+  optional string region_id = 3;
+}
+
+message LaunchBinaryRequest {
+  optional string product_id = 1;
+  optional string name = 2;
+}
+
+message UninstallRequest {
+  optional string install_id = 1;
+  optional string telemetry_source = 2;
+}
+
+message ModifyInstallRequest {
+  optional string install_id = 1;
+  optional string telemetry_source = 2;
+}
+
+message PauseUpdateRequest {
+  optional string install_id = 1;
+}
+
+message ResumeUpdateRequest {
+  optional string install_id = 1;
+}
+
+message LocateInstallRequest {
+  optional string install_id = 1;
+  optional string telemetry_source = 2;
+}
+
+message ScanAndRepairRequest {
+  optional string install_id = 1;
+}
+
+message CancelScanAndRepairRequest {
+  optional string install_id = 1;
+}
+
+message CheckForUpdatesRequest {
+  optional string install_id = 1;
+}
+
+message CheckForUpdatesCompletedNotification {
+  optional string install_id = 1;
+  optional bool up_to_date = 2;
+}
+
+message InstallInfoSortOrderChangedNotification {
+  optional .bna.rpc.InstallInfoSortOrder install_info_sort_order = 1;
+}
+
+message AddGameTimeRequest {
+  optional string product_group_id = 1;
+  optional string account_id = 2;
+}
+
+message OpenGameSettingsRequest {
+  optional string install_id = 1;
+}
+
+message ShowInExplorerRequest {
+  optional string install_id = 1;
+}
+
+message CreateDesktopShortcutRequest {
+  optional string install_id = 1;
+}
+
+message GetBreakingNewsRequest {
+  optional string product_id = 1;
+  optional string region_id = 2;
+}
+
+message GetBreakingNewsResponse {
+  optional .bna.rpc.BreakingNewsDescription breaking_news = 1;
+}
+
+message ShowPatchNotesRequest {
+  optional string product_id = 1;
+}
+
+message ExecuteQuickLinkRequest {
+  optional string product_group_id = 1;
+  optional string account_id = 2;
+  optional string quick_link_id = 3;
+}
+
+message ExecuteQuickLinkActionRequest {
+  optional string product_group_id = 1;
+  optional string account_id = 2;
+  optional .bna.rpc.QuickLinkAction quick_link_action = 3;
+}
+
+message GetPendingDialogResponse {
+  optional .bna.rpc.Dialog dialog = 1;
+}
+
+message PostDialogResultRequest {
+  optional .bna.rpc.DialogResult result = 1;
+}
+
+message OpenDialogNotification {
+  optional .bna.rpc.Dialog dialog = 1;
+}
+
+message DismissDialogNotification {
+  optional string id = 1;
+}
+
+service GamesService {
+  rpc Subscribe (.bna.rpc.NoData) returns (.bna.rpc.GamesServiceSubscribeResponse) {
+  }
+  
+  rpc Unsubscribe (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetGamesLoadingState (.bna.rpc.NoData) returns (.bna.rpc.GetGamesLoadingStateResponse) {
+  }
+  
+  rpc GetProductGroups (.bna.rpc.NoData) returns (.bna.rpc.GetProductGroupsResponse) {
+  }
+  
+  rpc GetProductGroup (.bna.rpc.GetProductGroupRequest) returns (.bna.rpc.GetProductGroupResponse) {
+  }
+  
+  rpc SetProductGroupSortPriorities (.bna.rpc.SetProductGroupSortPrioritiesRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetProductGroupVisibilities (.bna.rpc.SetProductGroupVisibilitiesRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SetActiveProductGroup (.bna.rpc.SetActiveProductGroupRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc SelectAccountAndRegion (.bna.rpc.SelectAccountAndRegionRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AcknowledgeProductGroupsSeen (.bna.rpc.AcknowledgeProductGroupsSeenRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetProducts (.bna.rpc.NoData) returns (.bna.rpc.GetProductsResponse) {
+  }
+  
+  rpc GetProduct (.bna.rpc.GetProductRequest) returns (.bna.rpc.GetProductResponse) {
+  }
+  
+  rpc GetInstallInfos (.bna.rpc.NoData) returns (.bna.rpc.GetInstallInfosResponse) {
+  }
+  
+  rpc SetActiveProductByInstallId (.bna.rpc.SetActiveProductByInstallIdRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc StartInstall (.bna.rpc.StartInstallRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc StartUpdate (.bna.rpc.StartUpdateRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc PlayGame (.bna.rpc.PlayGameRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc LaunchBinary (.bna.rpc.LaunchBinaryRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc Uninstall (.bna.rpc.UninstallRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc PauseUpdate (.bna.rpc.PauseUpdateRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ResumeUpdate (.bna.rpc.ResumeUpdateRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc LocateInstall (.bna.rpc.LocateInstallRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ScanAndRepair (.bna.rpc.ScanAndRepairRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CancelScanAndRepair (.bna.rpc.CancelScanAndRepairRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CheckForUpdates (.bna.rpc.CheckForUpdatesRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc PauseAllUpdates (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc StartAllUpdates (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ModifyInstall (.bna.rpc.ModifyInstallRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc AddGameTime (.bna.rpc.AddGameTimeRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc OpenGameSettings (.bna.rpc.OpenGameSettingsRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ShowInExplorer (.bna.rpc.ShowInExplorerRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc CreateDesktopShortcut (.bna.rpc.CreateDesktopShortcutRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetBreakingNews (.bna.rpc.GetBreakingNewsRequest) returns (.bna.rpc.GetBreakingNewsResponse) {
+  }
+  
+  rpc ShowPatchNotes (.bna.rpc.ShowPatchNotesRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ExecuteQuickLink (.bna.rpc.ExecuteQuickLinkRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ExecuteQuickLinkAction (.bna.rpc.ExecuteQuickLinkActionRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc GetPendingDialog (.bna.rpc.NoData) returns (.bna.rpc.GetPendingDialogResponse) {
+  }
+  
+  rpc PostDialogResult (.bna.rpc.PostDialogResultRequest) returns (.bna.rpc.NoData) {
+  }
+  
+  rpc ServiceStateChanged (.bna.rpc.NoData) returns (.bna.rpc.GamesServiceState) {
+  }
+  
+  rpc GamesInitialized (.bna.rpc.NoData) returns (.bna.rpc.GamesInitializedNotification) {
+  }
+  
+  rpc GamesReset (.bna.rpc.NoData) returns (.bna.rpc.GamesResetNotification) {
+  }
+  
+  rpc GamesLoadingStateChanged (.bna.rpc.NoData) returns (.bna.rpc.GamesLoadingStateChangedNotification) {
+  }
+  
+  rpc ProductGroupAdded (.bna.rpc.NoData) returns (.bna.rpc.ProductGroupAddedNotification) {
+  }
+  
+  rpc ProductGroupRemoved (.bna.rpc.NoData) returns (.bna.rpc.ProductGroupRemovedNotification) {
+  }
+  
+  rpc ProductGroupUpdated (.bna.rpc.NoData) returns (.bna.rpc.ProductGroupUpdatedNotification) {
+  }
+  
+  rpc ActiveProductGroupChanged (.bna.rpc.NoData) returns (.bna.rpc.ActiveProductGroupChangedNotification) {
+  }
+  
+  rpc ProductGroupSortPrioritiesChanged (.bna.rpc.NoData) returns (.bna.rpc.ProductGroupSortPrioritiesChangedNotification) {
+  }
+  
+  rpc ProductGroupVisibilitiesChanged (.bna.rpc.NoData) returns (.bna.rpc.ProductGroupVisibilitiesChangedNotification) {
+  }
+  
+  rpc ProductGroupLastSelectionsChanged (.bna.rpc.NoData) returns (.bna.rpc.ProductGroupLastSelectionsChangedNotification) {
+  }
+  
+  rpc AccountAdded (.bna.rpc.NoData) returns (.bna.rpc.AccountAddedNotification) {
+  }
+  
+  rpc AccountRemoved (.bna.rpc.NoData) returns (.bna.rpc.AccountRemovedNotification) {
+  }
+  
+  rpc AccountUpdated (.bna.rpc.NoData) returns (.bna.rpc.AccountUpdatedNotification) {
+  }
+  
+  rpc SelectedAccountChanged (.bna.rpc.NoData) returns (.bna.rpc.SelectedAccountChangedNotification) {
+  }
+  
+  rpc ProductAdded (.bna.rpc.NoData) returns (.bna.rpc.ProductAddedNotification) {
+  }
+  
+  rpc ProductRemoved (.bna.rpc.NoData) returns (.bna.rpc.ProductRemovedNotification) {
+  }
+  
+  rpc ProductUpdated (.bna.rpc.NoData) returns (.bna.rpc.ProductUpdatedNotification) {
+  }
+  
+  rpc ProductCategoryModified (.bna.rpc.NoData) returns (.bna.rpc.ProductCategoryModifiedNotification) {
+  }
+  
+  rpc InstallInfoChanged (.bna.rpc.NoData) returns (.bna.rpc.InstallInfoChangedNotification) {
+  }
+  
+  rpc InstallStateChanged (.bna.rpc.NoData) returns (.bna.rpc.InstallStateChangedNotification) {
+  }
+  
+  rpc ProductStateChanged (.bna.rpc.NoData) returns (.bna.rpc.ProductStateChangedNotification) {
+  }
+  
+  rpc InstallInfoSortOrderChanged (.bna.rpc.NoData) returns (.bna.rpc.InstallInfoSortOrderChangedNotification) {
+  }
+  
+  rpc CheckForUpdatesCompleted (.bna.rpc.NoData) returns (.bna.rpc.CheckForUpdatesCompletedNotification) {
+  }
+  
+  rpc OpenDialog (.bna.rpc.NoData) returns (.bna.rpc.OpenDialogNotification) {
+  }
+  
+  rpc DismissDialog (.bna.rpc.NoData) returns (.bna.rpc.DismissDialogNotification) {
+  }
+}

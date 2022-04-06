@@ -45,10 +45,10 @@ class BnetLoggingHandler(
                         val response = service.getResponsePrototype(methodDescriptor)
                         if (response !is NO_RESPONSE && response !is NoData) responses[message.header.token] = service to methodDescriptor
                         serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{}: {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload)
-                    }
-                }
+                    } ?: log.debug("{} RCP #{} - Unknown method id {}:{}", if (client) "Client" else "Server", message.header.token, service.descriptorForType.name, message.header.methodId)
+                } ?: log.debug("{} RCP #{} - Unknown service hash {}:{}", if (client) "Client" else "Server", message.header.token, message.header.serviceHash, message.header.methodId)
             }
-            254 -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload) }
+            254 -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload) } ?: log.debug("{} RCP #{} return unknown", if (client) "Server" else "Client", message.header.token)
         }
         context.fireChannelRead(message)
     }
@@ -61,15 +61,16 @@ class BnetLoggingHandler(
                         val response = service.getResponsePrototype(methodDescriptor)
                         if (response !is NO_RESPONSE && response !is NoData) responses[message.header.token] = service to methodDescriptor
                         serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{}: {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload)
-                    }
-                }
+                    } ?: log.debug("{} RCP #{} - Unknown method id {}:{}", if (client) "Server" else "Client", message.header.token, service.descriptorForType.name, message.header.methodId)
+                } ?: log.debug("{} RCP #{} - Unknown service hash {}:{}", if (client) "Server" else "Client", message.header.token, message.header.serviceHash, message.header.methodId)
             }
-            254 -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload) }
+            254 -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LoggerFactory.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload) } ?: log.debug("{} RCP #{} return unknown", if (client) "Client" else "Server", message.header.token)
         }
         context.write(message, promise)
     }
 
     companion object {
+        private val log = LoggerFactory.getLogger(BnetLoggingHandler::class.java)
         private val serviceLogs = mutableMapOf<String, Logger>()
     }
 }

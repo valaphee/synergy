@@ -60,8 +60,8 @@ import kotlin.random.asKotlinRandom
 class BnetProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
-    @JsonProperty("port") port: Int,
-    @JsonProperty("interface") `interface`: String,
+    @JsonProperty("port") port: Int = 1119,
+    @JsonProperty("interface") `interface`: String
 ) : TransparentProxy(id, host, port, `interface`) {
     private var channel: Channel? = null
 
@@ -116,7 +116,7 @@ class BnetProxy(
     }
 
     companion object {
-        private val rpcChannel = RpcChannel { _, _, _, _, _ -> }
+        private val dummyRpcChannel = RpcChannel { _, _, _, _, _ -> }
         internal val services = listOf(
             bgs.protocol.account.v1.AccountListener::class,
             bgs.protocol.account.v1.AccountService::class,
@@ -136,6 +136,7 @@ class BnetProxy(
             bgs.protocol.diag.v1.DiagService::class,
             bgs.protocol.friends.v1.FriendsListener::class,
             bgs.protocol.friends.v1.FriendsService::class,
+            bgs.protocol.game_utilities.v2.client.GameUtilitiesService::class,
             bgs.protocol.presence.v1.PresenceListener::class,
             bgs.protocol.presence.v1.PresenceService::class,
             bgs.protocol.report.v1.ReportService::class,
@@ -149,6 +150,6 @@ class BnetProxy(
             bgs.protocol.user_manager.v1.UserManagerService::class,
             bgs.protocol.whisper.v1.WhisperListener::class,
             bgs.protocol.whisper.v1.WhisperService::class
-        ).associate { (it.java.getDeclaredMethod("getDescriptor")(null) as Descriptors.ServiceDescriptor).options[ServiceOptionsProto.serviceOptions].descriptorName.hashFnv1a() to it.java.getDeclaredMethod("newStub", RpcChannel::class.java)(null, rpcChannel) as Service }
+        ).associate { (it.java.getDeclaredMethod("getDescriptor")(null) as Descriptors.ServiceDescriptor).options[ServiceOptionsProto.serviceOptions].descriptorName.hashFnv1a() to it.java.getDeclaredMethod("newStub", RpcChannel::class.java)(null, dummyRpcChannel) as Service }
     }
 }

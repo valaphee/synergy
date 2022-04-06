@@ -24,6 +24,7 @@ message ChallengeExternalResult {
 
 service ChallengeListener {
   option (service_options).descriptor_name = "bnet.protocol.challenge.ChallengeNotify";
+  option (service_options).type = SERVICE_TYPE_RPC_DIRECT;
   option (sdk_service_options).inbound = true;
   
   rpc OnExternalChallenge (.bgs.protocol.challenge.v1.ChallengeExternalRequest) returns (.bgs.protocol.NO_RESPONSE) {

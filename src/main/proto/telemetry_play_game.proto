@@ -1,0 +1,33 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "PlayGame";
+
+message NowPlayingData {
+  optional int32 friends_playing = 1;
+  optional int32 favorites_playing = 2;
+  optional int32 friends_playing_other = 3;
+  optional int32 favorites_playing_other = 4;
+  optional int32 friends_available_in_app = 5;
+  optional int32 favorites_available_in_app = 6;
+}
+
+message PlayGame {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  optional string product = 1;
+  optional string location = 2;
+  optional string region = 3;
+  optional string binary = 4;
+  optional int32 num_accounts = 5;
+  optional bool pause_updates = 6;
+  optional string product_variant_unique_id = 7;
+  optional .Blizzard.Telemetry.App.NowPlayingData friends = 10;
+}

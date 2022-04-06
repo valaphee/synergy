@@ -1,0 +1,12 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bgs.protocol.club.v1;
+
+option java_multiple_files = true;
+
+message UniqueClubType {
+  optional fixed32 program = 1;
+  optional string name = 2;
+}

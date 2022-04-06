@@ -8,7 +8,7 @@ import "google/protobuf/descriptor.proto";
 
 option java_multiple_files = true;
 
-option java_package = "bnet.protocol";
+option java_package = "bgs.protocol";
 option java_outer_classname = "ServiceOptionsProto";
 
 extend .google.protobuf.ServiceOptions {
@@ -19,8 +19,9 @@ extend .google.protobuf.ServiceOptions {
 message BGSServiceOptions {
   enum ServiceType {
     SERVICE_TYPE_RPC = 0;
-    SERVICE_TYPE_EVENT = 1;
-    SERVICE_TYPE_EVENT_BROADCAST = 2;
+    SERVICE_TYPE_RPC_DIRECT = 1;
+    SERVICE_TYPE_EVENT = 2;
+    SERVICE_TYPE_EVENT_BROADCAST = 3;
   }
   
   optional string descriptor_name = 1;

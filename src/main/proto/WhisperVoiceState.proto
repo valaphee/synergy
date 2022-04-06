@@ -1,0 +1,27 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.whisper;
+
+option java_multiple_files = true;
+
+enum VoiceMicrophoneState {
+  MICROPHONE_STATE_NORMAL = 0;
+  MICROPHONE_STATE_SELF_MUTE = 1;
+  MICROPHONE_STATE_SELF_DEAF = 2;
+}
+
+enum VoiceControlMessage {
+  WHISPER_VOICE_CALL_REQUEST = 1;
+}
+
+message WhisperVoiceState {
+  optional bool active = 1;
+  optional .bna.whisper.VoiceMicrophoneState microphone = 2;
+}
+
+message WhisperVoiceCallMessage {
+  optional bool active = 1;
+  optional int64 id = 2;
+}

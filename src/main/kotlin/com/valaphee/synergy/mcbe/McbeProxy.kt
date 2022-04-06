@@ -65,7 +65,7 @@ import java.util.zip.GZIPInputStream
 class McbeProxy(
     @JsonProperty("id") id: String,
     @JsonProperty("host") host: String,
-    @JsonProperty("port") port: Int,
+    @JsonProperty("port") port: Int = 19132,
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("authorization") val authorization: String
 ) : TransparentProxy(id, host, port, `interface`) {

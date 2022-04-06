@@ -1,0 +1,68 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "Conversation";
+
+message Conversation {
+  option (TelemetryMessageOptions).realtime = true;
+  
+  enum ChatType {
+    Whisper = 1;
+    Multi = 2;
+    Group = 3;
+  }
+  
+  message Mentions {
+    optional int32 at_all = 1;
+    optional int32 at_here = 2;
+    optional int32 at_role = 3;
+    optional int32 at_user = 4;
+    optional int32 total = 5;
+  }
+  
+  message Embeds {
+    optional int32 count = 1;
+    optional int32 message_count = 2;
+  }
+  
+  message Stats {
+    optional int32 count = 1;
+    optional int32 edits = 2;
+    optional int32 total_char_count = 3;
+    optional int32 length_longest = 4;
+    optional .Blizzard.Telemetry.App.Conversation.Embeds emoji = 5;
+    optional .Blizzard.Telemetry.App.Conversation.Embeds giphy = 6;
+    optional .Blizzard.Telemetry.App.Conversation.Embeds links = 9;
+    optional .Blizzard.Telemetry.App.Conversation.Mentions mentions = 7;
+    optional string programs = 8;
+  }
+  
+  message Deleted {
+    optional int32 user = 1;
+    optional int32 owner = 2;
+    optional int32 as_admin = 3;
+    optional int32 user_by_admin = 4;
+    optional int32 other_by_admin = 5;
+    optional int32 total = 6;
+  }
+  
+  optional bool user_created = 1;
+  optional .Blizzard.Telemetry.App.Conversation.ChatType chat_type = 2;
+  optional int32 duration_in_secs = 3;
+  optional .Blizzard.Telemetry.App.Conversation.Deleted delete_stats = 4;
+  optional .Blizzard.Telemetry.App.Conversation.Stats sent = 5;
+  optional .Blizzard.Telemetry.App.Conversation.Stats received = 6;
+  optional .Blizzard.Telemetry.App.Conversation.Stats total = 7;
+  optional int32 num_active_users = 8;
+  optional int32 num_inactive_users = 9;
+  optional int32 num_offline_users = 10;
+  optional int32 num_friends = 11;
+  optional int32 num_favorites = 12;
+}

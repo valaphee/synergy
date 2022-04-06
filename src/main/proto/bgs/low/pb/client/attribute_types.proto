@@ -8,7 +8,7 @@ import "bgs/low/pb/client/entity_types.proto";
 
 option java_multiple_files = true;
 
-option java_package = "bnet.protocol";
+option java_package = "bgs.protocol";
 option java_outer_classname = "AttributeProto";
 
 message Variant {
