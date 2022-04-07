@@ -23,12 +23,12 @@ import java.net.InetAddress
 /**
  * @author Kevin Ludwig
  */
-abstract class TransparentProxy(
+abstract class TransparentProxy<T>(
     override val id: String,
     val host: String,
     val port: Int,
     val `interface`: String,
-) : Proxy {
+) : Proxy<T> {
     override suspend fun start() {
         Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" ${InetAddress.getByName(host).hostAddress}/32\"", null, 0)
         delay(250)

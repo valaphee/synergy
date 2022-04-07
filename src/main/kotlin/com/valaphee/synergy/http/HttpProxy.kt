@@ -59,49 +59,49 @@ class HttpProxy(
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int = 443,
     @JsonProperty("interface") `interface`: String
-) : TransparentProxy(id, host, port, `interface`) {
+) : TransparentProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {
-        if (channel == null) {
-            super.start()
+        require(channel == null)
 
-            val rootCertificate = keyStore.getCertificate("synergy") as X509Certificate
-            val serverCertificate = keyStore.getCertificate(host) as X509Certificate? ?: run {
-                val serverKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
-                val rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
-                val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$host"), serverKeyPair.public).build(rootContentSigner)
-                val serverCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(X509v3CertificateBuilder(JcaX509CertificateHolder(rootCertificate).subject, BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, serverCsr.subject, serverCsr.subjectPublicKeyInfo).apply {
-                    addExtension(Extension.basicConstraints, true, BasicConstraints(false))
-                    addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
-                    addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
-                    addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, host)))
-                }.build(rootContentSigner))
-                keyStore.setKeyEntry(host, serverKeyPair.private, null, arrayOf(serverCertificate))
-                keyStoreFile.outputStream().use { keyStore.store(it, "".toCharArray()) }
-                serverCertificate
-            }
-            val sslContextBuilder = SslContextBuilder.forServer(keyStore.getKey(host, null) as PrivateKey, listOf(serverCertificate, rootCertificate)).build()
+        super.start()
 
-            channel = ServerBootstrap()
-                .group(bossGroup, workerGroup)
-                .channel(underlyingNetworking.serverSocketChannel)
-                .handler(LoggingHandler())
-                .childHandler(object : ChannelInitializer<SocketChannel>() {
-                    override fun initChannel(channel: SocketChannel) {
-                        channel.pipeline().addLast(
-                            sslContextBuilder.newHandler(channel.alloc()),
-                            HttpServerCodec(),
-                            HttpObjectAggregator(1 * 1024 * 1024),
-                            LoggingHandler(),
-                            HttpProxyFrontendHandler(this@HttpProxy)
-                        )
-                    }
-                })
-                .childOption(ChannelOption.AUTO_READ, false)
-                .localAddress(host, port)
-                .bind().channel()
+        val rootCertificate = keyStore.getCertificate("synergy") as X509Certificate
+        val serverCertificate = keyStore.getCertificate(host) as X509Certificate? ?: run {
+            val serverKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
+            val rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
+            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$host"), serverKeyPair.public).build(rootContentSigner)
+            val serverCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(X509v3CertificateBuilder(JcaX509CertificateHolder(rootCertificate).subject, BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, serverCsr.subject, serverCsr.subjectPublicKeyInfo).apply {
+                addExtension(Extension.basicConstraints, true, BasicConstraints(false))
+                addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
+                addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
+                addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, host)))
+            }.build(rootContentSigner))
+            keyStore.setKeyEntry(host, serverKeyPair.private, null, arrayOf(serverCertificate))
+            keyStoreFile.outputStream().use { keyStore.store(it, "".toCharArray()) }
+            serverCertificate
         }
+        val sslContextBuilder = SslContextBuilder.forServer(keyStore.getKey(host, null) as PrivateKey, listOf(serverCertificate, rootCertificate)).build()
+
+        channel = ServerBootstrap()
+            .group(bossGroup, workerGroup)
+            .channel(underlyingNetworking.serverSocketChannel)
+            .handler(LoggingHandler())
+            .childHandler(object : ChannelInitializer<SocketChannel>() {
+                override fun initChannel(channel: SocketChannel) {
+                    channel.pipeline().addLast(
+                        sslContextBuilder.newHandler(channel.alloc()),
+                        HttpServerCodec(),
+                        HttpObjectAggregator(1 * 1024 * 1024),
+                        LoggingHandler(),
+                        HttpProxyFrontendHandler(this@HttpProxy)
+                    )
+                }
+            })
+            .childOption(ChannelOption.AUTO_READ, false)
+            .localAddress(host, port)
+            .bind().channel()
     }
 
     override suspend fun stop() {

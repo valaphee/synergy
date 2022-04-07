@@ -68,47 +68,47 @@ class McbeProxy(
     @JsonProperty("port") port: Int = 19132,
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("authorization") val authorization: String
-) : TransparentProxy(id, host, port, `interface`) {
+) : TransparentProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {
-        if (channel == null) {
-            super.start()
+        require(channel == null)
 
-            channel = ServerBootstrap()
-                .group(bossGroup, workerGroup)
-                .channelFactory(ChannelFactory { RakNetServerChannel(underlyingNetworking.datagramChannel) })
-                .handler(LoggingHandler(LogLevel.INFO))
-                .handler(object : ChannelInitializer<Channel>() {
-                    override fun initChannel(channel: Channel) {
-                        channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {
-                            override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
-                                val rakNetConfig = context.channel().config() as RakNet.Config
-                                val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, 19132, 19133, "Synergy").toString())
-                                val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
-                                try {
-                                    rakNetConfig.codec.encode(unconnectedPong, buffer)
-                                    repeat(3) { context.writeAndFlush(DatagramPacket(buffer.retainedSlice(), address)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE) }
-                                } finally {
-                                    ReferenceCountUtil.safeRelease(unconnectedPong)
-                                    buffer.release()
-                                }
+        super.start()
+
+        channel = ServerBootstrap()
+            .group(bossGroup, workerGroup)
+            .channelFactory(ChannelFactory { RakNetServerChannel(underlyingNetworking.datagramChannel) })
+            .handler(LoggingHandler(LogLevel.INFO))
+            .handler(object : ChannelInitializer<Channel>() {
+                override fun initChannel(channel: Channel) {
+                    channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {
+                        override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
+                            val rakNetConfig = context.channel().config() as RakNet.Config
+                            val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, 19132, 19133, "Synergy").toString())
+                            val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
+                            try {
+                                rakNetConfig.codec.encode(unconnectedPong, buffer)
+                                repeat(3) { context.writeAndFlush(DatagramPacket(buffer.retainedSlice(), address)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE) }
+                            } finally {
+                                ReferenceCountUtil.safeRelease(unconnectedPong)
+                                buffer.release()
                             }
-                        })
-                    }
-                })
-                .childHandler(object : ChannelInitializer<Channel>() {
-                    override fun initChannel(channel: Channel) {
-                        channel.pipeline().addLast(UserDataCodec.NAME, userDataCodec)
-                        channel.pipeline().addLast(Compressor.NAME, Compressor(7))
-                        channel.pipeline().addLast(Decompressor.NAME, Decompressor())
-                        channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
-                        channel.pipeline().addLast(McbeProxyFrontendHandler(this@McbeProxy))
-                    }
-                })
-                .localAddress(host, port)
-                .bind().channel()
-        }
+                        }
+                    })
+                }
+            })
+            .childHandler(object : ChannelInitializer<Channel>() {
+                override fun initChannel(channel: Channel) {
+                    channel.pipeline().addLast(UserDataCodec.NAME, userDataCodec)
+                    channel.pipeline().addLast(Compressor.NAME, Compressor(7))
+                    channel.pipeline().addLast(Decompressor.NAME, Decompressor())
+                    channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
+                    channel.pipeline().addLast(McbeProxyFrontendHandler(this@McbeProxy))
+                }
+            })
+            .localAddress(host, port)
+            .bind().channel()
     }
 
     override suspend fun stop() {

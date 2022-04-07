@@ -16,12 +16,14 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.valaphee.synergy.bgs.BgsProxy
 import com.valaphee.synergy.bgs.PatchSecuritySubcommand
 import com.valaphee.synergy.http.HttpProxy
 import com.valaphee.synergy.mcbe.McbeProxy
-import com.valaphee.synergy.tcp.TcpProxy
+import com.valaphee.synergy.pro.ProProxy
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.call
@@ -30,7 +32,9 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.ContentNegotiation
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -77,6 +81,7 @@ val bossGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setN
 val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("worker-%d").build())
 lateinit var keyStoreFile: File
 lateinit var keyStore: KeyStore
+internal val objectMapper = jacksonObjectMapper()
 
 @OptIn(ExperimentalCli::class)
 fun main(arguments: Array<String>) {
@@ -104,13 +109,13 @@ fun main(arguments: Array<String>) {
     argumentParser.subcommands(PatchSecuritySubcommand)
     argumentParser.parse(arguments)
 
-    val proxyTypes = mapOf<String, KClass<out Proxy>>(
-        "tcp" to TcpProxy::class,
+    val proxyTypes = mapOf<String, KClass<out Proxy<*>>>(
+        "tcp" to ProProxy::class,
         "http" to HttpProxy::class,
         "mcbe" to McbeProxy::class,
         "bgs" to BgsProxy::class,
     )
-    val proxies = mutableMapOf<String, Proxy>()
+    val proxies = mutableMapOf<String, Proxy<Any?>>()
     embeddedServer(Netty, port, host) {
         install(ContentNegotiation) { jackson() }
 
@@ -118,7 +123,7 @@ fun main(arguments: Array<String>) {
             post("/proxy/{type}") {
                 proxyTypes[call.parameters["type"]]?.let {
                     val proxy = call.receive(it)
-                    if (proxies.putIfAbsent(proxy.id, proxy) != null) call.respond(HttpStatusCode.BadRequest)
+                    if (proxies.putIfAbsent(proxy.id, proxy as Proxy<Any?>) != null) call.respond(HttpStatusCode.BadRequest)
                     if (call.request.queryParameters["autoStart"] == "true") proxy.start()
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
@@ -136,6 +141,7 @@ fun main(arguments: Array<String>) {
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
+            post("/proxy/{id}/update") { proxies[call.parameters["id"]]?.let { call.respondText(objectMapper.writeValueAsString(it.update(objectMapper.readValue(call.receiveText(), it.dataType.java))), ContentType.Application.Json) } ?: call.respond(HttpStatusCode.NotFound) }
             get("/proxy/{id}/stop") {
                 proxies[call.parameters["id"]]?.let {
                     it.stop()

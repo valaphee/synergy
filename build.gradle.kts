@@ -39,10 +39,12 @@ repositories {
 dependencies {
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.protobuf:protobuf-kotlin:3.19.4")
+    implementation("com.nimbusds:srp6a:2.1.0")
     implementation("com.valaphee:netcode-mcbe:0.1.20")
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("io.ktor:ktor-client-content-negotiation-jvm:2.0.0-beta-1")
     implementation("io.ktor:ktor-client-okhttp:2.0.0-beta-1")
+    implementation("io.ktor:ktor-client-jackson:2.0.0-beta-1")
     implementation("io.ktor:ktor-network-tls-certificates:2.0.0-beta-1")
     implementation("io.ktor:ktor-serialization-jackson-jvm:2.0.0-beta-1")
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0-beta-1")

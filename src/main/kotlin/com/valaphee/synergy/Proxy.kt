@@ -16,13 +16,18 @@
 
 package com.valaphee.synergy
 
+import kotlin.reflect.KClass
+
 /**
  * @author Kevin Ludwig
  */
-interface Proxy {
+interface Proxy<T> {
     val id: String
+    val dataType: KClass<*> get() = Any::class
 
     suspend fun start()
+
+    suspend fun update(data: T) = data
 
     suspend fun stop()
 }

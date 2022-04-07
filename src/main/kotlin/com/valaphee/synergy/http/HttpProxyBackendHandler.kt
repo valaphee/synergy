@@ -33,7 +33,7 @@ class HttpProxyBackendHandler(
         context.read()
     }
 
-    override fun channelInactive(ctx: ChannelHandlerContext) {
+    override fun channelInactive(context: ChannelHandlerContext) {
         if (inboundChannel.isActive) inboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
     }
 

@@ -82,7 +82,7 @@ internal val objectMapper = jacksonObjectMapper()
 private val keyFactory = KeyFactory.getInstance("RSA")
 internal val blizzardKey = keyFactory.generatePublic(X509EncodedKeySpec("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB".decodeBase64Bytes())) as RSAPublicKey
 
-fun ByteArray.swap() = apply {
+internal fun ByteArray.swap() = apply {
     repeat(size / 2) {
         val value = this[it]
         this[it] = this[size - it - 1]
