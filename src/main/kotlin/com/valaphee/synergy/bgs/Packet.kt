@@ -21,7 +21,7 @@ import bgs.protocol.Header
 /**
  * @author Kevin Ludwig
  */
-class BgsPacket(
+class Packet(
     val header: Header,
     val payload: Any?
 ) {

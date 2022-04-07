@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.synergy.util.occurrencesOf
-import io.ktor.util.decodeBase64Bytes
 import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.asn1.x509.X509CertificateStructure
 import org.bouncycastle.util.encoders.Hex
@@ -31,6 +30,7 @@ import java.security.PublicKey
 import java.security.Signature
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 /**
  * @author Kevin Ludwig
@@ -77,11 +77,12 @@ fun parseSignedCertificateBundle(signedCertificateBundle: ByteArray, publicKey: 
 
 fun ASN1Sequence.hash() = Hex.toHexString(MessageDigest.getInstance("SHA256").digest(X509CertificateStructure.getInstance(this).subjectPublicKeyInfo.publicKeyData.bytes)).uppercase()
 
+internal val objectMapper = jacksonObjectMapper()
+private val base64Decoder = Base64.getDecoder()
 internal val magic = "NGIS".toByteArray()
 internal const val module = "Blizzard Certificate Bundle"
 private val keyFactory = KeyFactory.getInstance("RSA")
-internal val key = keyFactory.generatePublic(X509EncodedKeySpec("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB".decodeBase64Bytes())) as RSAPublicKey
-internal val objectMapper = jacksonObjectMapper()
+internal val key = keyFactory.generatePublic(X509EncodedKeySpec(base64Decoder.decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB"))) as RSAPublicKey
 
 internal fun ByteArray.swap() = apply {
     repeat(size / 2) {

@@ -19,7 +19,6 @@ package com.valaphee.synergy.bgs
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.synergy.keyStore
 import com.valaphee.synergy.util.occurrencesOf
-import io.ktor.util.encodeBase64
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
@@ -32,12 +31,13 @@ import java.io.File
 import java.security.KeyPairGenerator
 import java.security.Signature
 import java.security.interfaces.RSAPublicKey
+import java.util.Base64
 
 /**
  * @author Kevin Ludwig
  */
 @OptIn(ExperimentalCli::class)
-object PatchSecuritySubcommand : Subcommand("patch-security", "Patches the security module, and updates the certificate bundle") {
+object PatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches the security module, and updates the certificate bundle") {
     private val input by option(ArgType.String, "input", "i", "Input file").required()
     private val output by option(ArgType.String, "output", "o", "Output file")
     private val aliases by option(ArgType.String, "alias", "a", "Certificate alias").multiple()
@@ -56,7 +56,7 @@ object PatchSecuritySubcommand : Subcommand("patch-security", "Patches the secur
 
                 val certificateBundleEnd = bytes.occurrencesOf(infix.toByteArray()).single() + 1
                 val certificateBundle = objectMapper.readValue<CertificateBundle>(bytes.copyOfRange(certificateBundleIndex, certificateBundleEnd))
-                val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${keyStore.getCertificate("synergy").encoded.encodeBase64()}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
+                val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${base64Encoder.decode(keyStore.getCertificate("synergy").encoded)}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
                 val certificateBundleSize = certificateBundleEnd - certificateBundleIndex
                 if (certificateBundleSize >= certificateBundleBytes.size) {
                     val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
@@ -84,4 +84,5 @@ object PatchSecuritySubcommand : Subcommand("patch-security", "Patches the secur
     private val log = LogManager.getLogger(PatchSecuritySubcommand::class.java)
     private const val prefix = "{\"Created\":"
     private const val infix = "}NGIS"
+    private val base64Encoder = Base64.getDecoder()
 }

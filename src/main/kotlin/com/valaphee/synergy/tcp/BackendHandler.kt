@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.pro
+package com.valaphee.synergy.tcp
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -26,7 +26,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter
 /**
  * @author Kevin Ludwig
  */
-class ProProxyBackendHandler(
+class BackendHandler(
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
     override fun channelActive(context: ChannelHandlerContext) {

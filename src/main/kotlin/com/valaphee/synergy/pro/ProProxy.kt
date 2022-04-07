@@ -66,7 +66,7 @@ class ProProxy(
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
                         LoggingHandler(),
-                        ProProxyFrontendHandler(this@ProProxy)
+                        FrontendHandler(this@ProProxy)
                     )
                 }
             })

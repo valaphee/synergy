@@ -37,7 +37,7 @@ import java.net.URI
 /**
  * @author Kevin Ludwig
  */
-class BgsProxyBackendHandler(
+class BackendHandler(
     private val proxy: BgsProxy,
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
@@ -57,13 +57,13 @@ class BgsProxyBackendHandler(
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(if (message is BgsPacket) when (val payload = message.payload) {
+        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(if (message is Packet) when (val payload = message.payload) {
             is ProcessTaskResponse -> {
                 val results = payload.resultList.associate { it.name to it.value }.toMutableMap()
                 if (results["response_type"]?.stringValue == "ReferralInfo") {
                     val (address, data) = proxy.referral.getAddress(checkNotNull(address(checkNotNull(results["hostv4"]).stringValue, 0)), payload.toByteArray(), ByteArray::class)
                     val modifiedPayload = ProcessTaskResponse.parseFrom(data).toBuilder()
-                    BgsPacket(message.header, modifiedPayload.setResult(modifiedPayload.resultList.withIndex().single { it.value.name == "hostv4" }.index, Attribute.newBuilder().setName("hostv4").setValue(Variant.newBuilder().setStringValue(address.toString().split('/', limit = 2)[1]))).build())
+                    Packet(message.header, modifiedPayload.setResult(modifiedPayload.resultList.withIndex().single { it.value.name == "hostv4" }.index, Attribute.newBuilder().setName("hostv4").setValue(Variant.newBuilder().setStringValue(address.toString().split('/', limit = 2)[1]))).build())
                 } else message
             }
             else -> message

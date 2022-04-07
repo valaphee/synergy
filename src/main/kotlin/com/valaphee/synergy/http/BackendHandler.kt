@@ -26,7 +26,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter
 /**
  * @author Kevin Ludwig
  */
-class HttpProxyBackendHandler(
+class BackendHandler(
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
     override fun channelActive(context: ChannelHandlerContext) {

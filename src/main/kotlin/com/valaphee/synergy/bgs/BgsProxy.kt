@@ -102,8 +102,8 @@ class BgsProxy(
                         HttpServerCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
-                        BgsCodec(services),
-                        BgsProxyFrontendHandler(this@BgsProxy)
+                        PacketCodec(services),
+                        FrontendHandler(this@BgsProxy)
                     )
                 }
             })

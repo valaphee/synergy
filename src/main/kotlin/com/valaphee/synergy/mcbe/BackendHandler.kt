@@ -58,7 +58,7 @@ import java.util.Base64
 /**
  * @author Kevin Ludwig
  */
-class McbeProxyBackendHandler(
+class BackendHandler(
     private val mcbeProxy: McbeProxy,
     private val inboundChannel: Channel
 ) : ChannelDuplexHandler() {

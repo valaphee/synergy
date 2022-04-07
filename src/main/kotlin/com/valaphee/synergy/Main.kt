@@ -18,8 +18,8 @@ package com.valaphee.synergy
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.valaphee.synergy.bgs.BgsProxy
 import com.valaphee.synergy.bgs.PatchSecuritySubcommand
+import com.valaphee.synergy.bgs.BgsProxy
 import com.valaphee.synergy.http.HttpProxy
 import com.valaphee.synergy.mcbe.McbeProxy
 import com.valaphee.synergy.pro.ProProxy

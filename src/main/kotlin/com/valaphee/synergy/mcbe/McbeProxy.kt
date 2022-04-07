@@ -104,7 +104,7 @@ class McbeProxy(
                     channel.pipeline().addLast(Compressor.NAME, Compressor(7))
                     channel.pipeline().addLast(Decompressor.NAME, Decompressor())
                     channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
-                    channel.pipeline().addLast(McbeProxyFrontendHandler(this@McbeProxy))
+                    channel.pipeline().addLast(FrontendHandler(this@McbeProxy))
                 }
             })
             .localAddress(host, port)

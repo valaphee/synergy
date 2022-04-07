@@ -30,12 +30,12 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 /**
  * @author Kevin Ludwig
  */
-class BgsCodec(
+class PacketCodec(
     private val services: Map<Int, Service>
-) : MessageToMessageCodec<BinaryWebSocketFrame, BgsPacket>() {
+) : MessageToMessageCodec<BinaryWebSocketFrame, Packet>() {
     private val responses = mutableMapOf<Int, Message>()
 
-    override fun encode(context: ChannelHandlerContext, message: BgsPacket, out: MutableList<Any>) {
+    override fun encode(context: ChannelHandlerContext, message: Packet, out: MutableList<Any>) {
         val header = message.header
         val payload = message.payload
         if (payload is ByteArray) {
@@ -78,7 +78,7 @@ class BgsCodec(
         if (!buffer.isReadable(payloadSize)) return
         val payload = ByteArray(payloadSize).apply { buffer.readBytes(this) }
 
-        out.add(BgsPacket(header, when (header.serviceId) {
+        out.add(Packet(header, when (header.serviceId) {
             requestServiceId -> services[header.serviceHash]?.let { service -> service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor -> service.getRequestPrototype(methodDescriptor).parserForType.parseFrom(payload) } }
             responseServiceId -> responses.remove(header.token)?.parserForType?.parseFrom(payload)
             else -> null

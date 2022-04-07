@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.tcp
+package com.valaphee.synergy.bgs
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
@@ -23,13 +23,18 @@ import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.channel.ChannelOption
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.socket.SocketChannel
+import io.netty.handler.codec.http.HttpClientCodec
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 
 /**
  * @author Kevin Ludwig
  */
-class TcpProxyFrontendHandler(
-    private val proxy: TcpProxy
+class FrontendHandler(
+    private val proxy: BgsProxy
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
@@ -37,8 +42,18 @@ class TcpProxyFrontendHandler(
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
-            .handler(TcpProxyBackendHandler(context.channel()))
-            .option(ChannelOption.AUTO_READ, false)
+            .handler(object : ChannelInitializer<SocketChannel>() {
+                override fun initChannel(channel: SocketChannel) {
+                    channel.pipeline().addLast(
+                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
+                        HttpClientCodec(),
+                        HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
+                        PacketCodec(BgsProxy.services),
+                        LoggingHandler(BgsProxy.services, true),
+                        BackendHandler(proxy, context.channel())
+                    )
+                }
+            })
             .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
             .connect().addListener(object : ChannelFutureListener {

@@ -31,7 +31,7 @@ import java.math.BigInteger
 /**
  * @author Kevin Ludwig
  */
-class ProProxyFrontendHandler(
+class FrontendHandler(
     private val proxy: ProProxy
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
@@ -48,7 +48,7 @@ class ProProxyFrontendHandler(
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
-            .handler(ProProxyBackendHandler(context.channel()))
+            .handler(BackendHandler(context.channel()))
             .option(ChannelOption.AUTO_READ, false)
             .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
@@ -145,6 +145,6 @@ class ProProxyFrontendHandler(
     companion object {
         private const val clientMagic = "HELLO PRO CLIENT"
         private const val serverMagic = "HELLO PRO SERVER"
-        private val log = LogManager.getLogger(ProProxyFrontendHandler::class.java)
+        private val log = LogManager.getLogger(FrontendHandler::class.java)
     }
 }

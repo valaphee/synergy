@@ -52,7 +52,7 @@ class TcpProxy(
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
                         LoggingHandler(),
-                        TcpProxyFrontendHandler(this@TcpProxy)
+                        FrontendHandler(this@TcpProxy)
                     )
                 }
             })
