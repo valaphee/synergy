@@ -16,10 +16,16 @@
 
 package com.valaphee.synergy.pro
 
+import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
+import io.netty.channel.ChannelFuture
+import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.channel.ChannelOption
+import org.apache.logging.log4j.LogManager
 import java.math.BigInteger
 
 /**
@@ -39,7 +45,7 @@ class ProProxyFrontendHandler(
     private lateinit var srpB: BigInteger
 
     override fun channelActive(context: ChannelHandlerContext) {
-        /*outboundChannel = Bootstrap()
+        outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
             .handler(ProProxyBackendHandler(context.channel()))
@@ -51,71 +57,79 @@ class ProProxyFrontendHandler(
                     if (future.isSuccess) context.channel().read()
                     else context.channel().close()
                 }
-            }).channel()*/
+            }).channel()
         state = State.Handshake
     }
 
     override fun channelInactive(context: ChannelHandlerContext) {
-        /*outboundChannel?.let { if (it.isActive) it.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE) }*/
+        outboundChannel?.let { if (it.isActive) it.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE) }
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        /*if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(message).addListener(object : ChannelFutureListener {
+        val `in` = (message as ByteBuf).retainedDuplicate()
+        if (outboundChannel!!.isActive) outboundChannel!!.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
                 if (future.isSuccess) context.channel().read()
                 else future.channel().close()
             }
-        })*/
-        val buffer = message as ByteBuf
-        when (state) {
-            State.Handshake -> if (StringBuilder().apply {
-                var value = buffer.readByte().toInt()
-                while (value != 0) {
-                    append(value.toChar())
-                    value = buffer.readByte().toInt()
+        })
+
+        try {
+            when (state) {
+                State.Handshake -> if (StringBuilder(16).apply {
+                        var value = `in`.readByte().toInt()
+                        while (value != 0) {
+                            append(value.toChar())
+                            value = `in`.readByte().toInt()
+                        }
+                    }.toString() == clientMagic) {
+                    /*val out = context.alloc().buffer(serverMagic.toByteArray().size + 1)
+                    out.writeBytes(serverMagic.toByteArray())
+                    out.writeByte(0)
+                    context.writeAndFlush(out)*/
+                    state = State.LoginSrp1
                 }
-            }.toString() == clientMagic) {
-                val responseBuffer = context.alloc().buffer(serverMagic.toByteArray().size + 1)
-                responseBuffer.writeBytes(serverMagic.toByteArray())
-                responseBuffer.writeByte(0)
-                context.writeAndFlush(responseBuffer)
-                state = State.LoginSrp1
-            }
-            State.LoginSrp1 -> {
-                srpI = buffer.readLongLE()
-                srpA = BigInteger(ByteArray(buffer.readableBytes()).apply { buffer.readBytes(this) })
-                println("SRP1 ${java.lang.Long.toUnsignedString(srpI)} - ${srpA.toByteArray().size}")
+                State.LoginSrp1 -> {
+                    srpI = `in`.readLongLE()
+                    srpA = BigInteger(ByteArray(`in`.readableBytes()).apply { `in`.readBytes(this) })
 
-                val s = ProProxy.srpRoutines.generateRandomSalt(32, ProProxy.random)
-                val x = ProProxy.srpRoutines.computeX(ProProxy.sha256Local.get(), s, byteArrayOf(/*password*/))
-                srpv = ProProxy.srpRoutines.computeVerifier(proxy.srpN, ProProxy.srpG, x)
+                    val s = ProProxy.srpRoutines.generateRandomSalt(32, ProProxy.random)
+                    val x = ProProxy.srpRoutines.computeX(ProProxy.sha256Local.get(), s, proxy.k0)
+                    srpv = ProProxy.srpRoutines.computeVerifier(ProProxy.srpN, ProProxy.srpg, x)
+                    srpb = ProProxy.srpRoutines.generatePrivateValue(ProProxy.srpN, ProProxy.random)
+                    srpB = ProProxy.srpRoutines.computePublicServerValue(ProProxy.srpN, ProProxy.srpg, ProProxy.srpk, srpv, srpb)
 
-                srpb = ProProxy.srpRoutines.generatePrivateValue(proxy.srpN, ProProxy.random)
-                srpB = ProProxy.srpRoutines.computePublicServerValue(proxy.srpN, ProProxy.srpG, proxy.srpk, srpv, srpb)
-
-                val responseBuffer = context.alloc().buffer()
-                responseBuffer.writeBytes(s)
-                responseBuffer.writeByte(ProProxy.srpG.byteValueExact().toInt())
-                responseBuffer.writeBytes(srpB.toByteArray())
-                context.writeAndFlush(responseBuffer)
-                state = State.LoginSrp2
-            }
-            State.LoginSrp2 -> {
-                val srpI = buffer.readLongLE()
-                val M1 = BigInteger(ByteArray(buffer.readableBytes()).apply { buffer.readBytes(this) })
-                if (ProProxy.srpRoutines.isValidPublicValue(proxy.srpN, M1)) {
-                    val u = ProProxy.srpRoutines.computeU(ProProxy.sha256Local.get(), proxy.srpN, srpA, srpB)
-                    val S = ProProxy.srpRoutines.computeSessionKey(proxy.srpN, srpv, u, srpA, srpb)
-                    if (ProProxy.srpRoutines.computeClientEvidence(ProProxy.sha256Local.get(), srpA, srpB, S).equals(M1)) {
-                        println("success")
-                    } else {
-                        println("where am I now?")
+                    /*val out = context.alloc().buffer()
+                    out.writeBytes(s)
+                    out.writeByte(ProProxy.srpg.byteValueExact().toInt())
+                    out.writeBytes(srpB.toByteArray())
+                    context.writeAndFlush(out)*/
+                    state = State.LoginSrp2
+                }
+                State.LoginSrp2 -> {
+                    `in`.readLongLE()
+                    val M1_c = BigInteger(ByteArray(`in`.readableBytes()).apply { `in`.readBytes(this) })
+                    if (ProProxy.srpRoutines.isValidPublicValue(ProProxy.srpN, M1_c)) {
+                        val u_c = ProProxy.srpRoutines.computeU(ProProxy.sha256Local.get(), ProProxy.srpN, srpA, srpB)
+                        val S_c = ProProxy.srpRoutines.computeSessionKey(ProProxy.srpN, srpv, u_c, srpA, srpb)
+                        if (ProProxy.srpRoutines.computeClientEvidence(ProProxy.sha256Local.get(), srpA, srpB, S_c).equals(M1_c)) {
+                        }
                     }
-                } else {
-                    println("invalid n")
+                    val x_s = ProProxy.srpRoutines.computeX(ProProxy.sha256Local.get(), proxy.k1, proxy.k2)
+                    val u_s = ProProxy.srpRoutines.computeU(ProProxy.sha256Local.get(), ProProxy.srpN, srpA, srpB)
+                    val S_s = ProProxy.srpRoutines.computeSessionKey(ProProxy.srpN, ProProxy.srpg, ProProxy.srpk, x_s, u_s, srpb, srpA)
+                    val M1_s = ProProxy.srpRoutines.computeClientEvidence(ProProxy.sha256Local.get(), srpA, srpB, S_s)
+
+                    /*val out = context.alloc().buffer()
+                    out.writeBytes(M1_s.toByteArray())
+                    out.writeBytes(ByteArray(292))
+                    context.writeAndFlush(out)*/
+                    state = State.Encryption
                 }
-                println("SRP2 ${java.lang.Long.toUnsignedString(srpI)} - ${M1.toByteArray().size}")
+                State.Encryption -> Unit
             }
+        } finally {
+            `in`.release()
         }
     }
 
@@ -125,11 +139,12 @@ class ProProxyFrontendHandler(
     }
 
     private enum class State {
-        Handshake, LoginSrp1, LoginSrp2
+        Handshake, LoginSrp1, LoginSrp2, Encryption
     }
 
     companion object {
         private const val clientMagic = "HELLO PRO CLIENT"
         private const val serverMagic = "HELLO PRO SERVER"
+        private val log = LogManager.getLogger(ProProxyFrontendHandler::class.java)
     }
 }

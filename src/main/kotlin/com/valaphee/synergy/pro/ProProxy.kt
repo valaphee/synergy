@@ -17,6 +17,7 @@
 package com.valaphee.synergy.pro
 
 import bgs.protocol.game_utilities.v2.client.ProcessTaskResponse
+import bgs.protocol.v2.Attribute
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.nimbusds.srp6.SRP6Routines
 import com.valaphee.synergy.TransparentProxy
@@ -26,6 +27,7 @@ import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelInitializer
+import io.netty.channel.ChannelOption
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.logging.LoggingHandler
 import java.math.BigInteger
@@ -45,9 +47,11 @@ class ProProxy(
 
     private var channel: Channel? = null
 
-    internal lateinit var srpN: BigInteger
-    internal lateinit var srpk: BigInteger
     internal var srpI = 0L
+    internal lateinit var k0: ByteArray
+    internal lateinit var k1: ByteArray
+    internal lateinit var k2: ByteArray
+    internal lateinit var k3: ByteArray
 
     override suspend fun start() {
         require(channel == null)
@@ -66,23 +70,20 @@ class ProProxy(
                     )
                 }
             })
-            /*.childOption(ChannelOption.AUTO_READ, false)*/
+            .childOption(ChannelOption.AUTO_READ, false)
             .localAddress(host, port)
             .bind().channel()
     }
 
     override suspend fun update(data: ByteArray): ByteArray {
         val payload = ProcessTaskResponse.parseFrom(data)
-        val results = payload.resultList.associate { it.name to it.value }
-        val srpN = ByteArray(64 * 4)
-        checkNotNull(results["k0"]).blobValue.toByteArray().copyInto(srpN)
-        checkNotNull(results["k1"]).blobValue.toByteArray().copyInto(srpN, 64)
-        checkNotNull(results["k2"]).blobValue.toByteArray().copyInto(srpN, 64 + 64)
-        checkNotNull(results["k3"]).blobValue.toByteArray().copyInto(srpN, 64 + 64 + 64)
-        this.srpN = BigInteger(sha256Local.get().digest(srpN))
+        val results = payload.resultList.associate { it.name to it.value }.toMutableMap()
         srpI = checkNotNull(results["cid"]).uintValue
-        srpk = srpRoutines.computeK(sha256Local.get(), this.srpN, srpG)
-        return data
+        k0 = checkNotNull(results["k0"]).blobValue.toByteArray() // when invalid server doesn't accept LoginSrp1 packet, connection gets closed
+        k1 = checkNotNull(results["k1"]).blobValue.toByteArray() // when invalid client doesn't accept LoginSrp2 packet, connection gets closed
+        k2 = checkNotNull(results["k2"]).blobValue.toByteArray() // when invalid client doesn't accept LoginSrp2 packet, connection gets closed
+        k3 = checkNotNull(results["k3"]).blobValue.toByteArray() // when invalid client doesn't accept LoginSrp2 packet, nothing happens
+        return payload.toBuilder().clearResult().addAllResult(results.map { Attribute.newBuilder().setName(it.key).setValue(it.value).build() }).build().toByteArray()
     }
 
     override suspend fun stop() {
@@ -96,8 +97,10 @@ class ProProxy(
 
     companion object {
         internal val random = SecureRandom()
-        internal val srpRoutines = SRP6Routines()
-        internal val srpG = BigInteger.valueOf(2)
         internal val sha256Local = ThreadLocal.withInitial { MessageDigest.getInstance("SHA-256") }
+        internal val srpRoutines = SRP6Routines()
+        internal val srpN = BigInteger.probablePrime(256, random)
+        internal val srpg = BigInteger.valueOf(2)
+        internal val srpk = srpRoutines.computeK(sha256Local.get(), srpN, srpg)
     }
 }

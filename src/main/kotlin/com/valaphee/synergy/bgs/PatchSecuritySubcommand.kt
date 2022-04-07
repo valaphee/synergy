@@ -18,6 +18,7 @@ package com.valaphee.synergy.bgs
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.synergy.keyStore
+import com.valaphee.synergy.util.occurrencesOf
 import io.ktor.util.encodeBase64
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
@@ -25,8 +26,8 @@ import kotlinx.cli.Subcommand
 import kotlinx.cli.multiple
 import kotlinx.cli.required
 import okhttp3.internal.toHexString
+import org.apache.logging.log4j.LogManager
 import org.bouncycastle.asn1.ASN1Sequence
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.security.KeyPairGenerator
 import java.security.Signature
@@ -48,7 +49,7 @@ object PatchSecuritySubcommand : Subcommand("patch-security", "Patches the secur
         val serverCertificates = aliases.mapNotNull { alias -> keyStore.getCertificate(alias)?.let { alias to it } }
 
         val bytes = inputFile.readBytes()
-        bytes.occurrencesOf(blizzardKey.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
+        bytes.occurrencesOf(key.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
             log.info("Modulus found at 0x{}", modulusIndex.toHexString().uppercase())
             bytes.occurrencesOf(prefix.toByteArray()).singleOrNull()?.let { certificateBundleIndex ->
                 log.info("Certificate bundle found at 0x{}", certificateBundleIndex.toHexString().uppercase())
@@ -80,7 +81,7 @@ object PatchSecuritySubcommand : Subcommand("patch-security", "Patches the secur
         } ?: log.warn("Unable to find modulus")
     }
 
-    private val log = LoggerFactory.getLogger(PatchSecuritySubcommand::class.java)
+    private val log = LogManager.getLogger(PatchSecuritySubcommand::class.java)
     private const val prefix = "{\"Created\":"
     private const val infix = "}NGIS"
 }

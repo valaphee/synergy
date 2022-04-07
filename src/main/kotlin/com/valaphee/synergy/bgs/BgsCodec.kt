@@ -57,7 +57,7 @@ class BgsCodec(
             buffer.writeBytes(payload.toByteArray())
             out.add(BinaryWebSocketFrame(buffer))
 
-            if (header.serviceId == 0) services[header.serviceHash]?.let { service ->
+            if (header.serviceId == requestServiceId) services[header.serviceHash]?.let { service ->
                 service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor ->
                     val response = service.getResponsePrototype(methodDescriptor)
                     if (response !is NO_RESPONSE && response !is NoData) responses[header.token] = response
@@ -79,9 +79,14 @@ class BgsCodec(
         val payload = ByteArray(payloadSize).apply { buffer.readBytes(this) }
 
         out.add(BgsPacket(header, when (header.serviceId) {
-            0 -> services[header.serviceHash]?.let { service -> service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor -> service.getRequestPrototype(methodDescriptor).parserForType.parseFrom(payload) } }
-            254 -> responses.remove(header.token)?.parserForType?.parseFrom(payload)
+            requestServiceId -> services[header.serviceHash]?.let { service -> service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == header.methodId }?.let { methodDescriptor -> service.getRequestPrototype(methodDescriptor).parserForType.parseFrom(payload) } }
+            responseServiceId -> responses.remove(header.token)?.parserForType?.parseFrom(payload)
             else -> null
         } ?: payload))
+    }
+
+    companion object {
+        internal const val requestServiceId = 0
+        internal const val responseServiceId = 254
     }
 }

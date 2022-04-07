@@ -1,4 +1,4 @@
-package com.valaphee.synergy.bgs
+package com.valaphee.synergy.util
 
 /**
  * For each i in [0, length), this function computes
