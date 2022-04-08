@@ -41,7 +41,8 @@ import kotlin.reflect.KClass
  * @author Kevin Ludwig
  */
 @JsonSubTypes(
-    JsonSubTypes.Type(IpcLocation::class)
+    JsonSubTypes.Type(IpcLocation::class),
+    JsonSubTypes.Type(PassthroughLocation::class)
 )
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 interface Location {
@@ -61,21 +62,22 @@ class PassthroughLocation : Location {
  */
 @JsonTypeName("ipc")
 class IpcLocation(
-    @JsonProperty("ipc") val ipc: String,
+    @JsonProperty("url") val url: String,
+    @JsonProperty("type") val type: String,
     @JsonProperty("host") val host: String?,
     @JsonProperty("port") val port: Int?,
 ) : Location {
     override fun <T : Any> getAddress(address: InetSocketAddress, data: T, dataType: KClass<T>): Pair<InetSocketAddress, T> {
         val id = address.hashCode().toHexString()
         runBlocking {
-            httpClient.post("$ipc/proxy/tcp") {
+            httpClient.post("$url/proxy/$type") {
                 parameter("autoStart", true)
                 contentType(ContentType.Application.Json)
                 setBody(TcpProxy(id, host ?: address.hostString, port ?: address.port, "172.16.1.116"))
             }
         }
         val responseData = objectMapper.readValue(runBlocking {
-            httpClient.post("$ipc/proxy/$id/update") {
+            httpClient.post("$url/proxy/$id/update") {
                 setBody(object : OutgoingContent.ByteArrayContent() {
                     override val contentType: ContentType get() = ContentType.Application.Json
 

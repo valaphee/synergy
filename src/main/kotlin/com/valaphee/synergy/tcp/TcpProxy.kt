@@ -17,15 +17,13 @@
 package com.valaphee.synergy.tcp
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.TransparentProxy
+import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
-import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
-import io.netty.channel.socket.SocketChannel
 import io.netty.handler.logging.LoggingHandler
 
 /**
@@ -36,7 +34,7 @@ class TcpProxy(
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
     @JsonProperty("interface") `interface`: String
-) : TransparentProxy<Unit>(id, host, port, `interface`) {
+) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {
@@ -48,14 +46,7 @@ class TcpProxy(
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
             .handler(LoggingHandler())
-            .childHandler(object : ChannelInitializer<SocketChannel>() {
-                override fun initChannel(channel: SocketChannel) {
-                    channel.pipeline().addLast(
-                        LoggingHandler(),
-                        FrontendHandler(this@TcpProxy)
-                    )
-                }
-            })
+            .childHandler(FrontendHandler(this@TcpProxy))
             .childOption(ChannelOption.AUTO_READ, false)
             .localAddress(host, port)
             .bind().channel()

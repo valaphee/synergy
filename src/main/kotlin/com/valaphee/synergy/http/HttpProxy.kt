@@ -17,9 +17,10 @@
 package com.valaphee.synergy.http
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.TransparentProxy
+import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
+import com.valaphee.synergy.util.SelfIssuingX509ExtendedKeyManager
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
@@ -29,12 +30,6 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.logging.LoggingHandler
-import io.netty.handler.ssl.SslContextBuilder
-import java.net.Socket
-import java.security.Principal
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
-import javax.net.ssl.X509ExtendedKeyManager
 
 /**
  * @author Kevin Ludwig
@@ -45,7 +40,7 @@ class HttpProxy(
     @JsonProperty("port") port: Int = 443,
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("ssl") private val ssl: Boolean = true
-) : TransparentProxy<Unit>(id, host, port, `interface`) {
+) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {
@@ -53,41 +48,14 @@ class HttpProxy(
 
         super.start()
 
-        val sslContext = if (ssl) SslContextBuilder.forServer(object : X509ExtendedKeyManager() {
-            override fun getClientAliases(keyType: String?, issuers: Array<out Principal>?): Array<String> = TODO()
-
-            override fun chooseClientAlias(keyType: Array<out String>?, issuers: Array<out Principal>?, socket: Socket?) = TODO()
-
-            override fun getServerAliases(keyType: String?, issuers: Array<out Principal>?): Array<String> {
-                TODO("Not yet implemented")
-            }
-
-            override fun chooseServerAlias(keyType: String?, issuers: Array<out Principal>?, socket: Socket?) = TODO()
-
-            override fun getCertificateChain(alias: String?): Array<X509Certificate> {
-                TODO("Not yet implemented")
-            }
-
-            override fun getPrivateKey(alias: String?): PrivateKey {
-                TODO("Not yet implemented")
-            }
-        }).build() else null
-
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
             .handler(LoggingHandler())
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
-                    sslContext?.let {
-                        channel.pipeline().addLast(sslContext.newHandler(channel.alloc()))
-                    }
-                    channel.pipeline().addLast(
-                        HttpServerCodec(),
-                        HttpObjectAggregator(1 * 1024 * 1024),
-                        LoggingHandler(),
-                        FrontendHandler(this@HttpProxy)
-                    )
+                    if (ssl) channel.pipeline().addLast(SelfIssuingX509ExtendedKeyManager.sslContext.newHandler(channel.alloc()))
+                    channel.pipeline().addLast(HttpServerCodec(), HttpObjectAggregator(1 * 1024 * 1024), FrontendHandler(this@HttpProxy))
                 }
             })
             .childOption(ChannelOption.AUTO_READ, false)

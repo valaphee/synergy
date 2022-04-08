@@ -36,7 +36,7 @@ import com.valaphee.netcode.mcbe.network.Pong
 import com.valaphee.netcode.mcbe.world.GameMode
 import com.valaphee.netcode.mcbe.world.block.Block
 import com.valaphee.netcode.mcbe.world.block.BlockState
-import com.valaphee.synergy.TransparentProxy
+import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
@@ -68,7 +68,7 @@ class McbeProxy(
     @JsonProperty("port") port: Int = 19132,
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("authorization") val authorization: String
-) : TransparentProxy<Unit>(id, host, port, `interface`) {
+) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {

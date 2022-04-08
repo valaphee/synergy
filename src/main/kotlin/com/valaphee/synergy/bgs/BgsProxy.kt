@@ -23,7 +23,7 @@ import com.google.protobuf.RpcChannel
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
 import com.valaphee.synergy.Location
-import com.valaphee.synergy.TransparentProxy
+import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.keyStore
 import com.valaphee.synergy.keyStoreFile
@@ -66,7 +66,7 @@ class BgsProxy(
     @JsonProperty("port") port: Int = 1119,
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("referral") val referral: Location
-) : TransparentProxy<Unit>(id, host, port, `interface`) {
+) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
     override suspend fun start() {
@@ -97,14 +97,7 @@ class BgsProxy(
             .handler(LoggingHandler())
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
-                    channel.pipeline().addLast(
-                        sslContextBuilder.newHandler(channel.alloc()),
-                        HttpServerCodec(),
-                        HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
-                        PacketCodec(services),
-                        FrontendHandler(this@BgsProxy)
-                    )
+                    channel.pipeline().addLast(sslContextBuilder.newHandler(channel.alloc()), HttpServerCodec(), HttpObjectAggregator(UShort.MAX_VALUE.toInt()), WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"), PacketCodec(services), FrontendHandler(this@BgsProxy))
                 }
             })
             .localAddress(host, port)

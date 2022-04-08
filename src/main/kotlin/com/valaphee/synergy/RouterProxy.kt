@@ -23,7 +23,7 @@ import java.net.InetAddress
 /**
  * @author Kevin Ludwig
  */
-abstract class TransparentProxy<T>(
+abstract class RouterProxy<T>(
     override val id: String,
     val host: String,
     val port: Int,

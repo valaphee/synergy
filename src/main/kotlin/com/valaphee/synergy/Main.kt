@@ -18,14 +18,15 @@ package com.valaphee.synergy
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.valaphee.synergy.bgs.PatchSecuritySubcommand
 import com.valaphee.synergy.bgs.BgsProxy
+import com.valaphee.synergy.bgs.command.BgsPatchSecuritySubcommand
 import com.valaphee.synergy.http.HttpProxy
 import com.valaphee.synergy.mcbe.McbeProxy
 import com.valaphee.synergy.pro.ProProxy
+import com.valaphee.synergy.tcp.TcpProxy
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson.JacksonConverter
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
@@ -55,8 +56,8 @@ import io.netty.channel.socket.nio.NioDatagramChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
-import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.default
+import kotlinx.coroutines.runBlocking
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
 import org.bouncycastle.asn1.x509.Extension
@@ -73,6 +74,7 @@ import java.security.SecureRandom
 import java.security.Security
 import java.util.Calendar
 import java.util.concurrent.ThreadFactory
+import kotlin.concurrent.thread
 import kotlin.random.asKotlinRandom
 import kotlin.reflect.KClass
 
@@ -83,7 +85,6 @@ lateinit var keyStoreFile: File
 lateinit var keyStore: KeyStore
 internal val objectMapper = jacksonObjectMapper()
 
-@OptIn(ExperimentalCli::class)
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
 
@@ -105,24 +106,28 @@ fun main(arguments: Array<String>) {
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
     val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
-
-    argumentParser.subcommands(PatchSecuritySubcommand)
+    argumentParser.subcommands(BgsPatchSecuritySubcommand)
     argumentParser.parse(arguments)
 
     val proxyTypes = mapOf<String, KClass<out Proxy<*>>>(
-        "tcp" to ProProxy::class,
+        "bgs" to BgsProxy::class,
         "http" to HttpProxy::class,
         "mcbe" to McbeProxy::class,
-        "bgs" to BgsProxy::class,
+        "pro" to ProProxy::class,
+        "tcp" to TcpProxy::class
     )
     val proxies = mutableMapOf<String, Proxy<Any?>>()
+
+    Runtime.getRuntime().addShutdownHook(thread(false) { proxies.values.forEach { runBlocking { it.stop() } } })
+
     embeddedServer(Netty, port, host) {
-        install(ContentNegotiation) { jackson() }
+        install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
 
         routing {
             post("/proxy/{type}") {
                 proxyTypes[call.parameters["type"]]?.let {
                     val proxy = call.receive(it)
+                    @Suppress("UNCHECKED_CAST")
                     if (proxies.putIfAbsent(proxy.id, proxy as Proxy<Any?>) != null) call.respond(HttpStatusCode.BadRequest)
                     if (call.request.queryParameters["autoStart"] == "true") proxy.start()
                     call.respond(HttpStatusCode.OK)

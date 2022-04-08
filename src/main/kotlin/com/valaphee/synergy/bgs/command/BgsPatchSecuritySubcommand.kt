@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bgs
+package com.valaphee.synergy.bgs.command
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.valaphee.synergy.bgs.util.CertificateBundle
+import com.valaphee.synergy.bgs.util.hash
+import com.valaphee.synergy.bgs.util.key
+import com.valaphee.synergy.bgs.util.module
+import com.valaphee.synergy.bgs.util.objectMapper
+import com.valaphee.synergy.bgs.util.swap
 import com.valaphee.synergy.keyStore
 import com.valaphee.synergy.util.occurrencesOf
 import kotlinx.cli.ArgType
-import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.multiple
 import kotlinx.cli.required
@@ -36,8 +41,7 @@ import java.util.Base64
 /**
  * @author Kevin Ludwig
  */
-@OptIn(ExperimentalCli::class)
-object PatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches the security module, and updates the certificate bundle") {
+object BgsPatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches the security module, and updates the certificate bundle") {
     private val input by option(ArgType.String, "input", "i", "Input file").required()
     private val output by option(ArgType.String, "output", "o", "Output file")
     private val aliases by option(ArgType.String, "alias", "a", "Certificate alias").multiple()
@@ -72,7 +76,7 @@ object PatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches the s
                     Signature.getInstance("SHA256withRSA").apply {
                         initSign(keyPair.private)
                         update(certificateBundleBytesPadded)
-                        update(module.toByteArray())
+                        update(module)
                     }.sign().swap().copyInto(bytes, certificateBundleEnd + 4)
                     log.info("Signed certificate bundle overwritten (size: {}, new size: {})", certificateBundleSize, certificateBundleBytes.size)
                 } else log.warn("Unable to patch, too large")
@@ -81,7 +85,7 @@ object PatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches the s
         } ?: log.warn("Unable to find modulus")
     }
 
-    private val log = LogManager.getLogger(PatchSecuritySubcommand::class.java)
+    private val log = LogManager.getLogger(BgsPatchSecuritySubcommand::class.java)
     private const val prefix = "{\"Created\":"
     private const val infix = "}NGIS"
     private val base64Encoder = Base64.getDecoder()

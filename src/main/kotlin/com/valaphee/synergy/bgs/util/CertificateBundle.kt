@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bgs
+package com.valaphee.synergy.bgs.util
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -60,7 +60,7 @@ fun signedCertificateBundle(privateKey: PrivateKey, certificateBundle: Certifica
     Signature.getInstance("SHA256withRSA").apply {
         initSign(privateKey)
         update(certificateBundleBytes)
-        update(module.toByteArray())
+        update(module)
     }.sign().swap().copyInto(signedCertificateBundle, certificateBundleBytes.size + 4)
     return signedCertificateBundle
 }
@@ -71,7 +71,7 @@ fun parseSignedCertificateBundle(signedCertificateBundle: ByteArray, publicKey: 
     return Signature.getInstance("SHA256withRSA").apply {
         initVerify(publicKey)
         update(certificateBundle)
-        update(module.toByteArray())
+        update(module)
     }.verify(signedCertificateBundle.copyOfRange(signatureOffset + magic.size, signedCertificateBundle.size).swap()) to objectMapper.readValue(certificateBundle)
 }
 
@@ -80,7 +80,7 @@ fun ASN1Sequence.hash() = Hex.toHexString(MessageDigest.getInstance("SHA256").di
 internal val objectMapper = jacksonObjectMapper()
 private val base64Decoder = Base64.getDecoder()
 internal val magic = "NGIS".toByteArray()
-internal const val module = "Blizzard Certificate Bundle"
+internal val module = "Blizzard Certificate Bundle".toByteArray()
 private val keyFactory = KeyFactory.getInstance("RSA")
 internal val key = keyFactory.generatePublic(X509EncodedKeySpec(base64Decoder.decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB"))) as RSAPublicKey
 

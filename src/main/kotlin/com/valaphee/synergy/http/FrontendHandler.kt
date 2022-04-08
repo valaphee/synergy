@@ -27,6 +27,7 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 
@@ -44,12 +45,7 @@ class FrontendHandler(
             .channel(context.channel()::class.java)
             .handler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
-                    channel.pipeline().addLast(
-                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
-                        HttpClientCodec(),
-                        HttpObjectAggregator(1 * 1024 * 1024),
-                        BackendHandler(context.channel())
-                    )
+                    channel.pipeline().addLast(SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()), HttpClientCodec(), HttpObjectAggregator(1 * 1024 * 1024), LoggingHandler(), BackendHandler(context.channel()))
                 }
             })
             .localAddress(proxy.`interface`, 0)

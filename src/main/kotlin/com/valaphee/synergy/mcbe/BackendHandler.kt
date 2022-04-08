@@ -31,6 +31,7 @@ import com.valaphee.netcode.mcbe.util.parseAuthJws
 import com.valaphee.netcode.mcbe.util.parseServerToClientHandshakeJws
 import com.valaphee.netcode.mcbe.util.parseUserJws
 import com.valaphee.netcode.mcbe.world.entity.player.User
+import com.valaphee.synergy.objectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -39,7 +40,8 @@ import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.serialization.jackson.jackson
+import io.ktor.http.ContentType
+import io.ktor.serialization.jackson.JacksonConverter
 import io.ktor.util.encodeBase64
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -146,6 +148,6 @@ class BackendHandler(
     }
 
     companion object {
-        private val httpClient = HttpClient(OkHttp) { install(ContentNegotiation) { jackson() } }
+        private val httpClient = HttpClient(OkHttp) { install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }
     }
 }

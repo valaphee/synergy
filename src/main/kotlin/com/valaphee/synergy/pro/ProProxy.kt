@@ -20,15 +20,13 @@ import bgs.protocol.game_utilities.v2.client.ProcessTaskResponse
 import bgs.protocol.v2.Attribute
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.nimbusds.srp6.SRP6Routines
-import com.valaphee.synergy.TransparentProxy
+import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
-import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
-import io.netty.channel.socket.SocketChannel
 import io.netty.handler.logging.LoggingHandler
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -42,16 +40,16 @@ class ProProxy(
     @JsonProperty("host") host: String,
     @JsonProperty("port") port: Int,
     @JsonProperty("interface") `interface`: String
-) : TransparentProxy<ByteArray>(id, host, port, `interface`) {
+) : RouterProxy<ByteArray>(id, host, port, `interface`) {
     override val dataType get() = ByteArray::class
 
     private var channel: Channel? = null
 
-    internal var srpI = 0L
-    internal lateinit var k0: ByteArray
-    internal lateinit var k1: ByteArray
-    internal lateinit var k2: ByteArray
-    internal lateinit var k3: ByteArray
+    var cid = 0L
+    lateinit var k0: ByteArray
+    lateinit var k1: ByteArray
+    lateinit var k2: ByteArray
+    lateinit var k3: ByteArray
 
     override suspend fun start() {
         require(channel == null)
@@ -62,14 +60,7 @@ class ProProxy(
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
             .handler(LoggingHandler())
-            .childHandler(object : ChannelInitializer<SocketChannel>() {
-                override fun initChannel(channel: SocketChannel) {
-                    channel.pipeline().addLast(
-                        LoggingHandler(),
-                        FrontendHandler(this@ProProxy)
-                    )
-                }
-            })
+            .childHandler(FrontendHandler(this@ProProxy))
             .childOption(ChannelOption.AUTO_READ, false)
             .localAddress(host, port)
             .bind().channel()
@@ -78,7 +69,7 @@ class ProProxy(
     override suspend fun update(data: ByteArray): ByteArray {
         val payload = ProcessTaskResponse.parseFrom(data)
         val results = payload.resultList.associate { it.name to it.value }.toMutableMap()
-        srpI = checkNotNull(results["cid"]).uintValue
+        cid = checkNotNull(results["cid"]).uintValue
         k0 = checkNotNull(results["k0"]).blobValue.toByteArray() // when invalid server doesn't accept LoginSrp1 packet, connection gets closed
         k1 = checkNotNull(results["k1"]).blobValue.toByteArray() // when invalid client doesn't accept LoginSrp2 packet, connection gets closed
         k2 = checkNotNull(results["k2"]).blobValue.toByteArray() // when invalid client doesn't accept LoginSrp2 packet, connection gets closed

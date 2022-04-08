@@ -24,8 +24,9 @@ import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
-import org.apache.logging.log4j.LogManager
+import io.netty.handler.logging.LoggingHandler
 import java.math.BigInteger
 
 /**
@@ -48,7 +49,11 @@ class FrontendHandler(
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
-            .handler(BackendHandler(context.channel()))
+            .handler(object : ChannelInitializer<Channel>() {
+                override fun initChannel(channel: Channel) {
+                    channel.pipeline().addLast(LoggingHandler(), BackendHandler(context.channel()))
+                }
+            })
             .option(ChannelOption.AUTO_READ, false)
             .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
@@ -145,6 +150,5 @@ class FrontendHandler(
     companion object {
         private const val clientMagic = "HELLO PRO CLIENT"
         private const val serverMagic = "HELLO PRO SERVER"
-        private val log = LogManager.getLogger(FrontendHandler::class.java)
     }
 }

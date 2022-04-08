@@ -37,7 +37,7 @@ object UnconnectedPingHandler : UdpPacketHandler<UnconnectedPing>(UnconnectedPin
     override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
         val rakNetConfig = context.channel().config() as RakNet.Config
         val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, 19132, 19133, "Synergy").toString())
-        val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
+        val buffer = context.alloc().buffer(unconnectedPong.sizeHint())
         try {
             rakNetConfig.codec.encode(unconnectedPong, buffer)
             repeat(3) { context.writeAndFlush(DatagramPacket(buffer.retainedSlice(), address)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE) }

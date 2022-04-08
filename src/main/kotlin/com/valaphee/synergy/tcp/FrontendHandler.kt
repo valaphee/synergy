@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy.tcp
 
+import com.valaphee.synergy.pro.BackendHandler
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -23,7 +24,9 @@ import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
+import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelOption
+import io.netty.handler.logging.LoggingHandler
 
 /**
  * @author Kevin Ludwig
@@ -37,7 +40,11 @@ class FrontendHandler(
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
-            .handler(BackendHandler(context.channel()))
+            .handler(object : ChannelInitializer<Channel>() {
+                override fun initChannel(channel: Channel) {
+                    channel.pipeline().addLast(LoggingHandler(), BackendHandler(context.channel()))
+                }
+            })
             .option(ChannelOption.AUTO_READ, false)
             .localAddress(proxy.`interface`, 0)
             .remoteAddress(proxy.host, proxy.port)
