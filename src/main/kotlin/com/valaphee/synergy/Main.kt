@@ -146,7 +146,12 @@ fun main(arguments: Array<String>) {
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
-            post("/proxy/{id}/update") { proxies[call.parameters["id"]]?.let { call.respondText(objectMapper.writeValueAsString(it.update(objectMapper.readValue(call.receiveText(), it.dataType.java))), ContentType.Application.Json) } ?: call.respond(HttpStatusCode.NotFound) }
+            post("/proxy/{id}/update") {
+                proxies[call.parameters["id"]]?.let {
+                    // Use object mapper for correct interpretation of "update" structures, See IpcLocation
+                    call.respondText(objectMapper.writeValueAsString(it.update(objectMapper.readValue(call.receiveText(), it.dataType.java))), ContentType.Application.Json)
+                } ?: call.respond(HttpStatusCode.NotFound)
+            }
             get("/proxy/{id}/stop") {
                 proxies[call.parameters["id"]]?.let {
                     it.stop()
