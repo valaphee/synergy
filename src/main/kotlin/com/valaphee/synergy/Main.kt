@@ -48,7 +48,8 @@ import io.ktor.websocket.send
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
@@ -58,7 +59,7 @@ import kotlin.reflect.KClass
 
 val objectMapper = jacksonObjectMapper().registerModule(ProtobufModule())
 val httpClient = HttpClient(OkHttp) { install(io.ktor.client.plugins.ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }
-val events = Channel<Event>()
+val events = MutableSharedFlow<Event>()
 
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
@@ -114,7 +115,7 @@ fun main(arguments: Array<String>) {
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
-            webSocket("/event") { for (event in events) { send(objectMapper.writeValueAsString(event)) } }
+            webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }
         }
     }.start(true)
 }

@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bgs.util
+package com.valaphee.synergy.bgs
 
-fun String.hashFnv1a() = toByteArray().hashFnv1a()
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.valaphee.synergy.Event
 
-fun ByteArray.hashFnv1a(): Int {
-    var hash = fnv1aInit
-    forEach {
-        hash = hash xor (it.toInt() and 0xFF)
-        hash *= fnv1aPrime
-    }
-    return hash
-}
-
-private const val fnv1aInit = 0x811C9DC5.toInt()
-private const val fnv1aPrime = 16777619
+/**
+ * @author Kevin Ludwig
+ */
+abstract class BgsEvent(
+    emitterId: String,
+    emittedAt: Long,
+    @get:JsonProperty("id") val id: Int,
+    @get:JsonProperty("service_name") val serviceHash: Int,
+    @get:JsonProperty("service_hash") val serviceName: String?,
+    @get:JsonProperty("method_id") val methodId: Int,
+    @get:JsonProperty("method_name") val methodName: String?,
+    @get:JsonProperty("data") val data: Any?
+) : Event(emitterId, emittedAt)

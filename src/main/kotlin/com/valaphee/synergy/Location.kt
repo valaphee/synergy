@@ -58,10 +58,10 @@ class PassthroughLocation : Location {
  */
 @JsonTypeName("ipc")
 class IpcLocation(
-    @JsonProperty("url") val url: String,
-    @JsonProperty("type") val type: String,
-    @JsonProperty("host") val host: String?,
-    @JsonProperty("port") val port: Int?,
+    @get:JsonProperty("url") val url: String,
+    @get:JsonProperty("type") val type: String,
+    @get:JsonProperty("host") val host: String?,
+    @get:JsonProperty("port") val port: Int?,
 ) : Location {
     override fun <T : Any> getAddress(address: InetSocketAddress, data: T, dataType: KClass<T>): Pair<InetSocketAddress, T> {
         val id = address.hashCode().toHexString()

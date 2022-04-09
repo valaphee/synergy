@@ -18,7 +18,6 @@ package com.valaphee.synergy.pro
 
 import bgs.protocol.game_utilities.v2.client.ProcessTaskResponse
 import bgs.protocol.v2.Attribute
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.nimbusds.srp6.SRP6Routines
 import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
@@ -35,10 +34,10 @@ import java.security.SecureRandom
  * @author Kevin Ludwig
  */
 class ProProxy(
-    @JsonProperty("id") id: String,
-    @JsonProperty("host") host: String,
-    @JsonProperty("port") port: Int,
-    @JsonProperty("interface") `interface`: String
+    id: String,
+    host: String,
+    port: Int,
+    `interface`: String
 ) : RouterProxy<ByteArray>(id, host, port, `interface`) {
     override val dataType get() = ByteArray::class
 

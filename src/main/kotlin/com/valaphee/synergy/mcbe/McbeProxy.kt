@@ -61,11 +61,11 @@ import java.util.zip.GZIPInputStream
  * @author Kevin Ludwig
  */
 class McbeProxy(
-    @JsonProperty("id") id: String,
-    @JsonProperty("host") host: String,
-    @JsonProperty("port") port: Int = 19132,
-    @JsonProperty("interface") `interface`: String,
-    @JsonProperty("authorization") val authorization: String
+    id: String,
+    host: String,
+    port: Int = 19132,
+    `interface`: String,
+    @get:JsonProperty("authorization") val authorization: String
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 
@@ -82,7 +82,7 @@ class McbeProxy(
                     channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {
                         override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
                             val rakNetConfig = context.channel().config() as RakNet.Config
-                            val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, 19132, 19133, "Synergy").toString())
+                            val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, port, port, "Synergy").toString())
                             val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
                             try {
                                 rakNetConfig.codec.encode(unconnectedPong, buffer)
@@ -135,7 +135,7 @@ class McbeProxy(
         }
 
         private data class BlockPalette(
-            @JsonProperty("blocks") val blockStates: List<BlockState>
+            @get:JsonProperty("blocks") val blockStates: List<BlockState>
         )
     }
 }

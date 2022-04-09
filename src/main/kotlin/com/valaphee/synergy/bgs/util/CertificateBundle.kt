@@ -36,19 +36,19 @@ import java.util.Base64
  * @author Kevin Ludwig
  */
 data class CertificateBundle(
-    @JsonProperty("Created") val created: Long,
-    @JsonProperty("Certificates") val certificates: List<UriKeyPair>,
-    @JsonProperty("PublicKeys") val publicKeys: List<UriKeyPair>,
-    @JsonProperty("SigningCertificates") val signingCertificates: List<RawCertificate>,
-    @JsonProperty("RootCAPublicKeys") val rootCaPublicKeyShas: List<String>
+    @get:JsonProperty("Created") val created: Long,
+    @get:JsonProperty("Certificates") val certificates: List<UriKeyPair>,
+    @get:JsonProperty("PublicKeys") val publicKeys: List<UriKeyPair>,
+    @get:JsonProperty("SigningCertificates") val signingCertificates: List<RawCertificate>,
+    @get:JsonProperty("RootCAPublicKeys") val rootCaPublicKeyShas: List<String>
 ) {
     data class UriKeyPair(
-        @JsonProperty("Uri") val uri: String,
-        @JsonProperty("ShaHashPublicKeyInfo") val hash: String
+        @get:JsonProperty("Uri") val uri: String,
+        @get:JsonProperty("ShaHashPublicKeyInfo") val hash: String
     )
 
     data class RawCertificate(
-        @JsonProperty("RawData") val data: String
+        @get:JsonProperty("RawData") val data: String
     )
 }
 

@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bgs.util
+package com.valaphee.synergy.bgs
 
-fun String.hashFnv1a() = toByteArray().hashFnv1a()
+import com.fasterxml.jackson.annotation.JsonTypeName
 
-fun ByteArray.hashFnv1a(): Int {
-    var hash = fnv1aInit
-    forEach {
-        hash = hash xor (it.toInt() and 0xFF)
-        hash *= fnv1aPrime
-    }
-    return hash
-}
-
-private const val fnv1aInit = 0x811C9DC5.toInt()
-private const val fnv1aPrime = 16777619
+/**
+ * @author Kevin Ludwig
+ */
+@JsonTypeName("bgs_request")
+class BgsRequestEvent(
+    emitterId: String,
+    emittedAt: Long,
+    id: Int,
+    serviceHash: Int,
+    serviceName: String?,
+    methodId: Int,
+    methodName: String?,
+    payload: Any?
+) : BgsEvent(emitterId, emittedAt, id, serviceHash, serviceName, methodId, methodName, payload)

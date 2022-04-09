@@ -16,7 +16,6 @@
 
 package com.valaphee.synergy.tcp
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
@@ -29,10 +28,10 @@ import io.netty.channel.ChannelOption
  * @author Kevin Ludwig
  */
 class TcpProxy(
-    @JsonProperty("id") id: String,
-    @JsonProperty("host") host: String,
-    @JsonProperty("port") port: Int,
-    @JsonProperty("interface") `interface`: String
+    id: String,
+    host: String,
+    port: Int,
+    `interface`: String
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 

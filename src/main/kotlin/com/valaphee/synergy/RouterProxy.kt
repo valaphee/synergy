@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.sun.jna.platform.win32.Shell32
 import kotlinx.coroutines.delay
 import java.net.InetAddress
@@ -24,10 +25,10 @@ import java.net.InetAddress
  * @author Kevin Ludwig
  */
 abstract class RouterProxy<T>(
-    override val id: String,
-    val host: String,
-    val port: Int,
-    val `interface`: String,
+    @get:JsonProperty("id") override val id: String,
+    @get:JsonProperty("host") val host: String,
+    @get:JsonProperty("port") val port: Int,
+    @get:JsonProperty("interface") val `interface`: String,
 ) : Proxy<T> {
     override suspend fun start() {
         Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" ${InetAddress.getByName(host).hostAddress}/32\"", null, 0)

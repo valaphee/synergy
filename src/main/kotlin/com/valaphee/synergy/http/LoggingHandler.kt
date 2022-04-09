@@ -23,12 +23,14 @@ import io.netty.channel.ChannelPromise
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMessage
-import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Kevin Ludwig
  */
-class LoggingHandler : ChannelDuplexHandler() {
+class LoggingHandler(
+    private val proxy: HttpProxy
+) : ChannelDuplexHandler() {
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
         if (message is HttpMessage) log(message)
         context.fireChannelRead(message)
@@ -40,10 +42,14 @@ class LoggingHandler : ChannelDuplexHandler() {
     }
 
     private fun log(message: HttpMessage) {
-        events.sendBlocking(when (message) {
-            is FullHttpRequest -> HttpRequestLogEvent(message.method().name(), message.uri())
-            is FullHttpResponse -> HttpResponseLogEvent("${message.status().code()} ${message.status().reasonPhrase()}")
-            else -> TODO()
-        })
+        runBlocking {
+            events.emit(
+                when (message) {
+                    is FullHttpRequest -> HttpRequestEvent(proxy.id, System.currentTimeMillis(), message.method().name(), message.uri(), message.headers().associate { it.key to it.value })
+                    is FullHttpResponse -> HttpResponseEvent(proxy.id, System.currentTimeMillis(), message.status().code(), message.status().reasonPhrase(), message.headers().associate { it.key to it.value })
+                    else -> TODO()
+                }
+            )
+        }
     }
 }

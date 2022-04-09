@@ -23,7 +23,5 @@ import bgs.protocol.Header
  */
 class Packet(
     val header: Header,
-    val payload: Any?
-) {
-    override fun toString() = "BnetPacket(header=$header, payload=$payload)"
-}
+    val data: Any?
+)

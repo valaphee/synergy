@@ -37,7 +37,7 @@ class PacketCodec(
 
     override fun encode(context: ChannelHandlerContext, message: Packet, out: MutableList<Any>) {
         val header = message.header
-        val payload = message.payload
+        val payload = message.data
         if (payload is ByteArray) {
             val headerSize = header.serializedSize
             val buffer = context.alloc().buffer(2 + headerSize + payload.size)
@@ -47,9 +47,7 @@ class PacketCodec(
             out.add(BinaryWebSocketFrame(buffer))
         } else if (payload is Message) {
             val payloadSize = payload.serializedSize
-            val modifiedHeader = if (header.hasSize() && payloadSize != header.size) {
-                header.toBuilder().setSize(payloadSize).build()
-            } else header
+            val modifiedHeader = if (header.hasSize() && payloadSize != header.size) header.toBuilder().setSize(payloadSize).build() else header
             val headerSize = modifiedHeader.serializedSize
             val buffer = context.alloc().buffer(2 + headerSize + payloadSize)
             buffer.writeShort(headerSize)

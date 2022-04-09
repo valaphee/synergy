@@ -57,6 +57,7 @@ class FrontendHandler(
                     else context.channel().close()
                 }
             }).channel()
+
         state = State.Handshake
     }
 

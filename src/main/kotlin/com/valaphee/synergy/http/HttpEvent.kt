@@ -16,12 +16,14 @@
 
 package com.valaphee.synergy.http
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.valaphee.synergy.Event
 
 /**
  * @author Kevin Ludwig
  */
-class HttpRequestLogEvent(
-    val method: String,
-    val uri: String
-) : Event
+abstract class HttpEvent(
+    emitterId: String,
+    emittedAt: Long,
+    @get:JsonProperty("headers") val headers: Map<String, String>
+) : Event(emitterId, emittedAt)

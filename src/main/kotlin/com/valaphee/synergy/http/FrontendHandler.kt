@@ -48,7 +48,7 @@ class FrontendHandler(
                         SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(1 * 1024 * 1024),
-                        LoggingHandler(),
+                        LoggingHandler(proxy),
                         BackendHandler(context.channel()))
                 }
             })

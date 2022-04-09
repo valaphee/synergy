@@ -16,7 +16,14 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
 /**
  * @author Kevin Ludwig
  */
-interface Event
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+abstract class Event(
+    @get:JsonProperty("emitter_id") val emitterId: String,
+    @get:JsonProperty("emitted_at") val emittedAt: Long
+)

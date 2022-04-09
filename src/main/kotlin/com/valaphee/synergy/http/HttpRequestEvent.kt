@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.bgs
+package com.valaphee.synergy.http
 
-import com.valaphee.synergy.Event
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * @author Kevin Ludwig
  */
-class BgsLogEvent(
-    val id: Int,
-    val serviceHash: Int,
-    val serviceName: String?,
-    val methodId: Int,
-    val methodName: String?,
-    val payload: Any?
-) : Event
+@JsonTypeName("http_request")
+class HttpRequestEvent(
+    emitterId: String,
+    emittedAt: Long,
+    @get:JsonProperty("method") val method: String,
+    @get:JsonProperty("uri") val uri: String,
+    headers: Map<String, String>
+) : HttpEvent(emitterId, emittedAt, headers)

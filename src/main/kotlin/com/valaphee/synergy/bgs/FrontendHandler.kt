@@ -49,7 +49,7 @@ class FrontendHandler(
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         PacketCodec(BgsProxy.services),
-                        LoggingHandler(BgsProxy.services),
+                        LoggingHandler(proxy, BgsProxy.services),
                         BackendHandler(proxy, context.channel())
                     )
                 }

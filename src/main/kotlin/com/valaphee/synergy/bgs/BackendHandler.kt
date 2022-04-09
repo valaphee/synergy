@@ -57,7 +57,7 @@ class BackendHandler(
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(if (message is Packet) when (val payload = message.payload) {
+        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(if (message is Packet) when (val payload = message.data) {
             is ProcessTaskResponse -> {
                 val results = payload.resultList.associate { it.name to it.value }.toMutableMap()
                 if (results["response_type"]?.stringValue == "ReferralInfo") {

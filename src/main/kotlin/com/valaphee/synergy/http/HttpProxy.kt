@@ -35,11 +35,11 @@ import io.netty.handler.ssl.SslContext
  * @author Kevin Ludwig
  */
 class HttpProxy(
-    @JsonProperty("id") id: String,
-    @JsonProperty("host") host: String,
-    @JsonProperty("port") port: Int = 443,
-    @JsonProperty("interface") `interface`: String,
-    @JsonProperty("ssl") private val ssl: Boolean = true
+    id: String,
+    host: String,
+    port: Int = 443,
+    `interface`: String,
+    @get:JsonProperty("ssl") val ssl: Boolean = true
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
     @Inject private lateinit var sslContext: SslContext
 
