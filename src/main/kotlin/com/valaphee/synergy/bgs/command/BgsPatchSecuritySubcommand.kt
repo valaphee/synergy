@@ -19,11 +19,10 @@ package com.valaphee.synergy.bgs.command
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Inject
 import com.valaphee.synergy.bgs.util.CertificateBundle
+import com.valaphee.synergy.bgs.util.SignedCertificateBundle
 import com.valaphee.synergy.bgs.util.hash
-import com.valaphee.synergy.bgs.util.key
-import com.valaphee.synergy.bgs.util.module
-import com.valaphee.synergy.bgs.util.objectMapper
 import com.valaphee.synergy.bgs.util.swap
+import com.valaphee.synergy.objectMapper
 import com.valaphee.synergy.util.occurrencesOf
 import kotlinx.cli.ArgType
 import kotlinx.cli.Subcommand
@@ -54,7 +53,7 @@ class BgsPatchSecuritySubcommand @Inject constructor(
         log.info("Patching {}", inputFile)
 
         val bytes = inputFile.readBytes()
-        bytes.occurrencesOf(key.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
+        bytes.occurrencesOf(SignedCertificateBundle.key.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
             log.info("Modulus found at 0x{}", modulusIndex.toHexString().uppercase())
             bytes.occurrencesOf(prefix.toByteArray()).singleOrNull()?.let { certificateBundleIndex ->
                 log.info("Certificate bundle found at 0x{}", certificateBundleIndex.toHexString().uppercase())
@@ -78,7 +77,7 @@ class BgsPatchSecuritySubcommand @Inject constructor(
                     Signature.getInstance("SHA256withRSA").apply {
                         initSign(keyPair.private)
                         update(certificateBundleBytesPadded)
-                        update(module)
+                        update(SignedCertificateBundle.module)
                     }.sign().swap().copyInto(bytes, certificateBundleEnd + 4)
                     log.info("Signed certificate bundle overwritten (size: {}, new size: {})", certificateBundleSize, certificateBundleBytes.size)
                 } else log.warn("Unable to patch, too large")

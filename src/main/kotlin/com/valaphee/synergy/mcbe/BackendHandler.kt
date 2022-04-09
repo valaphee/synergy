@@ -83,7 +83,7 @@ class BackendHandler(
                             header("Content-Type", "application/json")
                             header("User-Agent", "MCPE/Android")
                             header("Client-Version", user.version)
-                            header("Authorization", mcbeProxy.authorization)
+                            header("Authorization", "")
                         }
                         setBody(mapOf("identityPublicKey" to keyPair.public.encoded.encodeBase64()))
                     }.body<Map<*, *>>()["chain"] as List<*>

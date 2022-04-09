@@ -16,7 +16,15 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.ContentNegotiation
+import io.ktor.http.ContentType
+import io.ktor.serialization.jackson.JacksonConverter
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.epoll.Epoll
 import io.netty.channel.epoll.EpollDatagramChannel
@@ -46,3 +54,6 @@ enum class UnderlyingNetworking(
     Kqueue({ threadCount, threadFactory -> KQueueEventLoopGroup(threadCount, threadFactory) }, KQueueServerSocketChannel::class.java, KQueueDatagramChannel::class.java),
     Nio({ threadCount, threadFactory -> NioEventLoopGroup(threadCount, threadFactory) }, NioServerSocketChannel::class.java, NioDatagramChannel::class.java)
 }
+
+val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(ProtobufModule())
+val httpClient = HttpClient(OkHttp) { install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }

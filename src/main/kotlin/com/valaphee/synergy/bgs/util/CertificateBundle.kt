@@ -17,20 +17,6 @@
 package com.valaphee.synergy.bgs.util
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.valaphee.synergy.util.occurrencesOf
-import org.bouncycastle.asn1.ASN1Sequence
-import org.bouncycastle.asn1.x509.X509CertificateStructure
-import org.bouncycastle.util.encoders.Hex
-import java.security.KeyFactory
-import java.security.MessageDigest
-import java.security.PrivateKey
-import java.security.PublicKey
-import java.security.Signature
-import java.security.interfaces.RSAPublicKey
-import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
 
 /**
  * @author Kevin Ludwig
@@ -52,42 +38,3 @@ data class CertificateBundle(
     )
 }
 
-fun signedCertificateBundle(privateKey: PrivateKey, certificateBundle: CertificateBundle): ByteArray {
-    val certificateBundleBytes = objectMapper.writeValueAsBytes(certificateBundle)
-    val signedCertificateBundle = ByteArray(certificateBundleBytes.size + magic.size + 256)
-    certificateBundleBytes.copyInto(signedCertificateBundle)
-    magic.copyInto(signedCertificateBundle, certificateBundleBytes.size)
-    Signature.getInstance("SHA256withRSA").apply {
-        initSign(privateKey)
-        update(certificateBundleBytes)
-        update(module)
-    }.sign().swap().copyInto(signedCertificateBundle, certificateBundleBytes.size + 4)
-    return signedCertificateBundle
-}
-
-fun parseSignedCertificateBundle(signedCertificateBundle: ByteArray, publicKey: PublicKey = key): Pair<Boolean, CertificateBundle> {
-    val signatureOffset = signedCertificateBundle.occurrencesOf(magic).single()
-    val certificateBundle = signedCertificateBundle.copyOf(signatureOffset)
-    return Signature.getInstance("SHA256withRSA").apply {
-        initVerify(publicKey)
-        update(certificateBundle)
-        update(module)
-    }.verify(signedCertificateBundle.copyOfRange(signatureOffset + magic.size, signedCertificateBundle.size).swap()) to objectMapper.readValue(certificateBundle)
-}
-
-fun ASN1Sequence.hash() = Hex.toHexString(MessageDigest.getInstance("SHA256").digest(X509CertificateStructure.getInstance(this).subjectPublicKeyInfo.publicKeyData.bytes)).uppercase()
-
-internal val objectMapper = jacksonObjectMapper()
-private val base64Decoder = Base64.getDecoder()
-internal val magic = "NGIS".toByteArray()
-internal val module = "Blizzard Certificate Bundle".toByteArray()
-private val keyFactory = KeyFactory.getInstance("RSA")
-internal val key = keyFactory.generatePublic(X509EncodedKeySpec(base64Decoder.decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB"))) as RSAPublicKey
-
-internal fun ByteArray.swap() = apply {
-    repeat(size / 2) {
-        val value = this[it]
-        this[it] = this[size - it - 1]
-        this[size - it - 1] = value
-    }
-}

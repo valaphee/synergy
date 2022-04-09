@@ -16,17 +16,13 @@
 
 package com.valaphee.synergy
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Guice
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import com.valaphee.synergy.bgs.BgsProxy
 import com.valaphee.synergy.bgs.command.BgsPatchSecuritySubcommand
 import com.valaphee.synergy.http.HttpProxy
 import com.valaphee.synergy.mcbe.McbeProxy
 import com.valaphee.synergy.pro.ProProxy
 import com.valaphee.synergy.tcp.TcpProxy
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.JacksonConverter
@@ -48,7 +44,6 @@ import io.ktor.websocket.send
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -56,10 +51,6 @@ import java.io.File
 import java.security.Security
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
-
-val objectMapper = jacksonObjectMapper().registerModule(ProtobufModule())
-val httpClient = HttpClient(OkHttp) { install(io.ktor.client.plugins.ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }
-val events = MutableSharedFlow<Event>()
 
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())

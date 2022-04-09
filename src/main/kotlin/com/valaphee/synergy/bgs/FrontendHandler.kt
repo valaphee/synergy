@@ -28,7 +28,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import io.netty.handler.ssl.util.SimpleTrustManagerFactory
 
 /**
  * @author Kevin Ludwig
@@ -45,7 +45,7 @@ class FrontendHandler(
             .handler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
-                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
+                        SslContextBuilder.forClient().trustManager(SimpleTrustManagerFactory.getInstance(SimpleTrustManagerFactory.getDefaultAlgorithm())).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         PacketCodec(BgsProxy.services),

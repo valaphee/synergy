@@ -64,8 +64,7 @@ class McbeProxy(
     id: String,
     host: String,
     port: Int = 19132,
-    `interface`: String,
-    @get:JsonProperty("authorization") val authorization: String
+    `interface`: String
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
     private var channel: Channel? = null
 

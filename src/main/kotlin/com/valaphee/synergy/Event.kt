@@ -18,6 +18,9 @@ package com.valaphee.synergy
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import kotlinx.coroutines.flow.MutableSharedFlow
+
+val events = MutableSharedFlow<Event>()
 
 /**
  * @author Kevin Ludwig
