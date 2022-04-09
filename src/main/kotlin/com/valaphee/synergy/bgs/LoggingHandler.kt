@@ -22,51 +22,41 @@ import bgs.protocol.NoData
 import com.google.protobuf.Descriptors.MethodDescriptor
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
+import com.valaphee.synergy.events
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import kotlinx.coroutines.channels.sendBlocking
 
 /**
  * @author Kevin Ludwig
  */
 class LoggingHandler(
-    private val services: Map<Int, Service>,
-    private val client: Boolean
+    private val services: Map<Int, Service>
 ) : ChannelDuplexHandler() {
     internal val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
 
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
-        if (message is Packet) when (message.header.serviceId) {
-            PacketCodec.requestServiceId -> services[message.header.serviceHash]?.let { service ->
-                service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == message.header.methodId }?.let { methodDescriptor ->
-                    val response = service.getResponsePrototype(methodDescriptor)
-                    if (response !is NO_RESPONSE && response !is NoData) responses[message.header.token] = service to methodDescriptor
-                    serviceLogs.getOrPut(service.descriptorForType.name) { LogManager.getLogger(service.descriptorForType.name) }.debug("{} RPC #{}: {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload)
-                } ?: log.debug("{} RCP #{} - Unknown method id {}:{}", if (client) "Client" else "Server", message.header.token, service.descriptorForType.name, message.header.methodId)
-            } ?: log.debug("{} RCP #{} - Unknown service hash {}:{}", if (client) "Client" else "Server", message.header.token, message.header.serviceHash, message.header.methodId)
-            PacketCodec.responseServiceId -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LogManager.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload) } ?: log.debug("{} RCP #{} return unknown", if (client) "Server" else "Client", message.header.token)
-        }
+        if (message is Packet) log(message)
         context.fireChannelRead(message)
     }
 
     override fun write(context: ChannelHandlerContext, message: Any?, promise: ChannelPromise?) {
-        if (message is Packet) when (message.header.serviceId) {
-            PacketCodec.requestServiceId -> services[message.header.serviceHash]?.let { service ->
-                service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == message.header.methodId }?.let { methodDescriptor ->
-                    val response = service.getResponsePrototype(methodDescriptor)
-                    if (response !is NO_RESPONSE && response !is NoData) responses[message.header.token] = service to methodDescriptor
-                    serviceLogs.getOrPut(service.descriptorForType.name) { LogManager.getLogger(service.descriptorForType.name) }.debug("{} RPC #{}: {}\n{}", if (client) "Server" else "Client", message.header.token, methodDescriptor.name, message.payload)
-                } ?: log.debug("{} RCP #{} - Unknown method id {}:{}", if (client) "Server" else "Client", message.header.token, service.descriptorForType.name, message.header.methodId)
-            } ?: log.debug("{} RCP #{} - Unknown service hash {}:{}", if (client) "Server" else "Client", message.header.token, message.header.serviceHash, message.header.methodId)
-            PacketCodec.responseServiceId -> responses.remove(message.header.token)?.let { (service, methodDescriptor) -> serviceLogs.getOrPut(service.descriptorForType.name) { LogManager.getLogger(service.descriptorForType.name) }.debug("{} RPC #{} returned {}\n{}", if (client) "Client" else "Server", message.header.token, methodDescriptor.name, message.payload) } ?: log.debug("{} RCP #{} return unknown", if (client) "Client" else "Server", message.header.token)
-        }
+        if (message is Packet) log(message)
         context.write(message, promise)
     }
 
-    companion object {
-        private val log = LogManager.getLogger(LoggingHandler::class.java)
-        private val serviceLogs = mutableMapOf<String, Logger>()
+    private fun log(packet: Packet) {
+        events.sendBlocking(when (packet.header.serviceId) {
+            PacketCodec.requestServiceId -> services[packet.header.serviceHash]?.let { service ->
+                service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == packet.header.methodId }?.let { methodDescriptor ->
+                    val response = service.getResponsePrototype(methodDescriptor)
+                    if (response !is NO_RESPONSE && response !is NoData) responses[packet.header.token] = service to methodDescriptor
+                    BgsLogEvent(packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload)
+                } ?: BgsLogEvent(packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, null, packet.payload)
+            } ?: BgsLogEvent(packet.header.token, packet.header.serviceHash, null, packet.header.methodId, null, packet.payload)
+            PacketCodec.responseServiceId -> responses.remove(packet.header.token)?.let { (service, methodDescriptor) -> BgsLogEvent(packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload) } ?: BgsLogEvent(packet.header.token, 0, null, 0, null, packet.payload)
+            else -> TODO()
+        })
     }
 }

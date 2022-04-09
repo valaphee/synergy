@@ -29,7 +29,6 @@ import io.netty.channel.ChannelOption
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContext
 
 /**
@@ -54,7 +53,6 @@ class HttpProxy(
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
-            .handler(LoggingHandler())
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
                     if (ssl) channel.pipeline().addLast(sslContext.newHandler(channel.alloc()))

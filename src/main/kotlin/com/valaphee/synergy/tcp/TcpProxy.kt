@@ -24,7 +24,6 @@ import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelOption
-import io.netty.handler.logging.LoggingHandler
 
 /**
  * @author Kevin Ludwig
@@ -45,7 +44,6 @@ class TcpProxy(
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
-            .handler(LoggingHandler())
             .childHandler(FrontendHandler(this@TcpProxy))
             .childOption(ChannelOption.AUTO_READ, false)
             .localAddress(host, port)

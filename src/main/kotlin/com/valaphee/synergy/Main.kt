@@ -18,6 +18,7 @@ package com.valaphee.synergy
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Guice
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import com.valaphee.synergy.bgs.BgsProxy
 import com.valaphee.synergy.bgs.command.BgsPatchSecuritySubcommand
 import com.valaphee.synergy.http.HttpProxy
@@ -41,9 +42,13 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSockets
+import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.send
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
@@ -51,8 +56,9 @@ import java.security.Security
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 
-val objectMapper = jacksonObjectMapper()
+val objectMapper = jacksonObjectMapper().registerModule(ProtobufModule())
 val httpClient = HttpClient(OkHttp) { install(io.ktor.client.plugins.ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }
+val events = Channel<Event>()
 
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
@@ -65,21 +71,20 @@ fun main(arguments: Array<String>) {
     argumentParser.subcommands(injector.getInstance(BgsPatchSecuritySubcommand::class.java))
     argumentParser.parse(arguments)
 
-    val proxyTypes = mapOf<String, KClass<out Proxy<*>>>(
-        "bgs" to BgsProxy::class,
-        "http" to HttpProxy::class,
-        "mcbe" to McbeProxy::class,
-        "pro" to ProProxy::class,
-        "tcp" to TcpProxy::class
-    )
-    val proxies = mutableMapOf<String, Proxy<Any?>>()
-
-    Runtime.getRuntime().addShutdownHook(thread(false) { proxies.values.forEach { runBlocking { it.stop() } } })
-
     embeddedServer(Netty, port, host) {
         install(io.ktor.server.plugins.ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
+        install(WebSockets)
 
         routing {
+            val proxyTypes = mapOf<String, KClass<out Proxy<*>>>(
+                "bgs" to BgsProxy::class,
+                "http" to HttpProxy::class,
+                "mcbe" to McbeProxy::class,
+                "pro" to ProProxy::class,
+                "tcp" to TcpProxy::class
+            )
+            val proxies = mutableMapOf<String, Proxy<Any?>>().also { Runtime.getRuntime().addShutdownHook(thread(false) { it.values.forEach { runBlocking { it.stop() } } }) }
+
             post("/proxy/{type}") {
                 proxyTypes[call.parameters["type"]]?.let {
                     val proxy = call.receive(it).apply(injector::injectMembers)
@@ -95,7 +100,7 @@ fun main(arguments: Array<String>) {
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
-            get("/proxy") { call.respond(proxies.values) }
+            get("/proxy/") { call.respond(proxies.values) }
             get("/proxy/{id}/start") {
                 proxies[call.parameters["id"]]?.let {
                     it.start()
@@ -109,6 +114,7 @@ fun main(arguments: Array<String>) {
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
+            webSocket("/event") { for (event in events) { send(objectMapper.writeValueAsString(event)) } }
         }
     }.start(true)
 }

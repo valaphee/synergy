@@ -27,7 +27,6 @@ import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelOption
-import io.netty.handler.logging.LoggingHandler
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -59,7 +58,6 @@ class ProProxy(
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
-            .handler(LoggingHandler())
             .childHandler(FrontendHandler(this@ProProxy))
             .childOption(ChannelOption.AUTO_READ, false)
             .localAddress(host, port)

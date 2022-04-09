@@ -36,7 +36,6 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
-import io.netty.handler.logging.LoggingHandler
 import io.netty.handler.ssl.SslContextBuilder
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
@@ -99,7 +98,6 @@ class BgsProxy(
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
-            .handler(LoggingHandler())
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(sslContextBuilder.newHandler(channel.alloc()), HttpServerCodec(), HttpObjectAggregator(UShort.MAX_VALUE.toInt()), WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"), PacketCodec(services), FrontendHandler(this@BgsProxy))
