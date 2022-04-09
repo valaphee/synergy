@@ -47,8 +47,6 @@ import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.DatagramPacket
-import io.netty.handler.logging.LogLevel
-import io.netty.handler.logging.LoggingHandler
 import io.netty.util.ReferenceCountUtil
 import network.ycc.raknet.RakNet
 import network.ycc.raknet.packet.UnconnectedPing
@@ -79,7 +77,6 @@ class McbeProxy(
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channelFactory(ChannelFactory { RakNetServerChannel(underlyingNetworking.datagramChannel) })
-            .handler(LoggingHandler(LogLevel.INFO))
             .handler(object : ChannelInitializer<Channel>() {
                 override fun initChannel(channel: Channel) {
                     channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {

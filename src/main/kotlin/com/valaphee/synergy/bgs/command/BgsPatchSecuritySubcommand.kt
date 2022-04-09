@@ -17,13 +17,13 @@
 package com.valaphee.synergy.bgs.command
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.inject.Inject
 import com.valaphee.synergy.bgs.util.CertificateBundle
 import com.valaphee.synergy.bgs.util.hash
 import com.valaphee.synergy.bgs.util.key
 import com.valaphee.synergy.bgs.util.module
 import com.valaphee.synergy.bgs.util.objectMapper
 import com.valaphee.synergy.bgs.util.swap
-import com.valaphee.synergy.keyStore
 import com.valaphee.synergy.util.occurrencesOf
 import kotlinx.cli.ArgType
 import kotlinx.cli.Subcommand
@@ -34,6 +34,7 @@ import org.apache.logging.log4j.LogManager
 import org.bouncycastle.asn1.ASN1Sequence
 import java.io.File
 import java.security.KeyPairGenerator
+import java.security.KeyStore
 import java.security.Signature
 import java.security.interfaces.RSAPublicKey
 import java.util.Base64
@@ -41,7 +42,9 @@ import java.util.Base64
 /**
  * @author Kevin Ludwig
  */
-object BgsPatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches the security module, and updates the certificate bundle") {
+class BgsPatchSecuritySubcommand @Inject constructor(
+    private val keyStore: KeyStore
+) : Subcommand("bgs-patch-security", "Patches the security module") {
     private val input by option(ArgType.String, "input", "i", "Input file").required()
     private val output by option(ArgType.String, "output", "o", "Output file")
     private val aliases by option(ArgType.String, "alias", "a", "Certificate alias").multiple()
@@ -50,17 +53,16 @@ object BgsPatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches th
         val inputFile = File(input)
         log.info("Patching {}", inputFile)
 
-        val serverCertificates = aliases.mapNotNull { alias -> keyStore.getCertificate(alias)?.let { alias to it } }
-
         val bytes = inputFile.readBytes()
         bytes.occurrencesOf(key.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
             log.info("Modulus found at 0x{}", modulusIndex.toHexString().uppercase())
             bytes.occurrencesOf(prefix.toByteArray()).singleOrNull()?.let { certificateBundleIndex ->
                 log.info("Certificate bundle found at 0x{}", certificateBundleIndex.toHexString().uppercase())
 
-                val certificateBundleEnd = bytes.occurrencesOf(infix.toByteArray()).single() + 1
+                val certificateBundleEnd = bytes.occurrencesOf(separator.toByteArray()).single() + 1
                 val certificateBundle = objectMapper.readValue<CertificateBundle>(bytes.copyOfRange(certificateBundleIndex, certificateBundleEnd))
-                val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, serverCertificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${base64Encoder.decode(keyStore.getCertificate("synergy").encoded)}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
+                val certificates = aliases.map { alias -> alias to checkNotNull(keyStore.getCertificate(alias)) }
+                val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${base64Encoder.decode(keyStore.getCertificate("synergy").encoded)}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
                 val certificateBundleSize = certificateBundleEnd - certificateBundleIndex
                 if (certificateBundleSize >= certificateBundleBytes.size) {
                     val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
@@ -85,8 +87,10 @@ object BgsPatchSecuritySubcommand : Subcommand("bgs-patch-security", "Patches th
         } ?: log.warn("Unable to find modulus")
     }
 
-    private val log = LogManager.getLogger(BgsPatchSecuritySubcommand::class.java)
-    private const val prefix = "{\"Created\":"
-    private const val infix = "}NGIS"
-    private val base64Encoder = Base64.getDecoder()
+    companion object {
+        private val log = LogManager.getLogger(BgsPatchSecuritySubcommand::class.java)
+        private const val prefix = "{\"Created\":"
+        private const val separator = "}NGIS"
+        private val base64Encoder = Base64.getDecoder()
+    }
 }

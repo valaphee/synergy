@@ -51,7 +51,10 @@ class FrontendHandler(
             .channel(context.channel()::class.java)
             .handler(object : ChannelInitializer<Channel>() {
                 override fun initChannel(channel: Channel) {
-                    channel.pipeline().addLast(LoggingHandler(), BackendHandler(context.channel()))
+                    channel.pipeline().addLast(
+                        LoggingHandler(),
+                        BackendHandler(context.channel())
+                    )
                 }
             })
             .option(ChannelOption.AUTO_READ, false)

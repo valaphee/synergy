@@ -45,7 +45,12 @@ class FrontendHandler(
             .channel(context.channel()::class.java)
             .handler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
-                    channel.pipeline().addLast(SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()), HttpClientCodec(), HttpObjectAggregator(1 * 1024 * 1024), LoggingHandler(), BackendHandler(context.channel()))
+                    channel.pipeline().addLast(
+                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
+                        HttpClientCodec(),
+                        HttpObjectAggregator(1 * 1024 * 1024),
+                        LoggingHandler(),
+                        BackendHandler(context.channel()))
                 }
             })
             .localAddress(proxy.`interface`, 0)

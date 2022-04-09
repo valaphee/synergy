@@ -21,9 +21,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.valaphee.synergy.tcp.TcpProxy
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.ContentNegotiation
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -31,7 +28,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
-import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 import okhttp3.internal.toHexString
 import java.net.InetSocketAddress
@@ -86,9 +82,5 @@ class IpcLocation(
             }.bodyAsText()
         }, dataType.java)
         return if (host != null && port != null) InetSocketAddress(host, port) to responseData else address to responseData
-    }
-
-    companion object {
-        private val httpClient = HttpClient(OkHttp) { install(ContentNegotiation) { jackson() } }
     }
 }

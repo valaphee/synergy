@@ -17,10 +17,10 @@
 package com.valaphee.synergy.http
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.inject.Inject
 import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
 import com.valaphee.synergy.underlyingNetworking
-import com.valaphee.synergy.util.SelfIssuingX509ExtendedKeyManager
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
@@ -30,6 +30,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.logging.LoggingHandler
+import io.netty.handler.ssl.SslContext
 
 /**
  * @author Kevin Ludwig
@@ -41,6 +42,8 @@ class HttpProxy(
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("ssl") private val ssl: Boolean = true
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
+    @Inject private lateinit var sslContext: SslContext
+
     private var channel: Channel? = null
 
     override suspend fun start() {
@@ -54,8 +57,12 @@ class HttpProxy(
             .handler(LoggingHandler())
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
-                    if (ssl) channel.pipeline().addLast(SelfIssuingX509ExtendedKeyManager.sslContext.newHandler(channel.alloc()))
-                    channel.pipeline().addLast(HttpServerCodec(), HttpObjectAggregator(1 * 1024 * 1024), FrontendHandler(this@HttpProxy))
+                    if (ssl) channel.pipeline().addLast(sslContext.newHandler(channel.alloc()))
+                    channel.pipeline().addLast(
+                        HttpServerCodec(),
+                        HttpObjectAggregator(1 * 1024 * 1024),
+                        FrontendHandler(this@HttpProxy)
+                    )
                 }
             })
             .childOption(ChannelOption.AUTO_READ, false)

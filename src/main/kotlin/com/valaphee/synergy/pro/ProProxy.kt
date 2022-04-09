@@ -87,8 +87,8 @@ class ProProxy(
     }
 
     companion object {
-        internal val random = SecureRandom()
         internal val sha256Local = ThreadLocal.withInitial { MessageDigest.getInstance("SHA-256") }
+        internal val random = SecureRandom()
         internal val srpRoutines = SRP6Routines()
         internal val srpN = BigInteger.probablePrime(256, random)
         internal val srpg = BigInteger.valueOf(2)

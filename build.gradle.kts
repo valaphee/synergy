@@ -38,6 +38,7 @@ repositories {
 
 dependencies {
     implementation("com.google.guava:guava:31.1-jre")
+    implementation("com.google.inject:guice:5.1.0")
     implementation("com.google.protobuf:protobuf-kotlin:3.19.4")
     implementation("com.nimbusds:srp6a:2.1.0")
     implementation("com.valaphee:netcode-mcbe:0.1.20")

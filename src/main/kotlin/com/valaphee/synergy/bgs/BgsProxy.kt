@@ -18,6 +18,8 @@ package com.valaphee.synergy.bgs
 
 import bgs.protocol.ServiceOptionsProto
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.inject.Inject
+import com.google.inject.name.Named
 import com.google.protobuf.Descriptors
 import com.google.protobuf.RpcChannel
 import com.google.protobuf.Service
@@ -25,8 +27,6 @@ import com.google.protobuf.kotlin.get
 import com.valaphee.synergy.Location
 import com.valaphee.synergy.RouterProxy
 import com.valaphee.synergy.bossGroup
-import com.valaphee.synergy.keyStore
-import com.valaphee.synergy.keyStoreFile
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
@@ -49,8 +49,10 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
+import java.io.File
 import java.math.BigInteger
 import java.security.KeyPairGenerator
+import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -67,6 +69,9 @@ class BgsProxy(
     @JsonProperty("interface") `interface`: String,
     @JsonProperty("referral") val referral: Location
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
+    @Inject private lateinit var keyStore: KeyStore
+    @Inject @Named("key-store") private lateinit var keyStoreFile: File
+
     private var channel: Channel? = null
 
     override suspend fun start() {
