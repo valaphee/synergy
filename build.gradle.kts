@@ -37,6 +37,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.1")
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.inject:guice:5.1.0")
     implementation("com.google.protobuf:protobuf-kotlin:3.19.4")

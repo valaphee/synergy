@@ -17,12 +17,15 @@
 package com.valaphee.synergy
 
 import com.google.inject.Guice
-import com.valaphee.synergy.bgs.BgsProxy
-import com.valaphee.synergy.bgs.command.BgsPatchSecuritySubcommand
-import com.valaphee.synergy.http.HttpProxy
-import com.valaphee.synergy.mcbe.McbeProxy
-import com.valaphee.synergy.pro.ProProxy
-import com.valaphee.synergy.tcp.TcpProxy
+import com.valaphee.synergy.proxy.Proxy
+import com.valaphee.synergy.proxy.SecurityModule
+import com.valaphee.synergy.proxy.bgs.BgsProxy
+import com.valaphee.synergy.proxy.bgs.command.BgsPatchSecuritySubcommand
+import com.valaphee.synergy.proxy.http.HttpProxy
+import com.valaphee.synergy.proxy.mcbe.McbeProxy
+import com.valaphee.synergy.proxy.objectMapper
+import com.valaphee.synergy.proxy.pro.ProProxy
+import com.valaphee.synergy.proxy.tcp.TcpProxy
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.JacksonConverter
