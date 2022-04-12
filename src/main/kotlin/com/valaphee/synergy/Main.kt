@@ -17,6 +17,11 @@
 package com.valaphee.synergy
 
 import com.google.inject.Guice
+import com.sun.jna.Pointer
+import com.sun.jna.platform.win32.Kernel32
+import com.sun.jna.platform.win32.User32
+import com.sun.jna.platform.win32.WinDef
+import com.sun.jna.platform.win32.WinUser
 import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.proxy.SecurityModule
 import com.valaphee.synergy.proxy.bgs.BgsProxy
@@ -54,6 +59,8 @@ import java.io.File
 import java.security.Security
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
+
+@Volatile private var hookThreadId = 0
 
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
@@ -111,5 +118,38 @@ fun main(arguments: Array<String>) {
             }
             webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }
         }
-    }.start(true)
+    }.start()
+
+    thread {
+        hookThreadId = Kernel32.INSTANCE.GetCurrentThreadId()
+
+        val hMod = Kernel32.INSTANCE.GetModuleHandle(null)
+        val hhkKeyboardLL = User32.INSTANCE.SetWindowsHookEx(User32.WH_KEYBOARD_LL, object : LowLevelKeyboardProc {
+            override fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.KBDLLHOOKSTRUCT): WinDef.LRESULT {
+                if (nCode == 0) runBlocking { events.emit(KeyboardEvent(System.currentTimeMillis(), lParam.vkCode, if (wParam.toInt() == User32.WM_KEYDOWN) KeyboardEvent.Event.Down else 0 or if (wParam.toInt() == User32.WM_KEYUP) KeyboardEvent.Event.Up else 0, if (lParam.flags and (1 shl 5) != 0) KeyboardEvent.Modifier.Alt else 0)) }
+                return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, WinDef.LPARAM(Pointer.nativeValue(lParam.pointer)))
+            }
+        }, hMod, 0)
+        /*val hhkMouseLL = User32.INSTANCE.SetWindowsHookEx(User32.WH_MOUSE_LL, object : LowLevelMouseProc {
+            override fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.MSLLHOOKSTRUCT): WinDef.LRESULT {
+                if (nCode == 0)
+                return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, WinDef.LPARAM(Pointer.nativeValue(lParam.pointer)))
+            }
+        }, hMod, 0)*/
+        User32.INSTANCE.GetMessage(WinUser.MSG(), WinDef.HWND(Pointer.NULL), 0, 0)
+        User32.INSTANCE.UnhookWindowsHookEx(hhkKeyboardLL)
+        /*User32.INSTANCE.UnhookWindowsHookEx(hhkMouseLL)*/
+
+        hookThreadId = 0
+    }
+
+    Runtime.getRuntime().addShutdownHook(thread(false) { if (hookThreadId != 0) User32.INSTANCE.PostThreadMessage(hookThreadId, WinUser.WM_QUIT, WinDef.WPARAM(), WinDef.LPARAM()) })
 }
+
+interface LowLevelKeyboardProc : WinUser.HOOKPROC {
+    fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.KBDLLHOOKSTRUCT): WinDef.LRESULT
+}
+
+/*interface LowLevelMouseProc : WinUser.HOOKPROC {
+    fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.MSLLHOOKSTRUCT): WinDef.LRESULT
+}*/

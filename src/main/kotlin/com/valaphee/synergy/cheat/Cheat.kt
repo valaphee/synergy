@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy
-
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import kotlinx.coroutines.flow.MutableSharedFlow
-
-val events = MutableSharedFlow<Event>()
+package com.valaphee.synergy.cheat
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-abstract class Event(
-    @get:JsonProperty("emitter_id") val emitterId: String?,
-    @get:JsonProperty("emitted_at") val emittedAt: Long
-)
+interface Cheat {
+    fun enable() = Unit
+
+    fun update() = Unit
+
+    fun disable() = Unit
+}
