@@ -23,8 +23,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  */
 @JsonTypeName("bgs_request")
 class BgsRequestEvent(
-    emitterId: String,
-    emittedAt: Long,
+    emitterId: String?,
+    emittedAt: Long?,
     id: Int,
     serviceHash: Int,
     serviceName: String?,

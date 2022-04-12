@@ -23,8 +23,8 @@ import com.valaphee.synergy.Event
  * @author Kevin Ludwig
  */
 abstract class BgsEvent(
-    emitterId: String,
-    emittedAt: Long,
+    emitterId: String?,
+    emittedAt: Long?,
     @get:JsonProperty("id") val id: Int,
     @get:JsonProperty("service_name") val serviceHash: Int,
     @get:JsonProperty("service_hash") val serviceName: String?,

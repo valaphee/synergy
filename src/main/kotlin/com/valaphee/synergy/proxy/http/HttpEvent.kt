@@ -23,7 +23,7 @@ import com.valaphee.synergy.Event
  * @author Kevin Ludwig
  */
 abstract class HttpEvent(
-    emitterId: String,
-    emittedAt: Long,
+    emitterId: String?,
+    emittedAt: Long?,
     @get:JsonProperty("headers") val headers: Map<String, String>
 ) : Event(emitterId, emittedAt)

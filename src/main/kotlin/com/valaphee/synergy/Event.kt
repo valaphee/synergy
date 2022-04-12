@@ -17,6 +17,7 @@
 package com.valaphee.synergy
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import kotlinx.coroutines.flow.MutableSharedFlow
 
@@ -26,7 +27,10 @@ val events = MutableSharedFlow<Event>()
  * @author Kevin Ludwig
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(KeyboardEvent::class)
+)
 abstract class Event(
     @get:JsonProperty("emitter_id") val emitterId: String?,
-    @get:JsonProperty("emitted_at") val emittedAt: Long
+    @get:JsonProperty("emitted_at") val emittedAt: Long?
 )

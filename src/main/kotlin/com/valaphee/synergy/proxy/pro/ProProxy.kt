@@ -18,6 +18,8 @@ package com.valaphee.synergy.proxy.pro
 
 import bgs.protocol.game_utilities.v2.client.ProcessTaskResponse
 import bgs.protocol.v2.Attribute
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.nimbusds.srp6.SRP6Routines
 import com.valaphee.synergy.proxy.RouterProxy
 import com.valaphee.synergy.proxy.bossGroup
@@ -33,21 +35,23 @@ import java.security.SecureRandom
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeName("pro")
 class ProProxy(
     id: String,
     host: String,
     port: Int,
     `interface`: String
 ) : RouterProxy<ByteArray>(id, host, port, `interface`) {
+    override val type get() = "pro"
     override val dataType get() = ByteArray::class
 
-    private var channel: Channel? = null
+    @JsonIgnore private var channel: Channel? = null
 
-    var cid = 0L
-    lateinit var k0: ByteArray
-    lateinit var k1: ByteArray
-    lateinit var k2: ByteArray
-    lateinit var k3: ByteArray
+    @get:JsonIgnore var cid = 0L
+    @get:JsonIgnore lateinit var k0: ByteArray
+    @get:JsonIgnore lateinit var k1: ByteArray
+    @get:JsonIgnore lateinit var k2: ByteArray
+    @get:JsonIgnore lateinit var k3: ByteArray
 
     override suspend fun start() {
         require(channel == null)

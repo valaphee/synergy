@@ -16,13 +16,21 @@
 
 package com.valaphee.synergy.cheat
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.synergy.Event
+
 /**
  * @author Kevin Ludwig
  */
-interface Cheat {
-    fun enable() = Unit
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+abstract class Cheat(
+    @get:JsonProperty("enable_event") val enableEvent: Event,
+    @get:JsonProperty("disable_event") val disableEvent: Event
+) {
+    open fun enable() = Unit
 
-    fun update() = Unit
+    open fun update() = Unit
 
-    fun disable() = Unit
+    open fun disable() = Unit
 }

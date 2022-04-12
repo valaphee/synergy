@@ -17,7 +17,9 @@
 package com.valaphee.synergy.proxy.bgs
 
 import bgs.protocol.ServiceOptionsProto
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.google.protobuf.Descriptors
@@ -26,8 +28,8 @@ import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
 import com.valaphee.synergy.proxy.Location
 import com.valaphee.synergy.proxy.RouterProxy
-import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.bgs.util.hashFnv1a
+import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.underlyingNetworking
 import com.valaphee.synergy.proxy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
@@ -62,6 +64,7 @@ import kotlin.random.asKotlinRandom
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeName("bgs")
 class BgsProxy(
     id: String,
     host: String,
@@ -69,8 +72,10 @@ class BgsProxy(
     `interface`: String,
     @get:JsonProperty("referral") val referral: Location
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    @Inject private lateinit var keyStore: KeyStore
-    @Inject @Named("key-store") private lateinit var keyStoreFile: File
+    override val type get() = "bgs"
+
+    @JsonIgnore @Inject private lateinit var keyStore: KeyStore
+    @JsonIgnore @Inject @Named("key-store") private lateinit var keyStoreFile: File
 
     private var channel: Channel? = null
 

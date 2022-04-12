@@ -16,14 +16,32 @@
 
 package com.valaphee.synergy.proxy
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.synergy.proxy.bgs.BgsProxy
+import com.valaphee.synergy.proxy.http.HttpProxy
+import com.valaphee.synergy.proxy.mcbe.McbeProxy
+import com.valaphee.synergy.proxy.pro.ProProxy
+import com.valaphee.synergy.proxy.tcp.TcpProxy
 import kotlin.reflect.KClass
 
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = BgsProxy::class),
+    JsonSubTypes.Type(value = HttpProxy::class),
+    JsonSubTypes.Type(value = McbeProxy::class),
+    JsonSubTypes.Type(value = ProProxy::class),
+    JsonSubTypes.Type(value = TcpProxy::class)
+)
 interface Proxy<T> {
-    val id: String
-    val dataType: KClass<*> get() = Any::class
+    @get:JsonProperty("type") val type: String
+    @get:JsonProperty("id") val id: String
+    @get:JsonIgnore val dataType: KClass<*> get() = Any::class
 
     suspend fun start()
 

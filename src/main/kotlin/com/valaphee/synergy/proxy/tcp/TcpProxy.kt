@@ -16,6 +16,8 @@
 
 package com.valaphee.synergy.proxy.tcp
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.valaphee.synergy.proxy.RouterProxy
 import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.underlyingNetworking
@@ -27,13 +29,16 @@ import io.netty.channel.ChannelOption
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeName("tcp")
 class TcpProxy(
     id: String,
     host: String,
     port: Int,
     `interface`: String
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    private var channel: Channel? = null
+    override val type get() = "tcp"
+
+    @JsonIgnore private var channel: Channel? = null
 
     override suspend fun start() {
         require(channel == null)

@@ -16,7 +16,9 @@
 
 package com.valaphee.synergy.proxy.http
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.google.inject.Inject
 import com.valaphee.synergy.proxy.RouterProxy
 import com.valaphee.synergy.proxy.bossGroup
@@ -34,6 +36,7 @@ import io.netty.handler.ssl.SslContext
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeName("http")
 class HttpProxy(
     id: String,
     host: String,
@@ -41,9 +44,11 @@ class HttpProxy(
     `interface`: String,
     @get:JsonProperty("ssl") val ssl: Boolean = true
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    @Inject private lateinit var sslContext: SslContext
+    override val type get() = "http"
 
-    private var channel: Channel? = null
+    @JsonIgnore @Inject private lateinit var sslContext: SslContext
+
+    @JsonIgnore private var channel: Channel? = null
 
     override suspend fun start() {
         require(channel == null)

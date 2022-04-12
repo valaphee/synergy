@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  */
 @JsonTypeName("keyboard")
 class KeyboardEvent(
-    emittedAt: Long,
+    emittedAt: Long?,
     @get:JsonProperty("key_code") val keyCode: Int,
     @get:JsonProperty("event") val event: Int,
     @get:JsonProperty("modifiers") val modifiers: Int
@@ -41,5 +41,26 @@ class KeyboardEvent(
 
     object Modifier {
         const val Alt = 1 shl 0
+    }
+
+    override fun equals(other: Any?): Boolean {
+        println(other)
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as KeyboardEvent
+
+        if (keyCode != other.keyCode) return false
+        if (event != other.event) return false
+        if (modifiers != other.modifiers) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = keyCode
+        result = 31 * result + event
+        result = 31 * result + modifiers
+        return result
     }
 }

@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  */
 @JsonTypeName("http_response")
 class HttpResponseEvent(
-    emitterId: String,
-    emittedAt: Long,
+    emitterId: String?,
+    emittedAt: Long?,
     @get:JsonProperty("status") val status: Int,
     @get:JsonProperty("message") val message: String,
     headers: Map<String, String>

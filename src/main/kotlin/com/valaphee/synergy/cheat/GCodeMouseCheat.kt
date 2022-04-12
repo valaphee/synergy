@@ -16,9 +16,11 @@
 
 package com.valaphee.synergy.cheat
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.valaphee.foundry.math.Float3
 import com.valaphee.foundry.math.Float4x4
 import com.valaphee.foundry.math.MutableFloat3
+import com.valaphee.synergy.Event
 import java.awt.Robot
 import kotlin.math.max
 
@@ -26,9 +28,11 @@ import kotlin.math.max
  * @author Kevin Ludwig
  */
 class GCodeMouseCheat(
-    private val data: String,
-    private val matrix: Float4x4
-) : Cheat {
+    enableEvent: Event,
+    disableEvent: Event,
+    @get:JsonProperty("data") val data: String,
+    @get:JsonProperty("matrix") val matrix: Float4x4
+) : Cheat(enableEvent, disableEvent) {
     private lateinit var lines: Iterator<String>
     private lateinit var position: Float3
 

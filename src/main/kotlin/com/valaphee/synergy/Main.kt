@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Guice
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.Kernel32
@@ -24,13 +25,8 @@ import com.sun.jna.platform.win32.WinDef
 import com.sun.jna.platform.win32.WinUser
 import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.proxy.SecurityModule
-import com.valaphee.synergy.proxy.bgs.BgsProxy
 import com.valaphee.synergy.proxy.bgs.command.BgsPatchSecuritySubcommand
-import com.valaphee.synergy.proxy.http.HttpProxy
-import com.valaphee.synergy.proxy.mcbe.McbeProxy
 import com.valaphee.synergy.proxy.objectMapper
-import com.valaphee.synergy.proxy.pro.ProProxy
-import com.valaphee.synergy.proxy.tcp.TcpProxy
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.JacksonConverter
@@ -58,9 +54,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.security.Security
 import kotlin.concurrent.thread
-import kotlin.reflect.KClass
 
-@Volatile private var hookThreadId = 0
+@Volatile
+private var hookThreadId = 0
 
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
@@ -78,26 +74,24 @@ fun main(arguments: Array<String>) {
         install(WebSockets)
 
         routing {
-            val proxyTypes = mapOf<String, KClass<out Proxy<*>>>(
-                "bgs" to BgsProxy::class,
-                "http" to HttpProxy::class,
-                "mcbe" to McbeProxy::class,
-                "pro" to ProProxy::class,
-                "tcp" to TcpProxy::class
-            )
-            val proxies = mutableMapOf<String, Proxy<Any?>>().also { Runtime.getRuntime().addShutdownHook(thread(false) { it.values.forEach { runBlocking { it.stop() } } }) }
+            val proxyFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "proxies.json")
+            val proxies = (if (proxyFile.exists()) try {
+                objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { it.id }.toMutableMap()
+            } catch (_: Exception) {
+                mutableMapOf()
+            } else mutableMapOf()).also { Runtime.getRuntime().addShutdownHook(thread(false) { it.values.forEach { runBlocking { it.stop() } } }) }
 
-            post("/proxy/{type}") {
-                proxyTypes[call.parameters["type"]]?.let {
-                    val proxy = call.receive(it).apply(injector::injectMembers)
-                    @Suppress("UNCHECKED_CAST")
-                    if (proxies.putIfAbsent(proxy.id, proxy as Proxy<Any?>) != null) call.respond(HttpStatusCode.BadRequest)
-                    if (call.request.queryParameters["autoStart"] == "true") proxy.start()
-                    call.respond(HttpStatusCode.OK)
-                } ?: call.respond(HttpStatusCode.NotFound)
+            post("/proxy") {
+                val proxy = call.receive(Proxy::class).apply(injector::injectMembers)
+                @Suppress("UNCHECKED_CAST")
+                if (proxies.putIfAbsent(proxy.id, proxy as Proxy<Any?>) != null) call.respond(HttpStatusCode.BadRequest)
+                if (call.request.queryParameters["persist"] == "true") objectMapper.writeValue(proxyFile, proxies.values)
+                if (call.request.queryParameters["autoStart"] == "true") proxy.start()
+                call.respond(HttpStatusCode.OK)
             }
             delete("/proxy/{id}") {
                 proxies.remove(call.parameters["id"])?.let {
+                    if (call.request.queryParameters["persist"] == "true") objectMapper.writeValue(proxyFile, proxies.values)
                     it.stop()
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
@@ -124,7 +118,7 @@ fun main(arguments: Array<String>) {
         hookThreadId = Kernel32.INSTANCE.GetCurrentThreadId()
 
         val hMod = Kernel32.INSTANCE.GetModuleHandle(null)
-        val hhkKeyboardLL = User32.INSTANCE.SetWindowsHookEx(User32.WH_KEYBOARD_LL, object : LowLevelKeyboardProc {
+        val hhkKeyboardLL = User32.INSTANCE.SetWindowsHookEx(User32.WH_KEYBOARD_LL, object : WinUser.LowLevelKeyboardProc {
             override fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.KBDLLHOOKSTRUCT): WinDef.LRESULT {
                 if (nCode == 0) runBlocking { events.emit(KeyboardEvent(System.currentTimeMillis(), lParam.vkCode, if (wParam.toInt() == User32.WM_KEYDOWN) KeyboardEvent.Event.Down else 0 or if (wParam.toInt() == User32.WM_KEYUP) KeyboardEvent.Event.Up else 0, if (lParam.flags and (1 shl 5) != 0) KeyboardEvent.Modifier.Alt else 0)) }
                 return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, WinDef.LPARAM(Pointer.nativeValue(lParam.pointer)))

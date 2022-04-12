@@ -16,7 +16,9 @@
 
 package com.valaphee.synergy.proxy.mcbe
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -60,13 +62,16 @@ import java.util.zip.GZIPInputStream
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeName("mcbe")
 class McbeProxy(
     id: String,
     host: String,
     port: Int = 19132,
     `interface`: String
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    private var channel: Channel? = null
+    override val type get() = "mcbe"
+
+    @JsonIgnore private var channel: Channel? = null
 
     override suspend fun start() {
         require(channel == null)
