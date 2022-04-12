@@ -44,7 +44,6 @@ class KeyboardEvent(
     }
 
     override fun equals(other: Any?): Boolean {
-        println(other)
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 

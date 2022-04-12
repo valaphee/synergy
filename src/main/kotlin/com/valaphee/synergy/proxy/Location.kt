@@ -66,7 +66,7 @@ class IpcLocation(
     override fun <T : Any> getAddress(address: InetSocketAddress, data: T, dataType: KClass<T>): Pair<InetSocketAddress, T> {
         val id = address.hashCode().toHexString()
         runBlocking {
-            httpClient.post("$url/proxy/$type") {
+            httpClient.post("$url/proxy") {
                 parameter("autoStart", true)
                 contentType(ContentType.Application.Json)
                 setBody(TcpProxy(id, host ?: address.hostString, port ?: address.port, "172.16.1.116"))

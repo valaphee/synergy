@@ -18,15 +18,14 @@ package com.valaphee.synergy
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Guice
-import com.sun.jna.Pointer
-import com.sun.jna.platform.win32.Kernel32
-import com.sun.jna.platform.win32.User32
-import com.sun.jna.platform.win32.WinDef
-import com.sun.jna.platform.win32.WinUser
+import com.valaphee.synergy.cheat.Cheat
+import com.valaphee.synergy.cheat.command.EventPumpSubcommand
 import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.proxy.SecurityModule
 import com.valaphee.synergy.proxy.bgs.command.BgsPatchSecuritySubcommand
+import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.objectMapper
+import com.valaphee.synergy.proxy.workerGroup
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.JacksonConverter
@@ -48,15 +47,17 @@ import io.ktor.websocket.send
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.security.Security
+import java.util.concurrent.Executors
 import kotlin.concurrent.thread
-
-@Volatile
-private var hookThreadId = 0
 
 fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
@@ -66,10 +67,10 @@ fun main(arguments: Array<String>) {
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
     val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
-    argumentParser.subcommands(injector.getInstance(BgsPatchSecuritySubcommand::class.java))
+    argumentParser.subcommands(EventPumpSubcommand, injector.getInstance(BgsPatchSecuritySubcommand::class.java))
     argumentParser.parse(arguments)
 
-    embeddedServer(Netty, port, host) {
+    embeddedServer(Netty, port, host, emptyList(), { configureBootstrap = { group(bossGroup, workerGroup) } }) {
         install(io.ktor.server.plugins.ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
         install(WebSockets)
 
@@ -85,65 +86,67 @@ fun main(arguments: Array<String>) {
                 val proxy = call.receive(Proxy::class).apply(injector::injectMembers)
                 @Suppress("UNCHECKED_CAST")
                 if (proxies.putIfAbsent(proxy.id, proxy as Proxy<Any?>) != null) call.respond(HttpStatusCode.BadRequest)
-                if (call.request.queryParameters["persist"] == "true") objectMapper.writeValue(proxyFile, proxies.values)
+                if (call.request.queryParameters["persist"] == "true") {
+                    val proxies0 = if (proxyFile.exists()) try {
+                        objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { proxy0 -> proxy0.id }.toMutableMap()
+                    } catch (_: Exception) {
+                        mutableMapOf()
+                    } else mutableMapOf()
+                    if (proxies0.putIfAbsent(proxy.id, proxy) == null) objectMapper.writeValue(proxyFile, proxies0.values)
+                }
                 if (call.request.queryParameters["autoStart"] == "true") proxy.start()
                 call.respond(HttpStatusCode.OK)
             }
             delete("/proxy/{id}") {
-                proxies.remove(call.parameters["id"])?.let {
-                    if (call.request.queryParameters["persist"] == "true") objectMapper.writeValue(proxyFile, proxies.values)
-                    it.stop()
+                proxies.remove(call.parameters["id"])?.let { proxy ->
+                    if (call.request.queryParameters["persist"] == "true") try {
+                        val proxies0 = objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { proxy0 -> proxy0.id }.toMutableMap()
+                        if (proxies0.remove(proxy.id) != null) objectMapper.writeValue(proxyFile, proxies0.values)
+                    } catch (_: Exception) {
+                    }
+                    proxy.stop()
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
             get("/proxy/") { call.respond(proxies.values) }
             get("/proxy/{id}/start") {
-                proxies[call.parameters["id"]]?.let {
-                    it.start()
+                proxies[call.parameters["id"]]?.let { proxy ->
+                    proxy.start()
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
             post("/proxy/{id}/update") { proxies[call.parameters["id"]]?.let { call.respondText(objectMapper.writeValueAsString(it.update(objectMapper.readValue(call.receiveText(), it.dataType.java))), ContentType.Application.Json) } ?: call.respond(HttpStatusCode.NotFound) }
             get("/proxy/{id}/stop") {
-                proxies[call.parameters["id"]]?.let {
-                    it.stop()
+                proxies[call.parameters["id"]]?.let { proxy ->
+                    proxy.stop()
                     call.respond(HttpStatusCode.OK)
                 } ?: call.respond(HttpStatusCode.NotFound)
+            }
+            post("/event") {
+                events.emit(call.receive())
+                call.respond(HttpStatusCode.OK)
             }
             webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }
         }
     }.start()
 
-    thread {
-        hookThreadId = Kernel32.INSTANCE.GetCurrentThreadId()
-
-        val hMod = Kernel32.INSTANCE.GetModuleHandle(null)
-        val hhkKeyboardLL = User32.INSTANCE.SetWindowsHookEx(User32.WH_KEYBOARD_LL, object : WinUser.LowLevelKeyboardProc {
-            override fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.KBDLLHOOKSTRUCT): WinDef.LRESULT {
-                if (nCode == 0) runBlocking { events.emit(KeyboardEvent(System.currentTimeMillis(), lParam.vkCode, if (wParam.toInt() == User32.WM_KEYDOWN) KeyboardEvent.Event.Down else 0 or if (wParam.toInt() == User32.WM_KEYUP) KeyboardEvent.Event.Up else 0, if (lParam.flags and (1 shl 5) != 0) KeyboardEvent.Modifier.Alt else 0)) }
-                return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, WinDef.LPARAM(Pointer.nativeValue(lParam.pointer)))
+    val cheats = listOf<Cheat>()
+    val coroutineScope = CoroutineScope(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher() + SupervisorJob())
+    coroutineScope.launch {
+        events.collectLatest { event ->
+            cheats.forEach { cheat -> if (cheat.enabled && cheat.disableEvent == event) cheat.enabled = false }
+            cheats.forEach { cheat ->
+                if (!cheat.enabled && cheat.enableEvent == event) {
+                    cheat.enable()
+                    cheat.enabled = true
+                    coroutineScope.launch {
+                        var running: Boolean
+                        do running = cheat.update() while (running && cheat.enabled)
+                        cheat.disable()
+                        cheat.enabled = false
+                    }
+                }
             }
-        }, hMod, 0)
-        /*val hhkMouseLL = User32.INSTANCE.SetWindowsHookEx(User32.WH_MOUSE_LL, object : LowLevelMouseProc {
-            override fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.MSLLHOOKSTRUCT): WinDef.LRESULT {
-                if (nCode == 0)
-                return User32.INSTANCE.CallNextHookEx(null, nCode, wParam, WinDef.LPARAM(Pointer.nativeValue(lParam.pointer)))
-            }
-        }, hMod, 0)*/
-        User32.INSTANCE.GetMessage(WinUser.MSG(), WinDef.HWND(Pointer.NULL), 0, 0)
-        User32.INSTANCE.UnhookWindowsHookEx(hhkKeyboardLL)
-        /*User32.INSTANCE.UnhookWindowsHookEx(hhkMouseLL)*/
-
-        hookThreadId = 0
+        }
     }
-
-    Runtime.getRuntime().addShutdownHook(thread(false) { if (hookThreadId != 0) User32.INSTANCE.PostThreadMessage(hookThreadId, WinUser.WM_QUIT, WinDef.WPARAM(), WinDef.LPARAM()) })
 }
-
-interface LowLevelKeyboardProc : WinUser.HOOKPROC {
-    fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.KBDLLHOOKSTRUCT): WinDef.LRESULT
-}
-
-/*interface LowLevelMouseProc : WinUser.HOOKPROC {
-    fun callback(nCode: Int, wParam: WinDef.WPARAM, lParam: WinUser.MSLLHOOKSTRUCT): WinDef.LRESULT
-}*/

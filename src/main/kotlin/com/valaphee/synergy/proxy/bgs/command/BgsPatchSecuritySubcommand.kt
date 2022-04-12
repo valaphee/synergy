@@ -37,6 +37,7 @@ import java.security.KeyStore
 import java.security.Signature
 import java.security.interfaces.RSAPublicKey
 import java.util.Base64
+import kotlin.system.exitProcess
 
 /**
  * @author Kevin Ludwig
@@ -84,6 +85,8 @@ class BgsPatchSecuritySubcommand @Inject constructor(
             }
             File(output ?: input).writeBytes(bytes)
         } ?: log.warn("Unable to find modulus")
+
+        exitProcess(0)
     }
 
     companion object {

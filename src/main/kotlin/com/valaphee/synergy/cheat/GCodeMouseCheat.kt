@@ -29,7 +29,7 @@ import kotlin.math.max
  */
 class GCodeMouseCheat(
     enableEvent: Event,
-    disableEvent: Event,
+    disableEvent: Event?,
     @get:JsonProperty("data") val data: String,
     @get:JsonProperty("matrix") val matrix: Float4x4
 ) : Cheat(enableEvent, disableEvent) {
@@ -41,27 +41,27 @@ class GCodeMouseCheat(
         position = Float3.Zero
     }
 
-    override fun update() {
-        if (lines.hasNext()) {
-            val command = lines.next().substringBefore(';').split(' ').filter { it.isNotEmpty() }.associate { it.first() to it.substring(1) }
-            if (command.isNotEmpty()) {
-                command['G']?.let {
-                    when (it.toInt()) {
-                        1 -> {
-                            val direction = MutableFloat3(command['X']?.toFloat() ?: position.x, command['Y']?.toFloat() ?: position.y, command['Z']?.toFloat() ?: position.z).sub(position)
-                            val steps = max(direction.length().toInt(), 1)
-                            repeat(steps) {
-                                val (x, y, _) = matrix.transform((position + (direction * (it / steps.toFloat()))).toMutableFloat3())
-                                robot.mouseMove(x.toInt(), y.toInt())
-                            }
-                            position += direction
+    override fun update() = if (lines.hasNext()) {
+        val command = lines.next().substringBefore(';').split(' ').filter { it.isNotEmpty() }.associate { it.first() to it.substring(1) }
+        if (command.isNotEmpty()) {
+            command['G']?.let {
+                when (it.toInt()) {
+                    1 -> {
+                        val direction = MutableFloat3(command['X']?.toFloat() ?: position.x, command['Y']?.toFloat() ?: position.y, command['Z']?.toFloat() ?: position.z).sub(position)
+                        val steps = max(direction.length().toInt(), 1)
+                        repeat(steps) {
+                            val (x, y, _) = matrix.transform((position + (direction * (it / steps.toFloat()))).toMutableFloat3())
+                            robot.mouseMove(x.toInt(), y.toInt())
                         }
-                        else -> Unit
+                        position += direction
                     }
+                    else -> Unit
                 }
             }
         }
-    }
+
+        true
+    } else false
 
     companion object {
         private val robot = Robot()

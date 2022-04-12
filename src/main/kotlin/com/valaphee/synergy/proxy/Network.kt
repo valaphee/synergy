@@ -42,8 +42,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import java.util.concurrent.ThreadFactory
 
 val underlyingNetworking = if (Epoll.isAvailable()) UnderlyingNetworking.Epoll else if (KQueue.isAvailable()) UnderlyingNetworking.Kqueue else UnderlyingNetworking.Nio
-val bossGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("boss-%d").build())
-val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().setNameFormat("worker-%d").build())
+val bossGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().build())
+val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().build())
 
 enum class UnderlyingNetworking(
     val groupFactory: (Int, ThreadFactory) -> EventLoopGroup,
