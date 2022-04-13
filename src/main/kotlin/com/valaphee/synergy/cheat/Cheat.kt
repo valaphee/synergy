@@ -19,21 +19,16 @@ package com.valaphee.synergy.cheat
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.valaphee.synergy.Event
+import com.valaphee.synergy.context
+import org.graalvm.polyglot.Source
+import org.graalvm.polyglot.Value
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 abstract class Cheat(
-    @get:JsonProperty("enable_event") val enableEvent: Event,
-    @get:JsonProperty("disable_event") val disableEvent: Event?
+    @get:JsonProperty("on") val on: String,
 ) {
-    @get:JsonIgnore var enabled = false
-
-    open fun enable() = Unit
-
-    open fun update() = false
-
-    open fun disable() = Unit
+    @get:JsonIgnore val onValue: Value by lazy { context.eval(Source.create("js", on)) }
 }

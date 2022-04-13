@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Guice
 import com.valaphee.synergy.cheat.Cheat
@@ -26,6 +27,7 @@ import com.valaphee.synergy.proxy.bgs.command.BgsPatchSecuritySubcommand
 import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.objectMapper
 import com.valaphee.synergy.proxy.workerGroup
+import com.valaphee.synergy.util.MapProxyObject
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.JacksonConverter
@@ -33,6 +35,7 @@ import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
@@ -48,21 +51,27 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.HostAccess
 import java.io.File
 import java.security.Security
-import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
-fun main(arguments: Array<String>) {
+val context: Context = Context.newBuilder().allowHostAccess(HostAccess.ALL).allowAllAccess(true).build()
+
+suspend fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
 
     val injector = Guice.createInjector(SecurityModule(File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx")))
+
+    context.getBindings("js").putMember("coroutineScope", CoroutineScope(Dispatchers.IO + SupervisorJob()))
 
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
@@ -71,7 +80,7 @@ fun main(arguments: Array<String>) {
     argumentParser.parse(arguments)
 
     embeddedServer(Netty, port, host, emptyList(), { configureBootstrap = { group(bossGroup, workerGroup) } }) {
-        install(io.ktor.server.plugins.ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
+        install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
         install(WebSockets)
 
         routing {
@@ -131,21 +140,11 @@ fun main(arguments: Array<String>) {
     }.start()
 
     val cheats = listOf<Cheat>()
-    val coroutineScope = CoroutineScope(Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher() + SupervisorJob())
-    coroutineScope.launch {
-        events.collectLatest { event ->
-            cheats.forEach { cheat -> if (cheat.enabled && cheat.disableEvent == event) cheat.enabled = false }
-            cheats.forEach { cheat ->
-                if (!cheat.enabled && cheat.enableEvent == event) {
-                    cheat.enable()
-                    cheat.enabled = true
-                    coroutineScope.launch {
-                        var running: Boolean
-                        do running = cheat.update() while (running && cheat.enabled)
-                        cheat.disable()
-                        cheat.enabled = false
-                    }
-                }
+    coroutineScope {
+        launch {
+            events.collectLatest { event ->
+                val eventProxy = MapProxyObject(objectMapper.convertValue(event))
+                cheats.forEach { cheat -> cheat.onValue.execute(context.asValue(cheat), eventProxy) }
             }
         }
     }

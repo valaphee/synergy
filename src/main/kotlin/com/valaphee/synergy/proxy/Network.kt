@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.ContentNegotiation
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.JacksonConverter
 import io.netty.channel.EventLoopGroup

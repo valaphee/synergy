@@ -17,51 +17,58 @@
 package com.valaphee.synergy.cheat
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.valaphee.foundry.math.Float3
 import com.valaphee.foundry.math.Float4x4
 import com.valaphee.foundry.math.MutableFloat3
-import com.valaphee.synergy.Event
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.awt.Robot
 import kotlin.math.max
 
 /**
  * @author Kevin Ludwig
  */
+@JsonTypeName("gcode_mouse")
 class GCodeMouseCheat(
-    enableEvent: Event,
-    disableEvent: Event?,
+    on: String,
     @get:JsonProperty("data") val data: String,
     @get:JsonProperty("matrix") val matrix: Float4x4
-) : Cheat(enableEvent, disableEvent) {
+) : Cheat(on) {
+    private var running = false
     private lateinit var lines: Iterator<String>
     private lateinit var position: Float3
 
-    override fun enable() {
-        lines = data.lines().iterator()
-        position = Float3.Zero
-    }
+    fun run(coroutineScope: CoroutineScope) {
+        if (!running) {
+            running = true
+            lines = data.lines().iterator()
+            position = Float3.Zero
 
-    override fun update() = if (lines.hasNext()) {
-        val command = lines.next().substringBefore(';').split(' ').filter { it.isNotEmpty() }.associate { it.first() to it.substring(1) }
-        if (command.isNotEmpty()) {
-            command['G']?.let {
-                when (it.toInt()) {
-                    1 -> {
-                        val direction = MutableFloat3(command['X']?.toFloat() ?: position.x, command['Y']?.toFloat() ?: position.y, command['Z']?.toFloat() ?: position.z).sub(position)
-                        val steps = max(direction.length().toInt(), 1)
-                        repeat(steps) {
-                            val (x, y, _) = matrix.transform((position + (direction * (it / steps.toFloat()))).toMutableFloat3())
-                            robot.mouseMove(x.toInt(), y.toInt())
+            coroutineScope.launch {
+                while (lines.hasNext()) {
+                    val command = lines.next().substringBefore(';').split(' ').filter { it.isNotEmpty() }.associate { it.first() to it.substring(1) }
+                    if (command.isNotEmpty()) {
+                        command['G']?.let {
+                            when (it.toInt()) {
+                                1 -> {
+                                    val direction = MutableFloat3(command['X']?.toFloat() ?: position.x, command['Y']?.toFloat() ?: position.y, command['Z']?.toFloat() ?: position.z).sub(position)
+                                    val steps = max(direction.length().toInt(), 1)
+                                    repeat(steps) {
+                                        val (x, y, _) = matrix.transform((position + (direction * (it / steps.toFloat()))).toMutableFloat3())
+                                        robot.mouseMove(x.toInt(), y.toInt())
+                                    }
+                                    position += direction
+                                }
+                                else -> Unit
+                            }
                         }
-                        position += direction
                     }
-                    else -> Unit
                 }
+                running = false
             }
         }
-
-        true
-    } else false
+    }
 
     companion object {
         private val robot = Robot()
