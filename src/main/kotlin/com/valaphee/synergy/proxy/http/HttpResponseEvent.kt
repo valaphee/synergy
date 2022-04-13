@@ -18,14 +18,15 @@ package com.valaphee.synergy.proxy.http
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeName("http_response")
 class HttpResponseEvent(
-    emitterId: String?,
-    emittedAt: Long?,
+    emitterId: UUID,
+    emittedAt: Long,
     @get:JsonProperty("status") val status: Int,
     @get:JsonProperty("message") val message: String,
     headers: Map<String, String>

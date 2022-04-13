@@ -20,12 +20,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.sun.jna.platform.win32.Shell32
 import kotlinx.coroutines.delay
 import java.net.InetAddress
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 abstract class RouterProxy<T>(
-    @get:JsonProperty("id") override val id: String,
+    @get:JsonProperty("id") override val id: UUID,
     @get:JsonProperty("host") val host: String,
     @get:JsonProperty("port") val port: Int,
     @get:JsonProperty("interface") val `interface`: String,

@@ -17,14 +17,15 @@
 package com.valaphee.synergy.proxy.bgs
 
 import com.fasterxml.jackson.annotation.JsonTypeName
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeName("bgs_request")
 class BgsRequestEvent(
-    emitterId: String?,
-    emittedAt: Long?,
+    emitterId: UUID,
+    emittedAt: Long,
     id: Int,
     serviceHash: Int,
     serviceName: String?,

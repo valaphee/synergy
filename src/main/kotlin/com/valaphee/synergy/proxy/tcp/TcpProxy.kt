@@ -25,13 +25,14 @@ import com.valaphee.synergy.proxy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelOption
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeName("tcp")
 class TcpProxy(
-    id: String,
+    id: UUID = UUID.randomUUID(),
     host: String,
     port: Int,
     `interface`: String

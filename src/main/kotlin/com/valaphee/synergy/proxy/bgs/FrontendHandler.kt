@@ -49,7 +49,7 @@ class FrontendHandler(
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         PacketCodec(BgsProxy.services),
-                        LoggingHandler(proxy, BgsProxy.services),
+                        EventPump(proxy, BgsProxy.services),
                         com.valaphee.synergy.proxy.bgs.BackendHandler(proxy, context.channel())
                     )
                 }

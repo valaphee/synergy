@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.cheat
+package com.valaphee.synergy.event
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.valaphee.synergy.context
-import org.graalvm.polyglot.Source
-import org.graalvm.polyglot.Value
+import kotlinx.coroutines.flow.MutableSharedFlow
+import java.util.UUID
+
+val events = MutableSharedFlow<Event>()
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-abstract class Cheat(
-    @get:JsonProperty("on") val on: String,
-) {
-    @get:JsonIgnore val onValue: Value by lazy { context.eval(Source.create("js", on)) }
-}
+@JsonSubTypes(
+    JsonSubTypes.Type(KeyboardEvent::class)
+)
+abstract class Event(
+    @get:JsonProperty("emitter_id") val emitterId: UUID?,
+    @get:JsonProperty("emitted_at") val emittedAt: Long?
+)

@@ -29,8 +29,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
-import okhttp3.internal.toHexString
 import java.net.InetSocketAddress
+import java.util.UUID
 import kotlin.reflect.KClass
 
 /**
@@ -64,7 +64,7 @@ class IpcLocation(
     @get:JsonProperty("port") val port: Int?,
 ) : Location {
     override fun <T : Any> getAddress(address: InetSocketAddress, data: T, dataType: KClass<T>): Pair<InetSocketAddress, T> {
-        val id = address.hashCode().toHexString()
+        val id = UUID.randomUUID()
         runBlocking {
             httpClient.post("$url/proxy") {
                 parameter("autoStart", true)

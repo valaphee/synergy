@@ -22,7 +22,7 @@ import bgs.protocol.NoData
 import com.google.protobuf.Descriptors.MethodDescriptor
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
-import com.valaphee.synergy.events
+import com.valaphee.synergy.event.events
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -31,23 +31,23 @@ import kotlinx.coroutines.runBlocking
 /**
  * @author Kevin Ludwig
  */
-class LoggingHandler(
+class EventPump(
     private val proxy: BgsProxy,
     private val services: Map<Int, Service>
 ) : ChannelDuplexHandler() {
     internal val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
 
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
-        if (message is Packet) log(message)
+        if (message is Packet) emit(message)
         context.fireChannelRead(message)
     }
 
     override fun write(context: ChannelHandlerContext, message: Any?, promise: ChannelPromise?) {
-        if (message is Packet) log(message)
+        if (message is Packet) emit(message)
         context.write(message, promise)
     }
 
-    private fun log(packet: Packet) {
+    private fun emit(packet: Packet) {
         runBlocking {
             events.emit(when (packet.header.serviceId) {
                 PacketCodec.requestServiceId -> services[packet.header.serviceHash]?.let { service ->

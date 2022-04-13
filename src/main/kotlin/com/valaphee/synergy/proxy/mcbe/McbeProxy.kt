@@ -57,6 +57,7 @@ import network.ycc.raknet.pipeline.UserDataCodec
 import network.ycc.raknet.server.channel.RakNetServerChannel
 import network.ycc.raknet.server.pipeline.UdpPacketHandler
 import java.net.InetSocketAddress
+import java.util.UUID
 import java.util.zip.GZIPInputStream
 
 /**
@@ -64,7 +65,7 @@ import java.util.zip.GZIPInputStream
  */
 @JsonTypeName("mcbe")
 class McbeProxy(
-    id: String,
+    id: UUID = UUID.randomUUID(),
     host: String,
     port: Int = 19132,
     `interface`: String

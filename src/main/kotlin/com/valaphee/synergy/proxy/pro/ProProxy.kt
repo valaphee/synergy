@@ -31,13 +31,14 @@ import io.netty.channel.ChannelOption
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeName("pro")
 class ProProxy(
-    id: String,
+    id: UUID = UUID.randomUUID(),
     host: String,
     port: Int,
     `interface`: String

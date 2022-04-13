@@ -14,20 +14,32 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy.http
+package com.valaphee.synergy.event
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeName
-import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeName("http_request")
-class HttpRequestEvent(
-    emitterId: UUID,
+@JsonTypeName("keyboard")
+class KeyboardEvent(
     emittedAt: Long,
-    @get:JsonProperty("method") val method: String,
-    @get:JsonProperty("uri") val uri: String,
-    headers: Map<String, String>
-) : HttpEvent(emitterId, emittedAt, headers)
+    @get:JsonProperty("key_code") val keyCode: Int,
+    @get:JsonProperty("event") val event: Int,
+    @get:JsonProperty("modifiers") val modifiers: Int
+) : Event(null, emittedAt) {
+    @get:JsonIgnore val isPressed get() = (event and Event.Down) != 0
+    @get:JsonIgnore val isReleased get() = (event and Event.Up) != 0
+    @get:JsonIgnore val isAltDown get() = (modifiers and Modifier.Alt) != 0
+
+    object Event {
+        const val Down = 1 shl 0
+        const val Up = 1 shl 1
+    }
+
+    object Modifier {
+        const val Alt = 1 shl 0
+    }
+}

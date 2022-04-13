@@ -17,13 +17,14 @@
 package com.valaphee.synergy.proxy.http
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.Event
+import com.valaphee.synergy.event.Event
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 abstract class HttpEvent(
-    emitterId: String?,
-    emittedAt: Long?,
+    emitterId: UUID,
+    emittedAt: Long,
     @get:JsonProperty("headers") val headers: Map<String, String>
 ) : Event(emitterId, emittedAt)

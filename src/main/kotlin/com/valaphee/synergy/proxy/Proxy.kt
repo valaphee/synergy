@@ -25,6 +25,7 @@ import com.valaphee.synergy.proxy.http.HttpProxy
 import com.valaphee.synergy.proxy.mcbe.McbeProxy
 import com.valaphee.synergy.proxy.pro.ProProxy
 import com.valaphee.synergy.proxy.tcp.TcpProxy
+import java.util.UUID
 import kotlin.reflect.KClass
 
 /**
@@ -40,7 +41,7 @@ import kotlin.reflect.KClass
 )
 interface Proxy<T> {
     @get:JsonProperty("type") val type: String
-    @get:JsonProperty("id") val id: String
+    @get:JsonProperty("id") val id: UUID
     @get:JsonIgnore val dataType: KClass<*> get() = Any::class
 
     suspend fun start()

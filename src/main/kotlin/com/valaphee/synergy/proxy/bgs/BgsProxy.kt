@@ -59,6 +59,7 @@ import java.security.PrivateKey
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.Calendar
+import java.util.UUID
 import kotlin.random.asKotlinRandom
 
 /**
@@ -66,7 +67,7 @@ import kotlin.random.asKotlinRandom
  */
 @JsonTypeName("bgs")
 class BgsProxy(
-    id: String,
+    id: UUID = UUID.randomUUID(),
     host: String,
     port: Int = 1119,
     `interface`: String,

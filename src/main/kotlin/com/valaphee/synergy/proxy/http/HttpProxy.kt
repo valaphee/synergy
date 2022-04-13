@@ -32,13 +32,14 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.ssl.SslContext
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeName("http")
 class HttpProxy(
-    id: String,
+    id: UUID = UUID.randomUUID(),
     host: String,
     port: Int = 443,
     `interface`: String,

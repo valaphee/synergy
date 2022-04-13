@@ -17,14 +17,15 @@
 package com.valaphee.synergy.proxy.bgs
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.Event
+import com.valaphee.synergy.event.Event
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
 abstract class BgsEvent(
-    emitterId: String?,
-    emittedAt: Long?,
+    emitterId: UUID,
+    emittedAt: Long,
     @get:JsonProperty("id") val id: Int,
     @get:JsonProperty("service_name") val serviceHash: Int,
     @get:JsonProperty("service_hash") val serviceName: String?,

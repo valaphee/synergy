@@ -14,32 +14,27 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy
+package com.valaphee.synergy.action
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeName
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.synergy.context
+import org.graalvm.polyglot.Source
+import org.graalvm.polyglot.Value
+import java.net.URL
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeName("keyboard")
-class KeyboardEvent(
-    emittedAt: Long?,
-    @get:JsonProperty("key_code") val keyCode: Int,
-    @get:JsonProperty("event") val event: Int,
-    @get:JsonProperty("modifiers") val modifiers: Int
-) : Event(null, emittedAt) {
-    @get:JsonIgnore val isPressed get() = (event and Event.Down) != 0
-    @get:JsonIgnore val isReleased get() = (event and Event.Up) != 0
-    @get:JsonIgnore val isAltDown get() = (modifiers and Modifier.Alt) != 0
-
-    object Event {
-        const val Down = 1 shl 0
-        const val Up = 1 shl 1
-    }
-
-    object Modifier {
-        const val Alt = 1 shl 0
-    }
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", defaultImpl = Action::class)
+@JsonSubTypes(
+)
+open class Action(
+    @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
+    @get:JsonProperty("event_handler") val _eventHandler: URL,
+) {
+    @get:JsonIgnore val eventHandler: Value by lazy { context.eval(Source.create("js", _eventHandler.readText())) }
 }

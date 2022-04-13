@@ -16,7 +16,7 @@
 
 package com.valaphee.synergy.proxy.http
 
-import com.valaphee.synergy.events
+import com.valaphee.synergy.event.events
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -28,20 +28,20 @@ import kotlinx.coroutines.runBlocking
 /**
  * @author Kevin Ludwig
  */
-class LoggingHandler(
+class EventPump(
     private val proxy: HttpProxy
 ) : ChannelDuplexHandler() {
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
-        if (message is HttpMessage) log(message)
+        if (message is HttpMessage) emit(message)
         context.fireChannelRead(message)
     }
 
     override fun write(context: ChannelHandlerContext, message: Any?, promise: ChannelPromise?) {
-        if (message is HttpMessage) log(message)
+        if (message is HttpMessage) emit(message)
         context.write(message, promise)
     }
 
-    private fun log(message: HttpMessage) {
+    private fun emit(message: HttpMessage) {
         runBlocking {
             events.emit(
                 when (message) {
