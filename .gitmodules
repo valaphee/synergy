@@ -1,3 +1,6 @@
 [submodule "synergy-component-hid/loki-hidriver"]
 	path = synergy-component-hid/loki-hidriver
 	url = https://github.com/hedgar2017/loki-hidriver.git
+[submodule "synergy-proxy-bgs/protod"]
+	path = synergy-proxy-bgs/protod
+	url = https://github.com/valaphee/protod.git

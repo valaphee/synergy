@@ -128,7 +128,7 @@ suspend fun main(arguments: Array<String>) {
                 call.respond(if (proxies.putIfAbsent(proxy.id, proxy) == null) HttpStatusCode.OK else HttpStatusCode.BadRequest)
                 if (call.request.queryParameters["persist"] == "true") {
                     val persistentProxies = if (proxyFile.exists()) try {
-                        objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy {it.id }.toMutableMap()
+                        objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { it.id }.toMutableMap()
                     } catch (_: Exception) {
                         mutableMapOf()
                     } else mutableMapOf()
