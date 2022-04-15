@@ -43,8 +43,6 @@ class HttpProxy(
     `interface`: String,
     @get:JsonProperty("ssl") val ssl: Boolean = true
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    override val base get() = "http"
-
     @JsonIgnore @Inject private lateinit var sslContext: SslContext
 
     @JsonIgnore private var channel: Channel? = null

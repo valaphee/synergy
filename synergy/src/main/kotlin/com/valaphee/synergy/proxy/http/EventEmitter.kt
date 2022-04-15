@@ -28,7 +28,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * @author Kevin Ludwig
  */
-class EventPump(
+class EventEmitter(
     private val proxy: HttpProxy
 ) : ChannelDuplexHandler() {
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
@@ -47,7 +47,7 @@ class EventPump(
                 when (message) {
                     is FullHttpRequest -> HttpRequestEvent(proxy.id, System.currentTimeMillis(), message.method().name(), message.uri(), message.headers().associate { it.key to it.value })
                     is FullHttpResponse -> HttpResponseEvent(proxy.id, System.currentTimeMillis(), message.status().code(), message.status().reasonPhrase(), message.headers().associate { it.key to it.value })
-                    else -> TODO()
+                    else -> TODO("$message")
                 }
             )
         }

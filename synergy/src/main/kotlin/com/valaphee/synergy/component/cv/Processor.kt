@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy
+package com.valaphee.synergy.component.cv
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.util.UUID
-import kotlin.reflect.KClass
+import org.opencv.core.Mat
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-interface Proxy<T> {
-    @get:JsonProperty("@class") val `class`: String get() = this::class.java.name
-    @get:JsonProperty("id") val id: UUID
-    @get:JsonIgnore val dataType: KClass<*> get() = Any::class
-
-    suspend fun start()
-
-    suspend fun update(data: T) = data
-
-    suspend fun stop()
+interface Processor {
+    fun process(image: Mat): Mat
 }

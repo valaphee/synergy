@@ -76,9 +76,9 @@ suspend fun main(arguments: Array<String>) {
     argumentParser.subcommands(WindowsHookSubcommand)
     argumentParser.parse(arguments)
 
-    val controlFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "actions.json")
-    val controls = if (controlFile.exists()) try {
-        objectMapper.readValue<List<Component>>(controlFile).associateBy { it.id }.toMutableMap()
+    val componentFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "components.json")
+    val components = if (componentFile.exists()) try {
+        objectMapper.readValue<List<Component>>(componentFile).associateBy { it.id }.toMutableMap()
     } catch (_: Exception) {
         mutableMapOf()
     } else mutableMapOf()
@@ -101,29 +101,28 @@ suspend fun main(arguments: Array<String>) {
             }
             webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }
             post("/component") {
-                @Suppress("UNCHECKED_CAST")
                 val component = call.receive(Component::class)
-                call.respond(if (controls.putIfAbsent(component.id, component) == null) HttpStatusCode.OK else HttpStatusCode.BadRequest)
+                call.respond(if (components.putIfAbsent(component.id, component) == null) HttpStatusCode.OK else HttpStatusCode.BadRequest)
                 if (call.request.queryParameters["persist"] == "true") {
-                    val persistentActions = if (controlFile.exists()) try {
-                        objectMapper.readValue<List<Component>>(controlFile).associateBy { it.id }.toMutableMap()
+                    val persistentActions = if (componentFile.exists()) try {
+                        objectMapper.readValue<List<Component>>(componentFile).associateBy { it.id }.toMutableMap()
                     } catch (_: Exception) {
                         mutableMapOf()
                     } else mutableMapOf()
-                    if (persistentActions.putIfAbsent(component.id, component) == null) objectMapper.writeValue(controlFile, persistentActions.values)
+                    if (persistentActions.putIfAbsent(component.id, component) == null) objectMapper.writeValue(componentFile, persistentActions.values)
                 }
             }
             delete("/component/{id}") {
-                controls.remove(UUID.fromString(call.parameters["id"]))?.let {
+                components.remove(UUID.fromString(call.parameters["id"]))?.let {
                     call.respond(HttpStatusCode.OK)
                     if (call.request.queryParameters["persist"] == "true") try {
-                        val persistentControls = objectMapper.readValue<List<Component>>(controlFile).associateBy { it.id }.toMutableMap()
-                        if (persistentControls.remove(it.id) != null) objectMapper.writeValue(controlFile, persistentControls.values)
+                        val persistentControls = objectMapper.readValue<List<Component>>(componentFile).associateBy { it.id }.toMutableMap()
+                        if (persistentControls.remove(it.id) != null) objectMapper.writeValue(componentFile, persistentControls.values)
                     } catch (_: Exception) {
                     }
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
-            get("/component/") { call.respond(controls.values) }
+            get("/component/") { call.respond(components.values) }
             post("/proxy") {
                 @Suppress("UNCHECKED_CAST")
                 val proxy = call.receive(Proxy::class).apply(injector::injectMembers) as Proxy<Any?>
@@ -168,6 +167,6 @@ suspend fun main(arguments: Array<String>) {
 
     events.collectLatest {
         val eventProxy = MapProxyObject(objectMapper.convertValue(it))
-        controls.values.forEach { it.controller.forEach { it.execute(it, eventProxy) } }
+        components.values.forEach { it.controller.forEach { it.execute(it, eventProxy) } }
     }
 }

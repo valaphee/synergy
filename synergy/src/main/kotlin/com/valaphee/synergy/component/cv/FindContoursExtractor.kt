@@ -14,14 +14,29 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.component.aim
+package com.valaphee.synergy.component.cv
 
 import com.valaphee.foundry.math.Double2
 import org.opencv.core.Mat
+import org.opencv.core.MatOfPoint
+import org.opencv.imgproc.Imgproc
 
 /**
  * @author Kevin Ludwig
  */
-interface Processor {
-    fun process(image: Mat): List<Double2>
+class FindContoursExtractor : Extractor {
+    override fun extract(image: Mat): List<Double2> {
+        val contours = mutableListOf<MatOfPoint>()
+        Imgproc.findContours(image, contours, Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+        return contours.map {
+            var x = 0.0
+            var y = 0.0
+            val points = it.toArray()
+            points.forEach {
+                x += it.x
+                y += it.y
+            }
+            Double2(x / points.size, y / points.size)
+        }
+    }
 }

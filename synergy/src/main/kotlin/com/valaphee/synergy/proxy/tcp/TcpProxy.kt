@@ -35,8 +35,6 @@ class TcpProxy(
     port: Int,
     `interface`: String
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    override val base get() = "tcp"
-
     @JsonIgnore private var channel: Channel? = null
 
     override suspend fun start() {
