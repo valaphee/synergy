@@ -14,5 +14,14 @@
  * limitations under the License.
  */
 
-rootProject.name = "synergy"
-include("synergy")
+package com.valaphee.synergy.component.aim
+
+import com.valaphee.foundry.math.Double2
+import org.opencv.core.Mat
+
+/**
+ * @author Kevin Ludwig
+ */
+interface Processor {
+    fun process(image: Mat): List<Double2>
+}
