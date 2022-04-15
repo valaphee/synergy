@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy
+package com.valaphee.synergy
 
 import com.google.inject.AbstractModule
 import com.google.inject.Provides

@@ -14,20 +14,6 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.event
-
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import kotlinx.coroutines.flow.MutableSharedFlow
-import java.util.UUID
-
-val events = MutableSharedFlow<Event>()
-
-/**
- * @author Kevin Ludwig
- */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "base")
-abstract class Event(
-    @get:JsonProperty("emitter_id") val emitterId: UUID?,
-    @get:JsonProperty("emitted_at") val emittedAt: Long?
-)
+(function (action, event) {
+    console.log(JSON.stringify(event))
+})

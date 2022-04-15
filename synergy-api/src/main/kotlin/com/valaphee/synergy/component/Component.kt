@@ -16,11 +16,8 @@
 
 package com.valaphee.synergy.component
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import org.graalvm.polyglot.Context
-import org.graalvm.polyglot.Source
 import java.net.URL
 import java.util.UUID
 
@@ -30,8 +27,7 @@ import java.util.UUID
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 open class Component(
     @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("controller") val _controller: List<URL>,
+    @get:JsonProperty("controller") val controller: List<URL>,
 ) {
     @get:JsonProperty("@class") val `class`: String get() = this::class.java.name
-    @get:JsonIgnore val controller by lazy { _controller.map {Context.create().eval(Source.create("js", it.readText())) } }
 }

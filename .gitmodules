@@ -1,0 +1,3 @@
+[submodule "synergy-component-hid/loki-hidriver"]
+	path = synergy-component-hid/loki-hidriver
+	url = https://github.com/hedgar2017/loki-hidriver.git

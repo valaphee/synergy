@@ -3,16 +3,15 @@
  * All rights reserved.
  */
 
+plugins {
+    id("com.github.johnrengelman.shadow")
+}
+
 dependencies {
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.1")
-    implementation("com.google.guava:guava:31.1-jre")
-    implementation("com.google.inject:guice:5.1.0")
-    implementation("com.valaphee:foundry-math:1.4.0")
-    implementation("io.ktor:ktor-client-content-negotiation-jvm:2.0.0")
-    implementation("io.ktor:ktor-client-okhttp:2.0.0")
-    implementation("io.ktor:ktor-client-jackson:2.0.0")
-    implementation("io.ktor:ktor-network-tls-certificates:2.0.0")
-    implementation("io.ktor:ktor-serialization-jackson-jvm:2.0.0")
+    implementation(project(":synergy-api"))
+    implementation(project(":synergy-component-cv"))
+    implementation(project(":synergy-component-hid"))
+    implementation(project(":synergy-proxy-bgs"))
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0")
     implementation("io.ktor:ktor-server-compression-jvm:2.0.0")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.0")
@@ -20,14 +19,7 @@ dependencies {
     implementation("io.ktor:ktor-server-default-headers-jvm:2.0.0")
     implementation("io.ktor:ktor-server-locations-jvm:2.0.0")
     implementation("io.ktor:ktor-server-netty-jvm:2.0.0")
-    testImplementation("io.ktor:ktor-server-tests-jvm:2.0.0")
     implementation("io.ktor:ktor-server-websockets:2.0.0")
-    implementation("io.netty:netty-tcnative:2.0.51.Final")
-    implementation("io.netty:netty-tcnative-boringssl-static:2.0.51.Final")
-    implementation("io.netty:netty-tcnative-boringssl-static:2.0.51.Final:windows-x86_64")
-    implementation("net.java.dev.jna:jna:5.11.0")
-    implementation("net.java.dev.jna:jna-platform:5.11.0")
-    implementation("net.sourceforge.tess4j:tess4j:5.2.0")
     implementation("org.apache.logging.log4j:log4j-core:2.17.2")
     implementation("org.apache.logging.log4j:log4j-iostreams:2.17.2")
     implementation("org.apache.logging.log4j:log4j-jul:2.17.2")
@@ -36,8 +28,6 @@ dependencies {
     implementation("org.graalvm.js:js:22.0.0.2")
     implementation("org.graalvm.sdk:graal-sdk:22.0.0.2")
     implementation("org.graalvm.truffle:truffle-api:22.0.0.2")
-    implementation("org.hid4java:hid4java:0.7.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.6.20")
-    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.4")
-    implementation("org.openpnp:opencv:4.5.1-0")
 }
+
+tasks { shadowJar { archiveName = "synergy.jar" } }
