@@ -77,6 +77,7 @@ class FrontendHandler(
         })
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
         if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)

@@ -82,6 +82,7 @@ class BackendHandler(
         }
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
         if (!handshakeFuture.isDone) handshakeFuture.setFailure(cause)

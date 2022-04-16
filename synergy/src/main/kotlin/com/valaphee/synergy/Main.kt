@@ -20,6 +20,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Guice
 import com.valaphee.synergy.component.Component
+import com.valaphee.synergy.event.WindowsHookSubcommand
 import com.valaphee.synergy.event.events
 import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.proxy.bossGroup
@@ -72,7 +73,7 @@ suspend fun main(arguments: Array<String>) {
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
     val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
-    argumentParser.subcommands()
+    argumentParser.subcommands(WindowsHookSubcommand)
     argumentParser.parse(arguments)
 
     val componentFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "components.json")

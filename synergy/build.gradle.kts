@@ -11,7 +11,6 @@ dependencies {
     implementation(project(":synergy-api"))
     implementation(project(":synergy-component-cv"))
     implementation(project(":synergy-component-hid"))
-    implementation(project(":synergy-proxy-bgs"))
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0")
     implementation("io.ktor:ktor-server-compression-jvm:2.0.0")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.0")
@@ -30,4 +29,8 @@ dependencies {
     implementation("org.graalvm.truffle:truffle-api:22.0.0.2")
 }
 
-tasks { shadowJar { archiveName = "synergy.jar" } }
+tasks {
+    jar { manifest { attributes(mapOf("Main-Class" to "com.valaphee.synergy.MainKt")) } }
+
+    shadowJar { archiveName = "synergy.jar" }
+}

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
-(function (component, event) {
-    console.log(JSON.stringify(event))
-})
+dependencies {
+    implementation(project(":synergy-api"))
+    implementation("com.valaphee:netcode-mcbe:0.1.20")
+}
