@@ -16,10 +16,6 @@
 
 package com.valaphee.synergy.proxy.bgs
 
-import bgs.protocol.game_utilities.v2.client.ProcessTaskResponse
-import bgs.protocol.v2.Attribute
-import bgs.protocol.v2.Variant
-import com.valaphee.synergy.proxy.util.address
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFuture
@@ -57,17 +53,7 @@ class BackendHandler(
     }
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
-        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(if (message is com.valaphee.synergy.proxy.bgs.Packet) when (val payload = message.data) {
-            is ProcessTaskResponse -> {
-                val results = payload.resultList.associate { it.name to it.value }.toMutableMap()
-                if (results["response_type"]?.stringValue == "ReferralInfo") {
-                    val (address, data) = proxy.referral.getAddress(checkNotNull(address(checkNotNull(results["hostv4"]).stringValue, 0)), payload.toByteArray(), ByteArray::class)
-                    val modifiedPayload = ProcessTaskResponse.parseFrom(data).toBuilder()
-                    com.valaphee.synergy.proxy.bgs.Packet(message.header, modifiedPayload.setResult(modifiedPayload.resultList.withIndex().single { it.value.name == "hostv4" }.index, Attribute.newBuilder().setName("hostv4").setValue(Variant.newBuilder().setStringValue(address.toString().split('/', limit = 2)[1]))).build())
-                } else message
-            }
-            else -> message
-        } else message).addListener(object : ChannelFutureListener {
+        if (handshaker.isHandshakeComplete) inboundChannel.writeAndFlush(message).addListener(object : ChannelFutureListener {
             override fun operationComplete(future: ChannelFuture) {
                 if (future.isSuccess) context.channel().read()
                 else context.channel().close()

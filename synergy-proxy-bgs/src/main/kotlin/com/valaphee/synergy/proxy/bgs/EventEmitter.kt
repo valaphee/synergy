@@ -35,7 +35,7 @@ class EventEmitter(
     private val proxy: BgsProxy,
     private val services: Map<Int, Service>
 ) : ChannelDuplexHandler() {
-    internal val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
+    private val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
 
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
         if (message is Packet) emit(message)

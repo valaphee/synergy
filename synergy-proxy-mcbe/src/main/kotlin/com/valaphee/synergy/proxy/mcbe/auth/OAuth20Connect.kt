@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy
+package com.valaphee.synergy.proxy.mcbe.auth
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-interface Proxy<T> {
-    @get:JsonProperty("@class") val `class`: String get() = this::class.java.name
-    @get:JsonProperty("id") val id: UUID
-
-    suspend fun start()
-
-    suspend fun stop()
-}
+class OAuth20Connect(
+    @get:JsonProperty("user_code") val userCode: String,
+    @get:JsonProperty("device_code") val deviceCode: String,
+    @get:JsonProperty("verification_uri") val verificationUri: String,
+    @get:JsonProperty("interval") val interval: Int,
+    @get:JsonProperty("expires_in") val expiresIn: Int
+)

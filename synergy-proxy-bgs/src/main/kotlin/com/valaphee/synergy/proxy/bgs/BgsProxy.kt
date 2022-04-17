@@ -71,7 +71,6 @@ class BgsProxy(
     host: String,
     port: Int = 1119,
     `interface`: String,
-    @get:JsonProperty("referral") val referral: Location
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
     @JsonIgnore @Inject private lateinit var keyStore: KeyStore
     @JsonIgnore @Inject @Named("key-store") private lateinit var keyStoreFile: File

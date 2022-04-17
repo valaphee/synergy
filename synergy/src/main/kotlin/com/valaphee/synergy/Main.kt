@@ -35,9 +35,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -100,6 +98,7 @@ suspend fun main(arguments: Array<String>) {
                 events.emit(call.receive())
             }
             webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }
+
             post("/component") {
                 val component = call.receive(Component::class)
                 call.respond(if (components.putIfAbsent(component.id, component to component.controller.map { Context.create().eval(Source.create("js", it.readText())) }) == null) HttpStatusCode.OK else HttpStatusCode.BadRequest)
@@ -123,6 +122,7 @@ suspend fun main(arguments: Array<String>) {
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
             get("/component/") { call.respond(components.values.map { it.first }) }
+
             post("/proxy") {
                 @Suppress("UNCHECKED_CAST")
                 val proxy = call.receive(Proxy::class).apply(injector::injectMembers) as Proxy<Any?>
@@ -155,7 +155,6 @@ suspend fun main(arguments: Array<String>) {
                     proxy.start()
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
-            post("/proxy/{id}/update") { proxies[UUID.fromString(call.parameters["id"])]?.let { call.respondText(objectMapper.writeValueAsString(it.update(objectMapper.readValue(call.receiveText(), it.dataType.java))), ContentType.Application.Json) } ?: call.respond(HttpStatusCode.NotFound) }
             get("/proxy/{id}/stop") {
                 proxies[UUID.fromString(call.parameters["id"])]?.let { proxy ->
                     call.respond(HttpStatusCode.OK)

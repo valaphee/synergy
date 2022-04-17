@@ -3,14 +3,14 @@
  * All rights reserved.
  */
 
-plugins {
-    id("com.github.johnrengelman.shadow")
-}
+plugins { id("com.github.johnrengelman.shadow") }
 
 dependencies {
     implementation(project(":synergy-api"))
     implementation(project(":synergy-component-cv"))
     implementation(project(":synergy-component-hid"))
+    /*implementation(project(":synergy-proxy-bgs"))*/
+    implementation(project(":synergy-proxy-mcbe"))
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0")
     implementation("io.ktor:ktor-server-compression-jvm:2.0.0")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:2.0.0")
