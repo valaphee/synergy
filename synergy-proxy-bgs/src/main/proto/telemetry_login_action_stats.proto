@@ -1,0 +1,26 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "LoginActionStats";
+
+message LoginActionStats {
+  option (TelemetryMessageOptions).realtime = true;
+
+  optional bool appear_offline_selected = 1;
+  optional bool keep_me_logged_in_login_window_changed = 2;
+  optional bool continue_without_logging_in_selected = 3;
+  optional bool settings_opened = 4;
+  optional bool language_changed = 5;
+  optional bool remember_login_info_changed = 6;
+  optional bool keep_me_logged_in_settings_changed = 7;
+  optional bool clear_login_info_clicked = 8;
+  optional bool use_browser_hw_accel_changed = 9;
+  optional bool phoenix_restarted = 10;
+}

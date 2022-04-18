@@ -19,10 +19,12 @@ package com.valaphee.synergy
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Guice
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import com.valaphee.synergy.component.Component
 import com.valaphee.synergy.event.WindowsHookSubcommand
 import com.valaphee.synergy.event.events
 import com.valaphee.synergy.proxy.Proxy
+import com.valaphee.synergy.proxy.bgs.security.BgsSecurityPatchSubcommand
 import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.objectMapper
 import com.valaphee.synergy.proxy.workerGroup
@@ -41,8 +43,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
-import io.ktor.server.websocket.webSocket
-import io.ktor.websocket.send
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -66,12 +66,14 @@ suspend fun main(arguments: Array<String>) {
 
     Security.addProvider(BouncyCastleProvider())
 
+    objectMapper.registerModule(ProtobufModule())
+
     val injector = Guice.createInjector(SecurityModule(File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx")))
 
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
     val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
-    argumentParser.subcommands(WindowsHookSubcommand)
+    argumentParser.subcommands(WindowsHookSubcommand, BgsSecurityPatchSubcommand().apply { injector.injectMembers(this) })
     argumentParser.parse(arguments)
 
     val componentFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "components.json")
@@ -97,7 +99,7 @@ suspend fun main(arguments: Array<String>) {
                 call.respond(HttpStatusCode.OK)
                 events.emit(call.receive())
             }
-            webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }
+            /*webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }*/
 
             post("/component") {
                 val component = call.receive(Component::class)

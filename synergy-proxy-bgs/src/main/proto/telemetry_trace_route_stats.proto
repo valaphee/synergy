@@ -1,0 +1,53 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "TraceRouteStats";
+
+message TraceRouteStats {
+  option (TelemetryMessageOptions).realtime = true;
+
+  enum Status {
+    Success = 0;
+    Canceled = 1;
+    FailedInitialization = 2;
+    UnableToResolveHostName = 3;
+    TargetNotReached = 4;
+    UnknownErrorOccurred = 5;
+  }
+
+  message HopStats {
+    optional uint32 round_trip_time_ms = 1;
+    optional string addresses = 2;
+    optional uint32 num_packets_sent = 3;
+    optional uint32 num_packets_failed = 4;
+    optional uint32 current_hop_num = 5;
+    optional bool succeeded = 6;
+  }
+
+  message TraceRouteOptions {
+    optional uint32 max_number_of_hops = 1;
+    optional uint32 max_packets_sent_per_hop = 2;
+    optional uint32 dns_timeout_ms = 3;
+    optional uint32 router_timeout = 4;
+  }
+
+  optional .Blizzard.Telemetry.App.TraceRouteStats.HopStats last_successful_hop = 1;
+  optional .Blizzard.Telemetry.App.TraceRouteStats.HopStats last_attempted_hop = 2;
+  repeated .Blizzard.Telemetry.App.TraceRouteStats.HopStats all_hops_last_hop_first = 3;
+  optional string target_endpoint_name = 4;
+  optional string target_endpoint_hostname = 5;
+  optional string target_endpoint_ip_address = 6;
+  optional .Blizzard.Telemetry.App.TraceRouteStats.TraceRouteOptions options = 7;
+  optional uint32 total_num_hops = 8;
+  optional .Blizzard.Telemetry.App.TraceRouteStats.Status status = 9;
+  optional uint32 total_round_trip_time_ms = 10;
+  optional uint32 total_num_packets_sent = 11;
+  optional uint32 total_num_packets_failed = 12;
+}

@@ -18,15 +18,12 @@ package com.valaphee.synergy.proxy.bgs
 
 import bgs.protocol.ServiceOptionsProto
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.google.protobuf.Descriptors
 import com.google.protobuf.RpcChannel
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
-import com.valaphee.synergy.proxy.Location
 import com.valaphee.synergy.proxy.RouterProxy
 import com.valaphee.synergy.proxy.bgs.util.hashFnv1a
 import com.valaphee.synergy.proxy.bossGroup
@@ -65,7 +62,6 @@ import kotlin.random.asKotlinRandom
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeName("bgs")
 class BgsProxy(
     id: UUID = UUID.randomUUID(),
     host: String,
@@ -85,27 +81,26 @@ class BgsProxy(
         val rootCertificate = keyStore.getCertificate("synergy") as X509Certificate
         val serverCertificate = keyStore.getCertificate(host) as X509Certificate? ?: run {
             val serverKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
-            val rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
-            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$host"), serverKeyPair.public).build(rootContentSigner)
+            val rootSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
+            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$host"), serverKeyPair.public).build(rootSigner)
             val serverCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(X509v3CertificateBuilder(JcaX509CertificateHolder(rootCertificate).subject, BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, serverCsr.subject, serverCsr.subjectPublicKeyInfo).apply {
                 addExtension(Extension.basicConstraints, true, BasicConstraints(false))
                 addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
                 addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
                 addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, host)))
-            }.build(rootContentSigner))
+            }.build(rootSigner))
             keyStore.setKeyEntry(host, serverKeyPair.private, null, arrayOf(serverCertificate))
             keyStoreFile.outputStream().use { keyStore.store(it, "".toCharArray()) }
             serverCertificate
         }
-        val sslContextBuilder = SslContextBuilder.forServer(keyStore.getKey(host, null) as PrivateKey, listOf(serverCertificate, rootCertificate)).build()
-
+        val sslContext = SslContextBuilder.forServer(keyStore.getKey(host, null) as PrivateKey, listOf(serverCertificate, rootCertificate)).build()
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
-                        sslContextBuilder.newHandler(channel.alloc()),
+                        sslContext.newHandler(channel.alloc()),
                         HttpServerCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),

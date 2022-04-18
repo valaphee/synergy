@@ -1,0 +1,32 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "Install";
+
+message Install {
+  option (TelemetryMessageOptions).realtime = true;
+
+  optional bool did_install = 1;
+  optional string source = 2;
+  optional string config_uri = 3;
+  optional string tact_product_code = 4;
+  optional uint32 count_supported_languages = 5;
+  repeated string selected_languages = 6;
+  optional string selected_languages_serialized = 7;
+  optional uint32 count_supported_packages = 8;
+  repeated string selected_packages = 9;
+  optional string selected_packages_serialized = 10;
+  optional int64 install_size = 11;
+  optional bool encountered_out_of_disk = 12;
+  optional bool encountered_invalid_folder = 13;
+  optional bool enable_auto_update = 14;
+  optional bool create_desktop_shortcut = 15;
+  optional string unique_id = 16;
+}

@@ -12,7 +12,7 @@ dependencies {
     api("io.ktor:ktor-client-jackson:2.0.0")
     api("io.ktor:ktor-network-tls-certificates:2.0.0")
     api("io.ktor:ktor-serialization-jackson-jvm:2.0.0")
-    api("io.netty:netty-all:4.1.74.Final")
+    api("io.netty:netty-all:4.1.75.Final")
     implementation("io.netty:netty-tcnative:2.0.51.Final")
     implementation("io.netty:netty-tcnative-boringssl-static:2.0.51.Final")
     implementation("io.netty:netty-tcnative-boringssl-static:2.0.51.Final:windows-x86_64")

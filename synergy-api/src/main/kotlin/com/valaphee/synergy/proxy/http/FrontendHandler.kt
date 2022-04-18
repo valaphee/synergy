@@ -28,7 +28,8 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.ssl.SslContextBuilder
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import java.security.KeyStore
+import javax.net.ssl.TrustManagerFactory
 
 /**
  * @author Kevin Ludwig
@@ -39,13 +40,14 @@ class FrontendHandler(
     private var outboundChannel: Channel? = null
 
     override fun channelActive(context: ChannelHandlerContext) {
+        val sslContext = SslContextBuilder.forClient().trustManager(TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(null as KeyStore?) }).build()
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
             .handler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
+                    if (proxy.ssl) channel.pipeline().addLast(sslContext.newHandler(channel.alloc()))
                     channel.pipeline().addLast(
-                        SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build().newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(1 * 1024 * 1024),
                         EventEmitter(proxy),

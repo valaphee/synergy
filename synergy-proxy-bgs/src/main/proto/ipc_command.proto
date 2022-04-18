@@ -1,0 +1,21 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.ipc.app;
+
+option java_multiple_files = true;
+
+enum MessageId {
+  IPC_COMMAND = 1;
+}
+
+message Message {
+  required .bna.ipc.app.MessageId type = 1;
+  required bytes message_data = 2;
+}
+
+message CommandMessage {
+  optional string command = 1;
+  repeated string arguments = 2;
+}

@@ -1,0 +1,117 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+import "notification_service_types.proto";
+import "common_types.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message NotificationSubscriptionResponse {
+  optional .bna.rpc.NotificationCenterState initial_state = 1;
+  repeated .bna.rpc.NotificationData initial_notification_data = 2;
+}
+
+message DismissNotificationsRequest {
+  optional .bna.rpc.NotificationDismissType dismiss_type = 1;
+}
+
+message NotificationAcceptRequest {
+  optional string key = 1;
+  optional bool auto_dismiss = 2 [default = true];
+  optional bool accept_as_realid = 3 [default = false];
+}
+
+message NotificationDeclineRequest {
+  optional string key = 1;
+  optional bool auto_dismiss = 2 [default = true];
+}
+
+message NotificationDismissRequest {
+  optional string key = 1;
+}
+
+message NotificationClickthroughRequest {
+  optional string key = 1;
+}
+
+message NotificationContextMenuRequest {
+  optional string key = 1;
+  optional .bna.rpc.Point menu = 2;
+  optional .bna.rpc.Point arrow = 3;
+}
+
+message NotificationServiceStateNotification {
+  optional .bna.rpc.NotificationServiceState state = 1;
+}
+
+message NotificationCenterStateNotification {
+  optional .bna.rpc.NotificationCenterState state = 1;
+}
+
+message NotificationAddedNotification {
+  optional string key = 1;
+  optional .bna.rpc.NotificationData data = 2;
+}
+
+message NotificationRemovedNotification {
+  optional string key = 1;
+}
+
+message NotificationUpdatedNotification {
+  optional string key = 1;
+  optional .bna.rpc.NotificationData data = 2;
+}
+
+service NotificationService {
+  rpc SubscribeNotifications (.bna.rpc.NoData) returns (.bna.rpc.NotificationSubscriptionResponse) {
+  }
+
+  rpc UnsubscribeNotifications (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc DismissNotifications (.bna.rpc.DismissNotificationsRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc NewNotificationsSeen (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc Accept (.bna.rpc.NotificationAcceptRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc Decline (.bna.rpc.NotificationDeclineRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc Dismiss (.bna.rpc.NotificationDismissRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc Clickthrough (.bna.rpc.NotificationClickthroughRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc ShowContextMenu (.bna.rpc.NotificationContextMenuRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc NotificationServiceStateChanged (.bna.rpc.NoData) returns (.bna.rpc.NotificationServiceStateNotification) {
+  }
+
+  rpc NotificationCenterStateChanged (.bna.rpc.NoData) returns (.bna.rpc.NotificationCenterStateNotification) {
+  }
+
+  rpc NotificationAdded (.bna.rpc.NoData) returns (.bna.rpc.NotificationAddedNotification) {
+  }
+
+  rpc NotificationRemoved (.bna.rpc.NoData) returns (.bna.rpc.NotificationRemovedNotification) {
+  }
+
+  rpc NotificationUpdated (.bna.rpc.NoData) returns (.bna.rpc.NotificationUpdatedNotification) {
+  }
+
+  rpc NotificationsCleared (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+}

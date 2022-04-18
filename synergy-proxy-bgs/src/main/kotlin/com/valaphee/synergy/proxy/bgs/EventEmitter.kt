@@ -54,10 +54,10 @@ class EventEmitter(
                     service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == packet.header.methodId }?.let { methodDescriptor ->
                         val response = service.getResponsePrototype(methodDescriptor)
                         if (response !is NO_RESPONSE && response !is NoData) responses[packet.header.token] = service to methodDescriptor
-                        BgsRequestEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.data)
-                    } ?: BgsRequestEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, null, packet.data)
-                } ?: BgsRequestEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, null, packet.header.methodId, null, packet.data)
-                PacketCodec.responseServiceId -> responses.remove(packet.header.token)?.let { (service, methodDescriptor) -> BgsResponseEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.data) } ?: BgsResponseEvent(proxy.id, System.currentTimeMillis(), packet.header.token, -1, null, -1, null, packet.data)
+                        BgsRequestEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload)
+                    } ?: BgsRequestEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, null, packet.payload)
+                } ?: BgsRequestEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, null, packet.header.methodId, null, packet.payload)
+                PacketCodec.responseServiceId -> responses.remove(packet.header.token)?.let { (service, methodDescriptor) -> BgsResponseEvent(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload) } ?: BgsResponseEvent(proxy.id, System.currentTimeMillis(), packet.header.token, -1, null, -1, null, packet.payload)
                 else -> TODO()
             })
         }

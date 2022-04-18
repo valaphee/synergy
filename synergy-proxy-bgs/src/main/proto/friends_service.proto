@@ -1,0 +1,37 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "common_types.proto";
+import "friends_service_types.proto";
+import "rpc_core.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+service FriendsService {
+  rpc GetFriends (.bna.rpc.NoData) returns (.bna.rpc.FriendsList) {
+  }
+
+  rpc ShowTooltip (.bna.rpc.FriendTooltipLocation) returns (.bna.rpc.NoData) {
+  }
+
+  rpc HideTooltip (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc OpenChat (.bna.rpc.Entity) returns (.bna.rpc.NoData) {
+  }
+
+  rpc ShowContextMenu (.bna.rpc.Entity) returns (.bna.rpc.NoData) {
+  }
+
+  rpc FriendsReset (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc FriendsChanged (.bna.rpc.NoData) returns (.bna.rpc.FriendsList) {
+  }
+}

@@ -30,8 +30,9 @@ import io.netty.channel.ChannelOption
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
 import java.util.UUID
+import javax.net.ssl.KeyManager
 
 /**
  * @author Kevin Ludwig
@@ -43,7 +44,7 @@ class HttpProxy(
     `interface`: String,
     @get:JsonProperty("ssl") val ssl: Boolean = true
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    @JsonIgnore @Inject private lateinit var sslContext: SslContext
+    @JsonIgnore @Inject private lateinit var keyManager: KeyManager
 
     @JsonIgnore private var channel: Channel? = null
 
@@ -52,6 +53,7 @@ class HttpProxy(
 
         super.start()
 
+        val sslContext = SslContextBuilder.forServer(keyManager).build()
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)

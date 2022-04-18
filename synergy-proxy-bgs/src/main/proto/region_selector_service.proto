@@ -1,0 +1,56 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+import "common_types.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message RegionSelectedData {
+  optional string region = 1;
+}
+
+message RegionDetectedData {
+  optional string region = 1;
+  optional string country = 2;
+}
+
+message RegionInitializationData {
+  repeated .bna.rpc.KeyValue localized_strings = 1;
+  optional string geoip_nydus_url = 2;
+}
+
+message RegionPageData {
+  enum RegionPage {
+    REGION_PAGE_SUGGEST = 1;
+    REGION_PAGE_MANUAL = 2;
+  }
+
+  optional uint32 page = 1;
+}
+
+service RegionSelectorService {
+  rpc SetSelectedRegion (.bna.rpc.RegionSelectedData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc SetRegionPage (.bna.rpc.RegionPageData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc SetRegionDetectedData (.bna.rpc.RegionDetectedData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc WhyDoesThisMatterClicked (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc Initialize (.bna.rpc.NoData) returns (.bna.rpc.RegionInitializationData) {
+  }
+
+  rpc SetPage (.bna.rpc.NoData) returns (.bna.rpc.RegionPageData) {
+  }
+}

@@ -1,0 +1,39 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "ModifyInstall";
+
+message ModifyInstall {
+  option (TelemetryMessageOptions).realtime = true;
+
+  optional bool did_modify = 1;
+  optional string source = 2;
+  optional string config_uri = 3;
+  optional bool was_pending = 4;
+  optional string tact_product_code = 5;
+  repeated string added_languages = 6;
+  optional string added_languages_serialized = 7;
+  repeated string removed_languages = 8;
+  optional string removed_languages_serialized = 9;
+  optional uint32 count_supported_languages = 10;
+  repeated string selected_languages = 11;
+  optional string selected_languages_serialized = 12;
+  repeated string added_packages = 13;
+  optional string added_packages_serialized = 14;
+  repeated string removed_packages = 15;
+  optional string removed_packages_serialized = 16;
+  optional uint32 count_supported_packages = 17;
+  repeated string selected_packages = 18;
+  optional string selected_packages_serialized = 19;
+  optional int64 install_size_delta = 20;
+  optional bool was_game_running = 21;
+  optional bool was_open_blocked = 22;
+  optional string unique_id = 23;
+}

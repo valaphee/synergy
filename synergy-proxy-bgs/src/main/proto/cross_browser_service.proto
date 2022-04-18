@@ -1,0 +1,32 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+import "cross_browser_service_types.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message PostCrossBrowserMessageRequest {
+  optional .bna.rpc.CrossBrowserMessage message = 1;
+  optional bool propagate_all = 2;
+}
+
+message CrossBrowserMessageReceivedNotification {
+  optional uint32 id = 1;
+  optional string origin = 2;
+  optional .bna.rpc.CrossBrowserMessage message = 3;
+}
+
+service CrossBrowserService {
+  rpc PostCrossBrowserMessage (.bna.rpc.PostCrossBrowserMessageRequest) returns (.bna.rpc.NoData) {
+  }
+
+  rpc CrossBrowserMessageReceived (.bna.rpc.NoData) returns (.bna.rpc.CrossBrowserMessageReceivedNotification) {
+  }
+}

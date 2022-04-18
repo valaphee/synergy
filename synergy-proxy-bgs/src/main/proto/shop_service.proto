@@ -1,0 +1,35 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "rpc_core.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message ShopBackgroundImageData {
+  optional string image_data_base64 = 1;
+  optional uint32 header_height = 2;
+  optional uint32 subnav_height = 3;
+  optional string url = 4;
+}
+
+message GetSelectedRegionForProgramRequest {
+  optional string program_id = 1;
+}
+
+message GetSelectedRegionForProgramResponse {
+  optional string region_code = 1;
+}
+
+service ShopService {
+  rpc SetBackgroundDataBase64 (.bna.rpc.ShopBackgroundImageData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc GetSelectedRegionForProgram (.bna.rpc.GetSelectedRegionForProgramRequest) returns (.bna.rpc.GetSelectedRegionForProgramResponse) {
+  }
+}

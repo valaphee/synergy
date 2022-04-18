@@ -1,0 +1,45 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bgs.protocol.game_utilities.v2.client;
+
+import "bgs/low/pb/client/api/client/v2/attribute_types.proto";
+import "bgs/low/pb/client/rpc_types.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+message ProcessTaskRequest {
+  repeated .bgs.protocol.v2.Attribute attribute = 1;
+  repeated .bgs.protocol.v2.Attribute payload = 2;
+}
+
+message ProcessTaskResponse {
+  repeated .bgs.protocol.v2.Attribute result = 1;
+}
+
+message GetAllValuesForAttributeRequest {
+  optional string attribute_key = 1;
+}
+
+message GetAllValuesForAttributeResponse {
+  repeated .bgs.protocol.v2.Variant attribute_value = 1;
+}
+
+service GameUtilitiesService {
+  option (service_options).descriptor_name = "bnet.protocol.game_utilities.v2.client.GameUtilities";
+  option (service_options).shard_name = "game_utilities";
+  option (sdk_service_options).outbound = true;
+  option (sdk_service_options).use_client_id = true;
+
+  rpc ProcessTask (.bgs.protocol.game_utilities.v2.client.ProcessTaskRequest) returns (.bgs.protocol.game_utilities.v2.client.ProcessTaskResponse) {
+    option (method_options).id = 1;
+  }
+
+  rpc GetAllValuesForAttribute (.bgs.protocol.game_utilities.v2.client.GetAllValuesForAttributeRequest) returns (.bgs.protocol.game_utilities.v2.client.GetAllValuesForAttributeResponse) {
+    option (method_options).id = 2;
+  }
+}

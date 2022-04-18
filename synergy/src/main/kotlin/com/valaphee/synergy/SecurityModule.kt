@@ -20,8 +20,6 @@ import com.google.inject.AbstractModule
 import com.google.inject.Provides
 import com.google.inject.Singleton
 import com.google.inject.name.Named
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.SslContextBuilder
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
 import org.bouncycastle.asn1.x509.Extension
@@ -45,6 +43,7 @@ import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.Calendar
 import javax.net.ssl.ExtendedSSLSession
+import javax.net.ssl.KeyManager
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.X509ExtendedKeyManager
@@ -78,7 +77,7 @@ class SecurityModule(
 
     @Singleton
     @Provides
-    fun sslContext(@Named("key-store") keyStoreFile: File, keyStore: KeyStore): SslContext = SslContextBuilder.forServer(object : X509ExtendedKeyManager() {
+    fun keyManager(@Named("key-store") keyStoreFile: File, keyStore: KeyStore): KeyManager = object : X509ExtendedKeyManager() {
         override fun getClientAliases(keyType: String, issuers: Array<out Principal>?) = null
 
         override fun chooseClientAlias(keyType: Array<out String>, issuers: Array<out Principal>?, socket: Socket?) = null
@@ -96,14 +95,14 @@ class SecurityModule(
             val rootCertificate = keyStore.getCertificate("synergy") as X509Certificate
             val serverCertificate = keyStore.getCertificate(alias) as X509Certificate? ?: run {
                 val serverKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
-                val rootContentSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
-                val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$alias"), serverKeyPair.public).build(rootContentSigner)
+                val rootSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
+                val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$alias"), serverKeyPair.public).build(rootSigner)
                 val serverCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(X509v3CertificateBuilder(JcaX509CertificateHolder(rootCertificate).subject, BigInteger(random.nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, serverCsr.subject, serverCsr.subjectPublicKeyInfo).apply {
                     addExtension(Extension.basicConstraints, true, BasicConstraints(false))
                     addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
                     addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
                     addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, alias)))
-                }.build(rootContentSigner))
+                }.build(rootSigner))
                 keyStore.setKeyEntry(alias, serverKeyPair.private, null, arrayOf(serverCertificate))
                 keyStoreFile.outputStream().use { keyStore.store(it, "".toCharArray()) }
                 serverCertificate
@@ -112,7 +111,7 @@ class SecurityModule(
         }
 
         override fun getPrivateKey(alias: String?) = keyStore.getKey(alias, "".toCharArray()) as PrivateKey
-    }).build()
+    }
 
     companion object {
         private val random = SecureRandom().asKotlinRandom()

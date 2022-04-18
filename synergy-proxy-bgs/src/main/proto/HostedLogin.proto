@@ -1,0 +1,19 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.login;
+
+option java_multiple_files = true;
+
+message HostedFlowCallback {
+  optional string flow = 1;
+  optional bytes state = 2;
+  repeated .bna.login.KeyValuePair params = 3;
+  optional bool success = 4 [default = false];
+}
+
+message KeyValuePair {
+  optional string key = 1;
+  optional string value = 2;
+}

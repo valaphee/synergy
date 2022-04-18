@@ -1,0 +1,19 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package Blizzard.Telemetry.App;
+
+import "telemetry_extensions.proto";
+
+option java_multiple_files = true;
+
+option (TelemetryFileOptions).telemetry_message = "BlizzConTabEvent";
+
+message BlizzConTabEvent {
+  option (TelemetryMessageOptions).realtime = true;
+
+  optional string action = 1;
+  optional bool live_indicator = 2;
+  optional bool virtual_ticket = 3;
+}

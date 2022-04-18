@@ -1,0 +1,61 @@
+/* AUTO-GENERATED FILE. DO NOT MODIFY.
+ */
+syntax = "proto2";
+
+package bna.rpc;
+
+import "common_types.proto";
+import "playscreen_service_types.proto";
+import "rpc_core.proto";
+
+option java_multiple_files = true;
+option java_generic_services = true;
+
+option cc_generic_services = false;
+
+service PlayScreenService {
+  rpc GetState (.bna.rpc.NoData) returns (.bna.rpc.PlayScreenState) {
+  }
+
+  rpc GetAccount (.bna.rpc.NoData) returns (.bna.rpc.UserAccount) {
+  }
+
+  rpc SetRegionSelectorData (.bna.rpc.RegionSelectorData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc PlayButtonClicked (.bna.rpc.Region) returns (.bna.rpc.NoData) {
+  }
+
+  rpc ExpandPatchNotes (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc ClosePatchNotes (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc SetPatchNotesUrl (.bna.rpc.PatchNotesUrl) returns (.bna.rpc.NoData) {
+  }
+
+  rpc GetAnnouncementState (.bna.rpc.NoData) returns (.bna.rpc.GameAnnouncements) {
+  }
+
+  rpc DismissAnnouncement (.bna.rpc.DismissAnnouncementData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc StateChange (.bna.rpc.NoData) returns (.bna.rpc.PlayScreenState) {
+  }
+
+  rpc AccountChange (.bna.rpc.NoData) returns (.bna.rpc.UserAccount) {
+  }
+
+  rpc BreakingNewsChange (.bna.rpc.NoData) returns (.bna.rpc.BreakingNewsData) {
+  }
+
+  rpc ShowPatchNotes (.bna.rpc.NoData) returns (.bna.rpc.PatchNotesData) {
+  }
+
+  rpc RequestPatchNotesURL (.bna.rpc.NoData) returns (.bna.rpc.NoData) {
+  }
+
+  rpc AnnouncementDataChange (.bna.rpc.NoData) returns (.bna.rpc.GameAnnouncements) {
+  }
+}

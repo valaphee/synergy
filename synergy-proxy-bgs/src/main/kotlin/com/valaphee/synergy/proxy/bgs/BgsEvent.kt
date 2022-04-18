@@ -31,5 +31,5 @@ abstract class BgsEvent(
     @get:JsonProperty("service_hash") val serviceName: String?,
     @get:JsonProperty("method_id") val methodId: Int,
     @get:JsonProperty("method_name") val methodName: String?,
-    @get:JsonProperty("data") val data: Any?
+    @get:JsonProperty("payload") val payload: Any?
 ) : Event(emitterId, emittedAt)

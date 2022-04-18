@@ -29,52 +29,51 @@ import io.ktor.utils.io.close
 import io.ktor.utils.io.core.readBytes
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.PooledByteBufAllocator
-import java.security.PrivateKey
-import java.security.Signature
+import java.security.KeyPair
 
 /**
  * @author Kevin Ludwig
  */
-class ECDSASigner(
-    val privateKey: PrivateKey
+class Signature(
+    val keyPair: KeyPair,
 ) {
     class Config {
-        lateinit var privateKey: PrivateKey
+        lateinit var keyPair: KeyPair
 
-        fun build() = ECDSASigner(privateKey)
+        fun build() = Signature(keyPair)
     }
 
     @KtorDsl
-    companion object Plugin : HttpClientPlugin<Config, ECDSASigner> {
-        override val key = AttributeKey<ECDSASigner>("ECDSASigner")
+    companion object Plugin : HttpClientPlugin<Config, Signature> {
+        override val key = AttributeKey<Signature>("Signature")
 
         override fun prepare(block: Config.() -> Unit) = Config().apply(block).build()
 
-        override fun install(plugin: ECDSASigner, scope: HttpClient) {
+        override fun install(plugin: Signature, scope: HttpClient) {
             scope.requestPipeline.intercept(HttpRequestPipeline.Render) { payload ->
                 if (payload is OutputStreamContent) {
                     val timestamp = (System.currentTimeMillis() + 11644473600L) * 10000L
-                    val signer = Signature.getInstance("SHA256withECDSA").apply { initSign(plugin.privateKey) }
+                    val signer = java.security.Signature.getInstance("SHA256withECDSA").apply { initSign(plugin.keyPair.private) }
                     val signData = PooledByteBufAllocator.DEFAULT.directBuffer()
                     try {
-                        signData.writeInt(1)
-                        signData.writeZero(1)
+                        signData.writeInt(0x01)
+                        signData.writeByte(0x00)
                         signData.writeLong(timestamp)
-                        signData.writeZero(1)
+                        signData.writeByte(0x00)
                         signData.writeBytes(context.method.value.toByteArray())
-                        signData.writeZero(1)
+                        signData.writeByte(0x00)
                         signData.writeBytes(context.url.buildString().toByteArray())
-                        signData.writeZero(1)
+                        signData.writeByte(0x00)
                         context.headers["Authorization"]?.let { signData.writeBytes(it.toByteArray()) }
-                        signData.writeZero(1)
+                        signData.writeByte(0x00)
                         val bodyChannel = ByteChannel()
                         payload.writeTo(bodyChannel)
                         signData.writeBytes(bodyChannel.readRemaining().readBytes())
                         bodyChannel.close()
-                        signData.writeZero(1)
+                        signData.writeByte(0x00)
                         signer.update(signData.nioBuffer())
                         signData.clear()
-                        signData.writeInt(1)
+                        signData.writeInt(0x01)
                         signData.writeLong(timestamp)
                         signData.writeBytes(signer.sign())
                         context.header("Signature", ByteBufUtil.getBytes(signData).encodeBase64())
