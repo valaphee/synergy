@@ -42,7 +42,7 @@ class HttpProxy(
     host: String,
     port: Int = 443,
     `interface`: String,
-    @get:JsonProperty("ssl") val ssl: Boolean = true
+    @get:JsonProperty("ssl") val ssl: Boolean = true,
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
     @JsonIgnore @Inject private lateinit var keyManager: KeyManager
 

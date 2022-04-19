@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy.mcbe.auth
+package com.valaphee.synergy.proxy.mcbe.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
