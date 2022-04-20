@@ -16,16 +16,16 @@
 
 package com.valaphee.synergy.proxy.bgs.util
 
-fun String.hashFnv1a() = toByteArray().hashFnv1a()
+fun String.hashFnva32() = toByteArray().hashFnva32()
 
-fun ByteArray.hashFnv1a(): Int {
-    var hash = fnv1aInit
+fun ByteArray.hashFnva32(): Int {
+    var hash = fnv32Init
     forEach {
         hash = hash xor (it.toInt() and 0xFF)
-        hash *= fnv1aPrime
+        hash *= fnv32Prime
     }
     return hash
 }
 
-private const val fnv1aInit = 0x811C9DC5.toInt()
-private const val fnv1aPrime = 16777619
+private const val fnv32Init = 0x811C9dC5.toInt()
+private const val fnv32Prime = 16777619

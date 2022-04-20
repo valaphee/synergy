@@ -25,7 +25,7 @@ import com.google.protobuf.RpcChannel
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
 import com.valaphee.synergy.proxy.RouterProxy
-import com.valaphee.synergy.proxy.bgs.util.hashFnv1a
+import com.valaphee.synergy.proxy.bgs.util.hashFnva32
 import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.underlyingNetworking
 import com.valaphee.synergy.proxy.workerGroup
@@ -157,6 +157,6 @@ class BgsProxy(
             bgs.protocol.user_manager.v1.UserManagerService::class,
             bgs.protocol.whisper.v1.WhisperListener::class,
             bgs.protocol.whisper.v1.WhisperService::class
-        ).associate { (it.java.getDeclaredMethod("getDescriptor")(null) as Descriptors.ServiceDescriptor).options[ServiceOptionsProto.serviceOptions].descriptorName.hashFnv1a() to it.java.getDeclaredMethod("newStub", RpcChannel::class.java)(null, dummyRpcChannel) as Service }
+        ).associate { (it.java.getDeclaredMethod("getDescriptor")(null) as Descriptors.ServiceDescriptor).options[ServiceOptionsProto.serviceOptions].descriptorName.hashFnva32() to it.java.getDeclaredMethod("newStub", RpcChannel::class.java)(null, dummyRpcChannel) as Service }
     }
 }

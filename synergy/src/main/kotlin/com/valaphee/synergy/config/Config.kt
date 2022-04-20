@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy-api"))
-    implementation("com.valaphee:netcode-mcbe:0.1.24")
-}
+package com.valaphee.synergy.config
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.valaphee.synergy.component.Component
+import com.valaphee.synergy.proxy.Proxy
+
+/**
+ * @author Kevin Ludwig
+ */
+data class Config(
+    @get:JsonProperty("components") val components: List<Component> = emptyList(),
+    @get:JsonProperty("proxies") val proxies: List<Proxy<*>> = emptyList()
+)

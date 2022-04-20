@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy.util
+package com.valaphee.synergy.proxy.bgs.util
 
 fun ByteArray.occurrencesOf(pattern: ByteArray): Sequence<Int> {
     if (isEmpty() || pattern.isEmpty()) return emptySequence()

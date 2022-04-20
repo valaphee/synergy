@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy
+package com.valaphee.synergy.component
 
 import org.graalvm.polyglot.Value
 import org.graalvm.polyglot.proxy.ProxyArray

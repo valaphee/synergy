@@ -46,6 +46,8 @@ import javax.net.ssl.ExtendedSSLSession
 import javax.net.ssl.KeyManager
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SSLEngine
+import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509ExtendedKeyManager
 import kotlin.random.asKotlinRandom
 
@@ -55,8 +57,8 @@ import kotlin.random.asKotlinRandom
 class SecurityModule(
     private val keyStoreFile: File
 ) : AbstractModule() {
-    @Singleton
     @Named("key-store")
+    @Singleton
     @Provides
     fun keyStoreFile() = keyStoreFile
 
@@ -112,6 +114,10 @@ class SecurityModule(
 
         override fun getPrivateKey(alias: String?) = keyStore.getKey(alias, "".toCharArray()) as PrivateKey
     }
+
+    @Singleton
+    @Provides
+    fun trustManager(): TrustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(null as KeyStore?) }.trustManagers.first()
 
     companion object {
         private val random = SecureRandom().asKotlinRandom()

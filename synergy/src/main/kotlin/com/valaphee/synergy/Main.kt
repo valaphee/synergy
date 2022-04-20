@@ -16,14 +16,22 @@
 
 package com.valaphee.synergy
 
-import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.inject.AbstractModule
 import com.google.inject.Guice
+import com.google.inject.Provides
+import com.google.inject.Singleton
+import com.google.inject.name.Named
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import com.valaphee.synergy.component.Component
+import com.valaphee.synergy.component.ComponentService
+import com.valaphee.synergy.component.ComponentServiceImpl
+import com.valaphee.synergy.config.Config
 import com.valaphee.synergy.event.WindowsHookSubcommand
 import com.valaphee.synergy.event.events
 import com.valaphee.synergy.proxy.Proxy
+import com.valaphee.synergy.proxy.ProxyService
+import com.valaphee.synergy.proxy.ProxyServiceImpl
 import com.valaphee.synergy.proxy.bgs.security.BgsSecurityPatchSubcommand
 import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.objectMapper
@@ -46,18 +54,13 @@ import io.ktor.server.websocket.WebSockets
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.io.IoBuilder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.graalvm.polyglot.Context
-import org.graalvm.polyglot.Source
 import java.io.File
 import java.security.Security
 import java.util.UUID
-import kotlin.concurrent.thread
 
 suspend fun main(arguments: Array<String>) {
     System.setIn(null)
@@ -68,7 +71,27 @@ suspend fun main(arguments: Array<String>) {
 
     objectMapper.registerModule(ProtobufModule())
 
-    val injector = Guice.createInjector(SecurityModule(File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx")))
+    val injector = Guice.createInjector(SecurityModule(File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx")), object : AbstractModule() {
+        private val configFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "config.json")
+
+        override fun configure() {
+            bind(ComponentService::class.java).to(ComponentServiceImpl::class.java)
+            bind(ProxyService::class.java).to(ProxyServiceImpl::class.java)
+        }
+
+        @Named("config")
+        @Singleton
+        @Provides
+        fun configFile() = configFile
+
+        @Singleton
+        @Provides
+        fun config() = if (configFile.exists()) try {
+            objectMapper.readValue(configFile)
+        } catch (_: Exception) {
+            Config()
+        } else Config()
+    })
 
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
@@ -76,19 +99,8 @@ suspend fun main(arguments: Array<String>) {
     argumentParser.subcommands(WindowsHookSubcommand, BgsSecurityPatchSubcommand().apply { injector.injectMembers(this) })
     argumentParser.parse(arguments)
 
-    val componentFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "components.json")
-    val components = if (componentFile.exists()) try {
-        objectMapper.readValue<List<Component>>(componentFile).associate { it.id to (it to it.controller.map { Context.create().eval(Source.create("js", it.readText())) }) }.toMutableMap()
-    } catch (_: Exception) {
-        mutableMapOf()
-    } else mutableMapOf()
-
-    val proxyFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "proxies.json")
-    val proxies = (if (proxyFile.exists()) try {
-        objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { it.id }.toMutableMap()
-    } catch (_: Exception) {
-        mutableMapOf()
-    } else mutableMapOf()).also { Runtime.getRuntime().addShutdownHook(thread(false) { it.values.forEach { runBlocking { it.stop() } } }) }
+    val componentService = injector.getInstance(ComponentService::class.java)
+    val proxyService = injector.getInstance(ProxyService::class.java)
 
     embeddedServer(Netty, port, host, emptyList(), { configureBootstrap = { group(bossGroup, workerGroup) } }) {
         install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
@@ -101,73 +113,32 @@ suspend fun main(arguments: Array<String>) {
             }
             /*webSocket("/event") { events.collectLatest { send(objectMapper.writeValueAsString(it)) } }*/
 
-            post("/component") {
-                val component = call.receive(Component::class)
-                call.respond(if (components.putIfAbsent(component.id, component to component.controller.map { Context.create().eval(Source.create("js", it.readText())) }) == null) HttpStatusCode.OK else HttpStatusCode.BadRequest)
-                if (call.request.queryParameters["persist"] == "true") {
-                    val persistentActions = if (componentFile.exists()) try {
-                        objectMapper.readValue<List<Component>>(componentFile).associateBy { it.id }.toMutableMap()
-                    } catch (_: Exception) {
-                        mutableMapOf()
-                    } else mutableMapOf()
-                    if (persistentActions.putIfAbsent(component.id, component) == null) objectMapper.writeValue(componentFile, persistentActions.values)
-                }
-            }
-            delete("/component/{id}") {
-                components.remove(UUID.fromString(call.parameters["id"]))?.let {
-                    call.respond(HttpStatusCode.OK)
-                    if (call.request.queryParameters["persist"] == "true") try {
-                        val persistentControls = objectMapper.readValue<List<Component>>(componentFile).associateBy { it.id }.toMutableMap()
-                        if (persistentControls.remove(it.first.id) != null) objectMapper.writeValue(componentFile, persistentControls.values)
-                    } catch (_: Exception) {
-                    }
-                } ?: call.respond(HttpStatusCode.NotFound)
-            }
-            get("/component/") { call.respond(components.values.map { it.first }) }
+            post("/component") { call.respond(if (componentService.add(call.receive(Component::class))) HttpStatusCode.OK else HttpStatusCode.BadRequest) }
+            delete("/component/{id}") { call.respond(componentService.remove(UUID.fromString(call.parameters["id"]))?.let { HttpStatusCode.OK } ?: HttpStatusCode.NotFound) }
+            get("/component/") { call.respond(componentService.components) }
 
             post("/proxy") {
                 @Suppress("UNCHECKED_CAST")
                 val proxy = call.receive(Proxy::class).apply(injector::injectMembers) as Proxy<Any?>
-                call.respond(if (proxies.putIfAbsent(proxy.id, proxy) == null) HttpStatusCode.OK else HttpStatusCode.BadRequest)
-                if (call.request.queryParameters["persist"] == "true") {
-                    val persistentProxies = if (proxyFile.exists()) try {
-                        objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { it.id }.toMutableMap()
-                    } catch (_: Exception) {
-                        mutableMapOf()
-                    } else mutableMapOf()
-                    if (persistentProxies.putIfAbsent(proxy.id, proxy) == null) objectMapper.writeValue(proxyFile, persistentProxies.values)
-                }
+                call.respond(if (proxyService.add(proxy)) HttpStatusCode.OK else HttpStatusCode.BadRequest)
                 if (call.request.queryParameters["autoStart"] == "true") proxy.start()
             }
-            delete("/proxy/{id}") {
-                proxies.remove(UUID.fromString(call.parameters["id"]))?.let { proxy ->
-                    call.respond(HttpStatusCode.OK)
-                    if (call.request.queryParameters["persist"] == "true") try {
-                        val persistentProxies = objectMapper.readValue<List<Proxy<Any?>>>(proxyFile).associateBy { it.id }.toMutableMap()
-                        if (persistentProxies.remove(proxy.id) != null) objectMapper.writeValue(proxyFile, persistentProxies.values)
-                    } catch (_: Exception) {
-                    }
-                    proxy.stop()
-                } ?: call.respond(HttpStatusCode.NotFound)
-            }
-            get("/proxy/") { call.respond(proxies.values) }
+            delete("/proxy/{id}") { call.respond(proxyService.remove(UUID.fromString(call.parameters["id"]))?.let { HttpStatusCode.OK } ?: HttpStatusCode.NotFound) }
+            get("/proxy/") { call.respond(proxyService.proxies) }
             get("/proxy/{id}/start") {
-                proxies[UUID.fromString(call.parameters["id"])]?.let { proxy ->
+                proxyService.get(UUID.fromString(call.parameters["id"]))?.let {
                     call.respond(HttpStatusCode.OK)
-                    proxy.start()
+                    it.start()
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
             get("/proxy/{id}/stop") {
-                proxies[UUID.fromString(call.parameters["id"])]?.let { proxy ->
+                proxyService.get(UUID.fromString(call.parameters["id"]))?.let {
                     call.respond(HttpStatusCode.OK)
-                    proxy.stop()
+                    it.stop()
                 } ?: call.respond(HttpStatusCode.NotFound)
             }
         }
     }.start()
 
-    events.collectLatest {
-        val eventProxy = MapProxyObject(objectMapper.convertValue(it))
-        components.values.forEach { it.second.forEach { it.execute(it, eventProxy) } }
-    }
+    componentService.run()
 }

@@ -14,7 +14,19 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy-api"))
-    implementation("com.valaphee:netcode-mcbe:0.1.24")
+package com.valaphee.synergy.component
+
+import java.util.UUID
+
+/**
+ * @author Kevin Ludwig
+ */
+interface ComponentService {
+    val components: List<Component>
+
+    fun add(component: Component): Boolean
+
+    fun remove(id: UUID): Component?
+
+    suspend fun run()
 }

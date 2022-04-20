@@ -22,7 +22,7 @@ import com.valaphee.synergy.proxy.bgs.util.SignedCertificateBundle
 import com.valaphee.synergy.proxy.bgs.util.hash
 import com.valaphee.synergy.proxy.bgs.util.swap
 import com.valaphee.synergy.proxy.objectMapper
-import com.valaphee.synergy.proxy.util.occurrencesOf
+import com.valaphee.synergy.proxy.bgs.util.occurrencesOf
 import io.ktor.util.encodeBase64
 import kotlinx.cli.ArgType
 import kotlinx.cli.Subcommand

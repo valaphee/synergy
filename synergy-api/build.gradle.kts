@@ -8,7 +8,6 @@ dependencies {
     api("com.valaphee:foundry-math:1.4.0")
     api("io.ktor:ktor-client-content-negotiation-jvm:2.0.0")
     api("io.ktor:ktor-client-okhttp:2.0.0")
-    api("io.ktor:ktor-client-jackson:2.0.0")
     api("io.ktor:ktor-network-tls-certificates:2.0.0")
     api("io.ktor:ktor-serialization-jackson-jvm:2.0.0")
     api("io.netty:netty-all:4.1.75.Final")

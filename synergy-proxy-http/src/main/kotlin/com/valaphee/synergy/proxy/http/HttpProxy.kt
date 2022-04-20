@@ -33,6 +33,7 @@ import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.ssl.SslContextBuilder
 import java.util.UUID
 import javax.net.ssl.KeyManager
+import javax.net.ssl.TrustManager
 
 /**
  * @author Kevin Ludwig
@@ -42,9 +43,12 @@ class HttpProxy(
     host: String,
     port: Int = 443,
     `interface`: String,
-    @get:JsonProperty("ssl") val ssl: Boolean = true,
+    @get:JsonProperty("ssl") val ssl: Boolean = true
 ) : RouterProxy<Unit>(id, host, port, `interface`) {
-    @JsonIgnore @Inject private lateinit var keyManager: KeyManager
+    @Inject @JsonIgnore private lateinit var keyManager: KeyManager
+    @get:JsonIgnore private val serverSslContext by lazy { SslContextBuilder.forServer(keyManager).build() }
+    @Inject @JsonIgnore private lateinit var trustManager: TrustManager
+    @get:JsonIgnore internal val clientSslContext by lazy { SslContextBuilder.forClient().trustManager(trustManager).build() }
 
     @JsonIgnore private var channel: Channel? = null
 
@@ -53,13 +57,12 @@ class HttpProxy(
 
         super.start()
 
-        val sslContext = SslContextBuilder.forServer(keyManager).build()
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
             .childHandler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
-                    if (ssl) channel.pipeline().addLast(sslContext.newHandler(channel.alloc()))
+                    if (ssl) channel.pipeline().addLast(serverSslContext.newHandler(channel.alloc()))
                     channel.pipeline().addLast(
                         HttpServerCodec(),
                         HttpObjectAggregator(1 * 1024 * 1024),

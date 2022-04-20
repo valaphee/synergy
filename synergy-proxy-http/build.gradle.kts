@@ -3,6 +3,4 @@
  * All rights reserved.
  */
 
-dependencies {
-    implementation(project(":synergy-api"))
-}
+dependencies { implementation(project(":synergy-api")) }

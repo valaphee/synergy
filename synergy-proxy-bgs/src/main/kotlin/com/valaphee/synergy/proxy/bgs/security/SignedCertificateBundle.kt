@@ -19,7 +19,6 @@ package com.valaphee.synergy.proxy.bgs.util
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.synergy.proxy.bgs.security.CertificateBundle
 import com.valaphee.synergy.proxy.objectMapper
-import com.valaphee.synergy.proxy.util.occurrencesOf
 import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.asn1.x509.X509CertificateStructure
 import org.bouncycastle.util.encoders.Hex
