@@ -20,6 +20,7 @@ import com.google.inject.AbstractModule
 import com.google.inject.Provides
 import com.google.inject.Singleton
 import com.google.inject.name.Named
+import com.valaphee.synergy.config.Config
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
 import org.bouncycastle.asn1.x509.Extension
@@ -54,13 +55,10 @@ import kotlin.random.asKotlinRandom
 /**
  * @author Kevin Ludwig
  */
-class SecurityModule(
-    private val keyStoreFile: File
-) : AbstractModule() {
+class SecurityModule : AbstractModule() {
     @Named("key-store")
-    @Singleton
     @Provides
-    fun keyStoreFile() = keyStoreFile
+    fun keyStoreFile(config: Config) = config.keyStore
 
     @Singleton
     @Provides

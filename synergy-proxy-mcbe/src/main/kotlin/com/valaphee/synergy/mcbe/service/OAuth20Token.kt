@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.mcbe.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.component.Component
-import com.valaphee.synergy.proxy.Proxy
-import java.io.File
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Component> = emptyList(),
-    @get:JsonProperty("proxies") val proxies: List<Proxy<*>> = emptyList()
+class OAuth20Token(
+    @get:JsonProperty("token_type") val tokenType: String,
+    @get:JsonProperty("expires_in") val expiresIn: Int,
+    @get:JsonProperty("scope") val scope: String,
+    @get:JsonProperty("access_token") val accessToken: String,
+    @get:JsonProperty("refresh_token") val refreshToken: String,
+    @get:JsonProperty("user_id") val userId: String
 )

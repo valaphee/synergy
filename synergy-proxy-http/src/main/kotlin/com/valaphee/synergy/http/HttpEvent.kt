@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.http
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.component.Component
-import com.valaphee.synergy.proxy.Proxy
-import java.io.File
+import com.valaphee.synergy.event.Event
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Component> = emptyList(),
-    @get:JsonProperty("proxies") val proxies: List<Proxy<*>> = emptyList()
-)
+abstract class HttpEvent(
+    emitterId: UUID,
+    emittedAt: Long,
+    @get:JsonProperty("headers") val headers: Map<String, String>
+) : Event(emitterId, emittedAt)

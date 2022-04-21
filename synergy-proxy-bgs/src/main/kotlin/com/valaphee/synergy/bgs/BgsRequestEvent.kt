@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.bgs
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.component.Component
-import com.valaphee.synergy.proxy.Proxy
-import java.io.File
+import com.fasterxml.jackson.annotation.JsonTypeName
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Component> = emptyList(),
-    @get:JsonProperty("proxies") val proxies: List<Proxy<*>> = emptyList()
-)
+@JsonTypeName("bgs_request")
+class BgsRequestEvent(
+    emitterId: UUID,
+    emittedAt: Long,
+    id: Int,
+    serviceHash: Int,
+    serviceName: String?,
+    methodId: Int,
+    methodName: String?,
+    payload: Any?
+) : BgsEvent(emitterId, emittedAt, id, serviceHash, serviceName, methodId, methodName, payload)

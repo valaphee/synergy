@@ -27,12 +27,12 @@ import com.valaphee.synergy.component.Component
 import com.valaphee.synergy.component.ComponentService
 import com.valaphee.synergy.component.ComponentServiceImpl
 import com.valaphee.synergy.config.Config
-import com.valaphee.synergy.event.WindowsHookSubcommand
+import com.valaphee.synergy.hid.WindowsHookSubcommand
 import com.valaphee.synergy.event.events
 import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.proxy.ProxyService
 import com.valaphee.synergy.proxy.ProxyServiceImpl
-import com.valaphee.synergy.proxy.bgs.security.BgsSecurityPatchSubcommand
+import com.valaphee.synergy.bgs.security.BgsSecurityPatchSubcommand
 import com.valaphee.synergy.proxy.bossGroup
 import com.valaphee.synergy.proxy.objectMapper
 import com.valaphee.synergy.proxy.workerGroup
@@ -71,7 +71,7 @@ suspend fun main(arguments: Array<String>) {
 
     objectMapper.registerModule(ProtobufModule())
 
-    val injector = Guice.createInjector(SecurityModule(File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx")), object : AbstractModule() {
+    val injector = Guice.createInjector(SecurityModule(), object : AbstractModule() {
         private val configFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "config.json")
 
         override fun configure() {
@@ -80,7 +80,6 @@ suspend fun main(arguments: Array<String>) {
         }
 
         @Named("config")
-        @Singleton
         @Provides
         fun configFile() = configFile
 
@@ -89,8 +88,8 @@ suspend fun main(arguments: Array<String>) {
         fun config() = if (configFile.exists()) try {
             objectMapper.readValue(configFile)
         } catch (_: Exception) {
-            Config()
-        } else Config()
+            Config().also { objectMapper.writeValue(configFile, it) }
+        } else Config().also { objectMapper.writeValue(configFile, it) }
     })
 
     val argumentParser = ArgParser("synergy")

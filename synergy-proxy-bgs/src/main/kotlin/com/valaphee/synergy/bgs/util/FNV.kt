@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.bgs.util
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.component.Component
-import com.valaphee.synergy.proxy.Proxy
-import java.io.File
+fun String.hashFnva32() = toByteArray().hashFnva32()
 
-/**
- * @author Kevin Ludwig
- */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Component> = emptyList(),
-    @get:JsonProperty("proxies") val proxies: List<Proxy<*>> = emptyList()
-)
+fun ByteArray.hashFnva32(): Int {
+    var hash = fnv32Init
+    forEach {
+        hash = hash xor (it.toInt() and 0xFF)
+        hash *= fnv32Prime
+    }
+    return hash
+}
+
+private const val fnv32Init = 0x811C9dC5.toInt()
+private const val fnv32Prime = 16777619

@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.cv
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.component.Component
-import com.valaphee.synergy.proxy.Proxy
-import java.io.File
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.foundry.math.Double2
+import org.opencv.core.Mat
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Component> = emptyList(),
-    @get:JsonProperty("proxies") val proxies: List<Proxy<*>> = emptyList()
-)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+interface Extractor {
+    fun extract(image: Mat): List<Double2>
+}
