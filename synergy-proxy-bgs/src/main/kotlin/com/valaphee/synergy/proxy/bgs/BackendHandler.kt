@@ -37,7 +37,7 @@ class BackendHandler(
     private val proxy: BgsProxy,
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
-    private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.host}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
+    private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.remoteHost}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
     private lateinit var handshakeFuture: ChannelPromise
 
     override fun handlerAdded(context: ChannelHandlerContext) {

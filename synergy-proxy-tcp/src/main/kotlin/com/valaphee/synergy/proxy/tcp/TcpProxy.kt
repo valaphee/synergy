@@ -17,8 +17,8 @@
 package com.valaphee.synergy.proxy.tcp
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.bossGroup
+import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
@@ -33,10 +33,13 @@ import java.util.UUID
 class TcpProxy(
     id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
-    host: String,
-    port: Int,
-    `interface`: String
-) : Proxy(id, scripts, host, port, `interface`) {
+    localHost: String?,
+    localPort: Int?,
+    remoteHost: String,
+    remotePort: Int,
+    viaHost: String,
+    viaPort: Int
+) : Proxy(id, scripts, localHost, localPort, remoteHost, remotePort, viaHost, viaPort) {
     @JsonIgnore private var channel: Channel? = null
 
     override suspend fun _start() {
@@ -49,7 +52,7 @@ class TcpProxy(
             .channel(underlyingNetworking.serverSocketChannel)
             .childHandler(FrontendHandler(this@TcpProxy))
             .childOption(ChannelOption.AUTO_READ, false)
-            .localAddress(host, port)
+            .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
             .bind().channel()
     }
 

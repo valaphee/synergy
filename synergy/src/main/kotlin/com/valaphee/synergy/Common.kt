@@ -17,8 +17,23 @@
 package com.valaphee.synergy
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.module.kotlin.addDeserializer
+import com.fasterxml.jackson.module.kotlin.addSerializer
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.valaphee.foundry.math.Float2
+import com.valaphee.foundry.math.Float3
+import com.valaphee.foundry.math.Int3
+import com.valaphee.foundry.math.Int4
+import com.valaphee.synergy.math.Float2Deserializer
+import com.valaphee.synergy.math.Float2Serializer
+import com.valaphee.synergy.math.Float3Deserializer
+import com.valaphee.synergy.math.Float3Serializer
+import com.valaphee.synergy.math.Int3Deserializer
+import com.valaphee.synergy.math.Int3Serializer
+import com.valaphee.synergy.math.Int4Deserializer
+import com.valaphee.synergy.math.Int4Serializer
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -54,5 +69,5 @@ enum class UnderlyingNetworking(
     Nio({ threadCount, threadFactory -> NioEventLoopGroup(threadCount, threadFactory) }, NioServerSocketChannel::class.java, NioDatagramChannel::class.java)
 }
 
-val objectMapper: ObjectMapper = jacksonObjectMapper()
+val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(SimpleModule().addSerializer(Float2::class, Float2Serializer).addDeserializer(Float2::class, Float2Deserializer).addSerializer(Float3::class, Float3Serializer).addDeserializer(Float3::class, Float3Deserializer).addSerializer(Int3::class, Int3Serializer).addDeserializer(Int3::class, Int3Deserializer).addSerializer(Int4::class, Int4Serializer).addDeserializer(Int4::class, Int4Deserializer))
 val httpClient = HttpClient(OkHttp) { install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }

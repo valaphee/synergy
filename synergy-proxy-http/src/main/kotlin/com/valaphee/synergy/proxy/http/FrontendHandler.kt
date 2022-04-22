@@ -37,7 +37,6 @@ class FrontendHandler(
     private var outboundChannel: Channel? = null
 
     override fun channelActive(context: ChannelHandlerContext) {
-
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
@@ -52,8 +51,8 @@ class FrontendHandler(
                     )
                 }
             })
-            .localAddress(proxy.`interface`, 0)
-            .remoteAddress(proxy.host, proxy.port)
+            .localAddress(proxy.viaHost, proxy.viaPort)
+            .remoteAddress(proxy.remoteHost, proxy.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().read()

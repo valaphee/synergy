@@ -37,8 +37,8 @@ import com.valaphee.netcode.mcbe.network.Pong
 import com.valaphee.netcode.mcbe.world.GameMode
 import com.valaphee.netcode.mcbe.world.block.Block
 import com.valaphee.netcode.mcbe.world.block.BlockState
-import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.bossGroup
+import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
@@ -66,10 +66,13 @@ import java.util.zip.GZIPInputStream
 class McbeProxy(
     id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
-    host: String,
-    port: Int = 19132,
-    `interface`: String
-) : Proxy(id, scripts, host, port, `interface`) {
+    localHost: String?,
+    localPort: Int?,
+    remoteHost: String,
+    remotePort: Int = 19132,
+    viaHost: String,
+    viaPort: Int
+) : Proxy(id, scripts, localHost, localPort, remoteHost, remotePort, viaHost, viaPort) {
     @JsonIgnore private var channel: Channel? = null
 
     override suspend fun _start() {
@@ -85,7 +88,7 @@ class McbeProxy(
                     channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {
                         override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
                             val rakNetConfig = context.channel().config() as RakNet.Config
-                            val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, port, port, "Synergy").toString())
+                            val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, remotePort, remotePort, "Synergy").toString())
                             val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
                             try {
                                 rakNetConfig.codec.encode(unconnectedPong, buffer)
@@ -107,7 +110,7 @@ class McbeProxy(
                     channel.pipeline().addLast(FrontendHandler(this@McbeProxy))
                 }
             })
-            .localAddress(host, port)
+            .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
             .bind().channel()
     }
 

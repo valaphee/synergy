@@ -39,8 +39,8 @@ class FrontendHandler(
             .channel(context.channel()::class.java)
             .handler(BackendHandler(context.channel()))
             .option(ChannelOption.AUTO_READ, false)
-            .localAddress(proxy.`interface`, 0)
-            .remoteAddress(proxy.host, proxy.port)
+            .localAddress(proxy.viaHost, proxy.viaPort)
+            .remoteAddress(proxy.remoteHost, proxy.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().read()

@@ -14,30 +14,19 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.keyboard
+package com.valaphee.synergy.math
 
-import java.awt.Robot
-import java.net.URL
-import java.util.UUID
+import com.fasterxml.jackson.core.JsonGenerator
+import java.io.IOException
 
-/**
- * @author Kevin Ludwig
- */
-class RobotKeyboardComponent(
-    id: UUID,
-    scripts: List<URL>
-) : KeyboardComponent(id, scripts) {
-    override fun keyPress(key: Key): Boolean {
-        robot.keyPress(key.vkCode)
-        return true
+@Throws(IOException::class)
+fun JsonGenerator.writeArray(array: FloatArray, offset: Int, length: Int) {
+    writeStartArray(array, length)
+    var i = offset
+    val end = offset + length
+    while (i < end) {
+        writeNumber(array[i])
+        ++i
     }
-
-    override fun keyRelease(key: Key): Boolean {
-        robot.keyRelease(key.vkCode)
-        return true
-    }
-
-    companion object {
-        private val robot = Robot()
-    }
+    writeEndArray()
 }

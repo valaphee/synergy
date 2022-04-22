@@ -66,10 +66,13 @@ import kotlin.random.asKotlinRandom
 class BgsProxy(
     id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
-    host: String,
-    port: Int = 1119,
-    `interface`: String,
-) : Proxy(id, scripts, host, port, `interface`) {
+    localHost: String?,
+    localPort: Int?,
+    remoteHost: String,
+    remotePort: Int = 1119,
+    viaHost: String,
+    viaPort: Int,
+) : Proxy(id, scripts, localHost, localPort, remoteHost, remotePort, viaHost, viaPort) {
     @JsonIgnore @Inject private lateinit var keyStore: KeyStore
     @JsonIgnore @Inject @Named("key-store") private lateinit var keyStoreFile: File
 
@@ -81,21 +84,21 @@ class BgsProxy(
         super._start()
 
         val rootCertificate = keyStore.getCertificate("synergy") as X509Certificate
-        val serverCertificate = keyStore.getCertificate(host) as X509Certificate? ?: run {
+        val serverCertificate = keyStore.getCertificate(remoteHost) as X509Certificate? ?: run {
             val serverKeyPair = KeyPairGenerator.getInstance("RSA", "BC").apply { initialize(2048) }.generateKeyPair()
             val rootSigner = JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyStore.getKey("synergy", null) as PrivateKey)
-            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$host"), serverKeyPair.public).build(rootSigner)
+            val serverCsr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=$remoteHost"), serverKeyPair.public).build(rootSigner)
             val serverCertificate = JcaX509CertificateConverter().setProvider("BC").getCertificate(X509v3CertificateBuilder(JcaX509CertificateHolder(rootCertificate).subject, BigInteger(SecureRandom().asKotlinRandom().nextBytes(8)), Calendar.getInstance().apply { add(Calendar.DATE, -1) }.time, Calendar.getInstance().apply { add(Calendar.YEAR, 1) }.time, serverCsr.subject, serverCsr.subjectPublicKeyInfo).apply {
                 addExtension(Extension.basicConstraints, true, BasicConstraints(false))
                 addExtension(Extension.authorityKeyIdentifier, false, JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCertificate))
                 addExtension(Extension.subjectKeyIdentifier, false, JcaX509ExtensionUtils().createSubjectKeyIdentifier(serverCsr.subjectPublicKeyInfo))
-                addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, host)))
+                addExtension(Extension.subjectAlternativeName, false, GeneralNames(GeneralName(GeneralName.dNSName, remoteHost)))
             }.build(rootSigner))
-            keyStore.setKeyEntry(host, serverKeyPair.private, null, arrayOf(serverCertificate))
+            keyStore.setKeyEntry(remoteHost, serverKeyPair.private, null, arrayOf(serverCertificate))
             keyStoreFile.outputStream().use { keyStore.store(it, "".toCharArray()) }
             serverCertificate
         }
-        val sslContext = SslContextBuilder.forServer(keyStore.getKey(host, null) as PrivateKey, listOf(serverCertificate, rootCertificate)).build()
+        val sslContext = SslContextBuilder.forServer(keyStore.getKey(remoteHost, null) as PrivateKey, listOf(serverCertificate, rootCertificate)).build()
         channel = ServerBootstrap()
             .group(bossGroup, workerGroup)
             .channel(underlyingNetworking.serverSocketChannel)
@@ -111,7 +114,7 @@ class BgsProxy(
                     )
                 }
             })
-            .localAddress(host, port)
+            .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
             .bind().channel()
     }
 

@@ -27,18 +27,18 @@ import kotlin.concurrent.thread
 /**
  * @author Kevin Ludwig
  */
-class HidKeyboardComponent(
+class HidKeyboard(
     id: UUID,
     scripts: List<URL>
-) : KeyboardComponent(id, scripts) {
-    override fun keyPress(key: Key) = if (!pressedKeys.contains(key) && pressedKeys.size <= 6) {
-        pressedKeys += key
+) : Keyboard(id, scripts) {
+    override fun keyPress(key: Key) = if (!keys.contains(key) && keys.size <= 6) {
+        keys += key
         write()
         true
     } else false
 
-    override fun keyRelease(key: Key) = if (pressedKeys.contains(key)) {
-        pressedKeys -= key
+    override fun keyRelease(key: Key) = if (keys.contains(key)) {
+        keys -= key
         write()
         true
     } else false
@@ -47,12 +47,12 @@ class HidKeyboardComponent(
         private var hidDevice: HidDevice? = null
         private const val path = "\\\\?\\hid#variable_6&col04#1"
 
-        private val pressedKeys = mutableSetOf<Key>()
+        private val keys = mutableSetOf<Key>()
 
         init {
             Runtime.getRuntime().addShutdownHook(thread(false) {
-                if (pressedKeys.isNotEmpty()) {
-                    pressedKeys.clear()
+                if (keys.isNotEmpty()) {
+                    keys.clear()
                     write()
                 }
                 hidDevice?.close()
@@ -67,17 +67,17 @@ class HidKeyboardComponent(
                     val buffer = Unpooled.buffer()
                     try {
                         val modifiers = BitSet()
-                        if (pressedKeys.contains(Key.LeftControl)) modifiers.set(0)
-                        if (pressedKeys.contains(Key.LeftShift)) modifiers.set(1)
-                        if (pressedKeys.contains(Key.LeftAlt)) modifiers.set(2)
-                        if (pressedKeys.contains(Key.LeftMeta)) modifiers.set(3)
-                        if (pressedKeys.contains(Key.RightControl)) modifiers.set(4)
-                        if (pressedKeys.contains(Key.RightShift)) modifiers.set(5)
-                        if (pressedKeys.contains(Key.RightAlt)) modifiers.set(6)
-                        if (pressedKeys.contains(Key.RightMeta)) modifiers.set(7)
-                        buffer.writeByte(modifiers.toByteArray()[0].toInt())
+                        if (keys.contains(Key.LeftControl)) modifiers.set(0)
+                        if (keys.contains(Key.LeftShift)) modifiers.set(1)
+                        if (keys.contains(Key.LeftAlt)) modifiers.set(2)
+                        if (keys.contains(Key.LeftMeta)) modifiers.set(3)
+                        if (keys.contains(Key.RightControl)) modifiers.set(4)
+                        if (keys.contains(Key.RightShift)) modifiers.set(5)
+                        if (keys.contains(Key.RightAlt)) modifiers.set(6)
+                        if (keys.contains(Key.RightMeta)) modifiers.set(7)
+                        buffer.writeByte(if (modifiers.isEmpty) 0 else modifiers.toByteArray()[0].toInt())
                         buffer.writeByte(0x00)
-                        pressedKeys.forEach { buffer.writeByte(it.scanCode) }
+                        keys.forEach { buffer.writeByte(it.scanCode) }
                         it.write(buffer.array(), buffer.readableBytes(), 0x04)
                     } finally {
                         buffer?.release()

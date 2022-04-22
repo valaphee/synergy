@@ -19,8 +19,8 @@ package com.valaphee.synergy.proxy.http
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.inject.Inject
-import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.bossGroup
+import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.underlyingNetworking
 import com.valaphee.synergy.workerGroup
 import io.netty.bootstrap.ServerBootstrap
@@ -42,11 +42,14 @@ import javax.net.ssl.TrustManager
 class HttpProxy(
     id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
-    host: String,
-    port: Int = 443,
-    `interface`: String,
+    localHost: String?,
+    localPort: Int?,
+    remoteHost: String,
+    remotePort: Int = 443,
+    viaHost: String,
+    viaPort: Int,
     @get:JsonProperty("ssl") val ssl: Boolean = true
-) : Proxy(id, scripts, host, port, `interface`) {
+) : Proxy(id, scripts, localHost, localPort, remoteHost, remotePort, viaHost, viaPort) {
     @Inject @JsonIgnore private lateinit var keyManager: KeyManager
     @get:JsonIgnore private val serverSslContext by lazy { SslContextBuilder.forServer(keyManager).build() }
     @Inject @JsonIgnore private lateinit var trustManager: TrustManager
@@ -73,7 +76,7 @@ class HttpProxy(
                 }
             })
             .childOption(ChannelOption.AUTO_READ, false)
-            .localAddress(host, port)
+            .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
             .bind().channel()
     }
 

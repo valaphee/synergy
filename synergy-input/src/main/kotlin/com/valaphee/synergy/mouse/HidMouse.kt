@@ -33,12 +33,12 @@ import kotlin.math.abs
 /**
  * @author Kevin Ludwig
  */
-open class HidMouseComponent(
+open class HidMouse(
     id: UUID,
     scripts: List<URL>,
     @get:JsonProperty("sensitivity") val sensitivity: Float,
     @get:JsonProperty("epsilon") val epsilon: Int
-) : MouseComponent(id, scripts) {
+) : Mouse(id, scripts) {
     private val moves: IntArray
 
     init {
@@ -72,12 +72,12 @@ open class HidMouseComponent(
     }
 
     override fun mousePress(button: Int) {
-        pressedButtons.set(button)
+        buttons.set(button)
         write(Int2.Zero)
     }
 
     override fun mouseRelease(button: Int) {
-        pressedButtons.clear(button)
+        buttons.clear(button)
         write(Int2.Zero)
     }
 
@@ -85,7 +85,7 @@ open class HidMouseComponent(
         private var hidDevice: HidDevice? = null
         private const val path = "\\\\?\\hid#variable_6&col02#1"
 
-        private val pressedButtons = BitSet()
+        private val buttons = BitSet()
 
         init {
             Runtime.getRuntime().addShutdownHook(thread(false) { hidDevice?.close() })
@@ -98,7 +98,7 @@ open class HidMouseComponent(
                 if (it.isOpen) {
                     val buffer = Unpooled.buffer()
                     try {
-                        buffer.writeByte(pressedButtons.toByteArray()[0].toInt())
+                        buffer.writeByte(if (buttons.isEmpty) 0 else buttons.toByteArray()[0].toInt())
                         buffer.writeByte(move.x)
                         buffer.writeByte(move.y)
                         it.write(buffer.array(), buffer.readableBytes(), 0x02)

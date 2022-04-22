@@ -58,8 +58,8 @@ class FrontendHandler(
             })
             .option(RakNet.MTU, 1_464)
             .option(RakNet.PROTOCOL_VERSION, 10)
-            .localAddress(proxy.`interface`, 0)
-            .remoteAddress(proxy.host, proxy.port)
+            .localAddress(proxy.viaHost, proxy.viaPort)
+            .remoteAddress(proxy.remoteHost, proxy.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().config().isAutoRead = true

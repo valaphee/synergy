@@ -14,27 +14,35 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.keyboard
+package com.valaphee.synergy.mouse
 
-import com.valaphee.synergy.component.Component
-import org.graalvm.polyglot.HostAccess
+import com.valaphee.foundry.math.Int2
+import java.awt.Robot
 import java.net.URL
 import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-abstract class KeyboardComponent(
+class RobotMouse(
     id: UUID,
     scripts: List<URL>
-) : Component(id, scripts) {
-    @HostAccess.Export
-    fun keyPress(key: Int) = keyPress(Key.values()[key])
+) : Mouse(id, scripts) {
+    override suspend fun mouseMove(target: Int2) {
+        robot.mouseMove(target.x, target.y)
+    }
 
-    abstract fun keyPress(key: Key): Boolean
+    override fun mouseMoveRaw(move: Int2) = TODO()
 
-    @HostAccess.Export
-    fun keyRelease(key: Int) = keyRelease(Key.values()[key])
+    override fun mousePress(button: Int) {
+        robot.mousePress(button)
+    }
 
-    abstract fun keyRelease(key: Key): Boolean
+    override fun mouseRelease(button: Int) {
+        robot.mouseRelease(button)
+    }
+
+    companion object {
+        private val robot = Robot()
+    }
 }
