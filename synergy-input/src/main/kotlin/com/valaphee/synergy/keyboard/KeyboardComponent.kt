@@ -14,21 +14,27 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.component
+package com.valaphee.synergy.keyboard
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.synergy.component.Component
+import org.graalvm.polyglot.HostAccess
 import java.net.URL
 import java.util.UUID
-import kotlin.reflect.jvm.jvmName
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
-open class Component(
-    @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("controller") val controller: List<URL>,
-) {
-    @get:JsonProperty("type") val type: String get() = this::class.jvmName
+abstract class KeyboardComponent(
+    id: UUID,
+    controller: List<URL>
+) : Component(id, controller) {
+    @HostAccess.Export
+    fun keyPress(key: Int) = keyPress(Key.values()[key])
+
+    abstract fun keyPress(key: Key): Boolean
+
+    @HostAccess.Export
+    fun keyRelease(key: Int) = keyRelease(Key.values()[key])
+
+    abstract fun keyRelease(key: Key): Boolean
 }

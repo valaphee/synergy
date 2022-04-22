@@ -14,21 +14,33 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.component
+package com.valaphee.synergy.mouse
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.foundry.math.Int2
+import com.valaphee.synergy.component.Component
+import kotlinx.coroutines.runBlocking
+import org.graalvm.polyglot.HostAccess
 import java.net.URL
 import java.util.UUID
-import kotlin.reflect.jvm.jvmName
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
-open class Component(
-    @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("controller") val controller: List<URL>,
-) {
-    @get:JsonProperty("type") val type: String get() = this::class.jvmName
+abstract class MouseComponent(
+    id: UUID,
+    controller: List<URL>
+) : Component(id, controller) {
+    @HostAccess.Export
+    fun mouseMove(x: Int, y: Int) = runBlocking { mouseMove(Int2(x, y)) }
+
+    abstract suspend fun mouseMove(target: Int2)
+
+    @HostAccess.Export
+    fun mouseMoveRaw(x: Int, y: Int) = mouseMoveRaw(Int2(x, y))
+
+    abstract fun mouseMoveRaw(move: Int2)
+
+    abstract fun mousePress(button: Int)
+
+    abstract fun mouseRelease(button: Int)
 }

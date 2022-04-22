@@ -35,26 +35,21 @@ import java.util.UUID
 class ComponentServiceImpl @Inject constructor(
     config: Config
 ) : ComponentService {
-    private val _components = mutableMapOf<UUID, Component>()
-    override val components get() = _components.values.toList()
-
-    private val controller = mutableMapOf<UUID, List<Value>>()
+    private val _components = mutableMapOf<UUID, Pair<Component, List<Value>>>()
+    override val components get() = _components.values.map { it.first }.toList()
 
     init {
         config.components.forEach(::add)
     }
 
-    override fun add(component: Component) = if (_components.putIfAbsent(component.id, component) == null) {
-        controller[component.id] = component.controller.map { Context.create().eval(Source.create("js", it.readText())) }
-        true
-    } else false
+    override fun add(component: Component) = _components.putIfAbsent(component.id, component to component.controller.map { Context.create().eval(Source.create("js", it.readText())) }) == null
 
-    override fun remove(id: UUID) = _components.remove(id)
+    override fun remove(id: UUID) = _components.remove(id)?.first
 
     override suspend fun run() {
         events.collectLatest {
             val eventProxy = MapProxyObject(objectMapper.convertValue(it))
-            controller.values.forEach { it.forEach { it.execute(it, eventProxy) } }
+            _components.values.forEach { (component, controller) -> controller.forEach { it.execute(component, eventProxy) } }
         }
     }
 }

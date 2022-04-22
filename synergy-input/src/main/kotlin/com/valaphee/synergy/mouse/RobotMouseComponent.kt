@@ -14,21 +14,35 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.component
+package com.valaphee.synergy.mouse
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.foundry.math.Int2
+import java.awt.Robot
 import java.net.URL
 import java.util.UUID
-import kotlin.reflect.jvm.jvmName
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
-open class Component(
-    @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("controller") val controller: List<URL>,
-) {
-    @get:JsonProperty("type") val type: String get() = this::class.jvmName
+class RobotMouseComponent(
+    id: UUID,
+    controller: List<URL>
+) : MouseComponent(id, controller) {
+    override suspend fun mouseMove(target: Int2) {
+        robot.mouseMove(target.x, target.y)
+    }
+
+    override fun mouseMoveRaw(move: Int2) = TODO()
+
+    override fun mousePress(button: Int) {
+        robot.mousePress(button)
+    }
+
+    override fun mouseRelease(button: Int) {
+        robot.mouseRelease(button)
+    }
+
+    companion object {
+        private val robot = Robot()
+    }
 }

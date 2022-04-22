@@ -26,7 +26,7 @@ val events = MutableSharedFlow<Event>()
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 abstract class Event(
     @get:JsonProperty("emitter_id") val emitterId: UUID?,
     @get:JsonProperty("emitted_at") val emittedAt: Long?

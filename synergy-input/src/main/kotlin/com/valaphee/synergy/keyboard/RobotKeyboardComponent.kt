@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.component
+package com.valaphee.synergy.keyboard
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
+import java.awt.Robot
 import java.net.URL
 import java.util.UUID
-import kotlin.reflect.jvm.jvmName
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
-open class Component(
-    @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("controller") val controller: List<URL>,
-) {
-    @get:JsonProperty("type") val type: String get() = this::class.jvmName
+class RobotKeyboardComponent(
+    id: UUID,
+    controller: List<URL>
+) : KeyboardComponent(id, controller) {
+    override fun keyPress(key: Key): Boolean {
+        robot.keyPress(key.vkCode)
+        return true
+    }
+
+    override fun keyRelease(key: Key): Boolean {
+        robot.keyRelease(key.vkCode)
+        return true
+    }
+
+    companion object {
+        private val robot = Robot()
+    }
 }

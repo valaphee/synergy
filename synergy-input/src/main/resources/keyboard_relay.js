@@ -14,21 +14,9 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.component
-
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.net.URL
-import java.util.UUID
-import kotlin.reflect.jvm.jvmName
-
-/**
- * @author Kevin Ludwig
- */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
-open class Component(
-    @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("controller") val controller: List<URL>,
-) {
-    @get:JsonProperty("type") val type: String get() = this::class.jvmName
-}
+(function (component, event) {
+    if (event.type === "com.valaphee.synergy.keyboard.KeyboardEvent") {
+        if (event.event === 1) component.keyPress(event.key)
+        if (event.event === 2) component.keyRelease(event.key)
+    }
+})

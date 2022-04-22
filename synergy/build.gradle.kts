@@ -7,12 +7,12 @@ plugins { id("com.github.johnrengelman.shadow") }
 
 dependencies {
     implementation(project(":synergy-api"))
-    implementation(project(":synergy-component-cv"))
-    implementation(project(":synergy-component-hid"))
-    implementation(project(":synergy-proxy-bgs"))
-    implementation(project(":synergy-proxy-http"))
-    implementation(project(":synergy-proxy-mcbe"))
-    implementation(project(":synergy-proxy-tcp"))
+    implementation(project(":synergy-bgs"))
+    implementation(project(":synergy-cv"))
+    implementation(project(":synergy-http"))
+    implementation(project(":synergy-input"))
+    implementation(project(":synergy-mcbe"))
+    implementation(project(":synergy-tcp"))
     implementation("com.hubspot.jackson:jackson-datatype-protobuf:0.9.12")
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0")
     implementation("io.ktor:ktor-server-compression-jvm:2.0.0")

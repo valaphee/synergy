@@ -19,13 +19,14 @@ package com.valaphee.synergy.proxy
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.util.UUID
+import kotlin.reflect.jvm.jvmName
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 interface Proxy<T> {
-    @get:JsonProperty("@class") val `class`: String get() = this::class.java.name
+    @get:JsonProperty("type") val type: String get() = this::class.jvmName
     @get:JsonProperty("id") val id: UUID
 
     suspend fun start()
