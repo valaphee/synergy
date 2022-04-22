@@ -21,9 +21,9 @@ import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
 import com.sun.jna.platform.win32.WinUser
+import com.valaphee.synergy.httpClient
 import com.valaphee.synergy.keyboard.Key
-import com.valaphee.synergy.keyboard.KeyboardEvent
-import com.valaphee.synergy.proxy.httpClient
+import com.valaphee.synergy.keyboard.KeyboardMessage
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -39,7 +39,7 @@ import kotlin.system.exitProcess
 /**
  * @author Kevin Ludwig
  */
-object WindowsHookSubcommand : Subcommand("windows-hook", "Windows Hook")/*, CoroutineScope*/ {
+class WindowsHookSubcommand : Subcommand("windows-hook", "Windows Hook")/*, CoroutineScope*/ {
     /*override val coroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()*/
 
     private val id by option(ArgType.String, "id", null, "Id").default(UUID.randomUUID().toString())
@@ -75,9 +75,9 @@ object WindowsHookSubcommand : Subcommand("windows-hook", "Windows Hook")/*, Cor
                     try {
                         Key.byVkCode(lParam.vkCode)?.let {
                             runBlocking {
-                                httpClient.post("$url/event") {
+                                httpClient.post("$url/message") {
                                     contentType(ContentType.Application.Json)
-                                    setBody(KeyboardEvent(emitterId, now, it, if (wParam.toInt() == User32.WM_KEYDOWN) KeyboardEvent.Event.Down else 0 or if (wParam.toInt() == User32.WM_KEYUP) KeyboardEvent.Event.Up else 0, if (lParam.flags and (1 shl 5) != 0) KeyboardEvent.Modifier.Alt else 0))
+                                    setBody(KeyboardMessage(emitterId, now, it, if (wParam.toInt() == User32.WM_KEYDOWN) KeyboardMessage.Action.Down else 0 or if (wParam.toInt() == User32.WM_KEYUP) KeyboardMessage.Action.Up else 0, if (lParam.flags and (1 shl 5) != 0) KeyboardMessage.Modifier.Alt else 0))
                                 }
                             }
                         }

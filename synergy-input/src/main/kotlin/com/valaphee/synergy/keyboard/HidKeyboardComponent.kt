@@ -29,8 +29,8 @@ import kotlin.concurrent.thread
  */
 class HidKeyboardComponent(
     id: UUID,
-    controller: List<URL>
-) : KeyboardComponent(id, controller) {
+    scripts: List<URL>
+) : KeyboardComponent(id, scripts) {
     override fun keyPress(key: Key) = if (!pressedKeys.contains(key) && pressedKeys.size <= 6) {
         pressedKeys += key
         write()

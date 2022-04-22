@@ -35,10 +35,10 @@ import kotlin.math.abs
  */
 open class HidMouseComponent(
     id: UUID,
-    controller: List<URL>,
+    scripts: List<URL>,
     @get:JsonProperty("sensitivity") val sensitivity: Float,
     @get:JsonProperty("epsilon") val epsilon: Int
-) : MouseComponent(id, controller) {
+) : MouseComponent(id, scripts) {
     private val moves: IntArray
 
     init {

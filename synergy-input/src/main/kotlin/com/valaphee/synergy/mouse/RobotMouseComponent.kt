@@ -26,8 +26,8 @@ import java.util.UUID
  */
 class RobotMouseComponent(
     id: UUID,
-    controller: List<URL>
-) : MouseComponent(id, controller) {
+    scripts: List<URL>
+) : MouseComponent(id, scripts) {
     override suspend fun mouseMove(target: Int2) {
         robot.mouseMove(target.x, target.y)
     }

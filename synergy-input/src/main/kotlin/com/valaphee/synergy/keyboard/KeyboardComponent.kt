@@ -26,8 +26,8 @@ import java.util.UUID
  */
 abstract class KeyboardComponent(
     id: UUID,
-    controller: List<URL>
-) : Component(id, controller) {
+    scripts: List<URL>
+) : Component(id, scripts) {
     @HostAccess.Export
     fun keyPress(key: Int) = keyPress(Key.values()[key])
 

@@ -28,8 +28,8 @@ import java.util.UUID
  */
 abstract class MouseComponent(
     id: UUID,
-    controller: List<URL>
-) : Component(id, controller) {
+    scripts: List<URL>
+) : Component(id, scripts) {
     @HostAccess.Export
     fun mouseMove(x: Int, y: Int) = runBlocking { mouseMove(Int2(x, y)) }
 

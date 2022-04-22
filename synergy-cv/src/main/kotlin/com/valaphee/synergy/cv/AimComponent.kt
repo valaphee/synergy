@@ -53,12 +53,12 @@ import javax.swing.JPanel
  */
 class AimComponent(
     id: UUID,
-    controller: List<URL>,
+    scripts: List<URL>,
     sensitivity: Float,
     @get:JsonProperty("view") val view: Int4,
     @get:JsonProperty("processors") val processors: List<Processor>,
     @get:JsonProperty("extractor") val extractor: Extractor
-) : HidMouseComponent(id, controller, sensitivity, 0), CoroutineScope {
+) : HidMouseComponent(id, scripts, sensitivity, 0), CoroutineScope {
     @get:JsonIgnore override val coroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
 
     var active = false

@@ -4,7 +4,7 @@
  */
 
 dependencies {
-    implementation(project(":synergy-api"))
+    implementation(project(":synergy"))
     implementation(project(":synergy-input"))
     implementation("org.openpnp:opencv:4.5.1-0")
 }

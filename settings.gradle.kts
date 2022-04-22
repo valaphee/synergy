@@ -16,10 +16,11 @@
 
 rootProject.name = "synergy"
 include("synergy")
-include("synergy-api")
-include("synergy-bgs")
 include("synergy-cv")
-include("synergy-http")
 include("synergy-input")
-include("synergy-mcbe")
-include("synergy-tcp")
+include("synergy-proxy")
+include("synergy-proxy-bgs")
+include("synergy-proxy-http")
+include("synergy-proxy-mcbe")
+include("synergy-proxy-tcp")
+include("synergy-server")

@@ -25,8 +25,8 @@ import java.util.UUID
  */
 class RobotKeyboardComponent(
     id: UUID,
-    controller: List<URL>
-) : KeyboardComponent(id, controller) {
+    scripts: List<URL>
+) : KeyboardComponent(id, scripts) {
     override fun keyPress(key: Key): Boolean {
         robot.keyPress(key.vkCode)
         return true
