@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy.proxy.http
 
+import com.valaphee.synergy.proxy.Connection
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -32,7 +33,8 @@ import io.netty.handler.codec.http.HttpObjectAggregator
  * @author Kevin Ludwig
  */
 class FrontendHandler(
-    private val proxy: HttpProxy
+    private val proxy: HttpProxy,
+    private val connection: Connection,
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
@@ -46,13 +48,13 @@ class FrontendHandler(
                     channel.pipeline().addLast(
                         HttpClientCodec(),
                         HttpObjectAggregator(1 * 1024 * 1024),
-                        EventEmitter(proxy),
+                        EventEmitter(connection),
                         BackendHandler(context.channel())
                     )
                 }
             })
-            .localAddress(proxy.viaHost, proxy.viaPort)
-            .remoteAddress(proxy.remoteHost, proxy.remotePort)
+            .localAddress(connection.viaHost, connection.viaPort)
+            .remoteAddress(connection.remoteHost, connection.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().read()

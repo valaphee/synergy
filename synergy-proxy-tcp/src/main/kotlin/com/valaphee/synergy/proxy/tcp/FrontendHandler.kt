@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy.proxy.tcp
 
+import com.valaphee.synergy.proxy.Connection
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -29,7 +30,8 @@ import io.netty.channel.ChannelOption
  * @author Kevin Ludwig
  */
 class FrontendHandler(
-    private val proxy: TcpProxy
+    private val proxy: TcpProxy,
+    private val connection: Connection
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
@@ -39,8 +41,8 @@ class FrontendHandler(
             .channel(context.channel()::class.java)
             .handler(BackendHandler(context.channel()))
             .option(ChannelOption.AUTO_READ, false)
-            .localAddress(proxy.viaHost, proxy.viaPort)
-            .remoteAddress(proxy.remoteHost, proxy.remotePort)
+            .localAddress(connection.viaHost, connection.viaPort)
+            .remoteAddress(connection.remoteHost, connection.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().read()

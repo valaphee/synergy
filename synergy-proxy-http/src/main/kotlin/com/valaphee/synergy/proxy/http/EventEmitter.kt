@@ -17,6 +17,7 @@
 package com.valaphee.synergy.proxy.http
 
 import com.valaphee.synergy.messages
+import com.valaphee.synergy.proxy.Connection
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -29,7 +30,7 @@ import kotlinx.coroutines.runBlocking
  * @author Kevin Ludwig
  */
 class EventEmitter(
-    private val proxy: HttpProxy
+    private val connection: Connection
 ) : ChannelDuplexHandler() {
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
         if (message is HttpMessage) emit(message)
@@ -45,8 +46,8 @@ class EventEmitter(
         runBlocking {
             messages.emit(
                 when (message) {
-                    is FullHttpRequest -> HttpRequestMessage(proxy.id, System.currentTimeMillis(), message.method().name(), message.uri(), message.headers().associate { it.key to it.value })
-                    is FullHttpResponse -> HttpResponseMessage(proxy.id, System.currentTimeMillis(), message.status().code(), message.status().reasonPhrase(), message.headers().associate { it.key to it.value })
+                    is FullHttpRequest -> HttpRequestMessage(connection.id, System.currentTimeMillis(), message.method().name(), message.uri(), message.headers().associate { it.key to it.value })
+                    is FullHttpResponse -> HttpResponseMessage(connection.id, System.currentTimeMillis(), message.status().code(), message.status().reasonPhrase(), message.headers().associate { it.key to it.value })
                     else -> TODO("$message")
                 }
             )

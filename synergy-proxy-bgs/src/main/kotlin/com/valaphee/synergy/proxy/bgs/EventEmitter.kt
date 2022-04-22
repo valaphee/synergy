@@ -23,6 +23,7 @@ import com.google.protobuf.Descriptors.MethodDescriptor
 import com.google.protobuf.Service
 import com.google.protobuf.kotlin.get
 import com.valaphee.synergy.messages
+import com.valaphee.synergy.proxy.Connection
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
@@ -32,7 +33,7 @@ import kotlinx.coroutines.runBlocking
  * @author Kevin Ludwig
  */
 class EventEmitter(
-    private val proxy: BgsProxy,
+    private val connection: Connection,
     private val services: Map<Int, Service>
 ) : ChannelDuplexHandler() {
     private val responses = mutableMapOf<Int, Pair<Service, MethodDescriptor>>()
@@ -54,10 +55,10 @@ class EventEmitter(
                     service.descriptorForType.methods.find { it.options[MethodOptionsProto.methodOptions].id == packet.header.methodId }?.let { methodDescriptor ->
                         val response = service.getResponsePrototype(methodDescriptor)
                         if (response !is NO_RESPONSE && response !is NoData) responses[packet.header.token] = service to methodDescriptor
-                        BgsRequestMessage(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload)
-                    } ?: BgsRequestMessage(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, null, packet.payload)
-                } ?: BgsRequestMessage(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, null, packet.header.methodId, null, packet.payload)
-                PacketCodec.responseServiceId -> responses.remove(packet.header.token)?.let { (service, methodDescriptor) -> BgsResponseMessage(proxy.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload) } ?: BgsResponseMessage(proxy.id, System.currentTimeMillis(), packet.header.token, -1, null, -1, null, packet.payload)
+                        BgsRequestMessage(connection.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload)
+                    } ?: BgsRequestMessage(connection.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, null, packet.payload)
+                } ?: BgsRequestMessage(connection.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, null, packet.header.methodId, null, packet.payload)
+                PacketCodec.responseServiceId -> responses.remove(packet.header.token)?.let { (service, methodDescriptor) -> BgsResponseMessage(connection.id, System.currentTimeMillis(), packet.header.token, packet.header.serviceHash, service.descriptorForType.name, packet.header.methodId, methodDescriptor.name, packet.payload) } ?: BgsResponseMessage(connection.id, System.currentTimeMillis(), packet.header.token, -1, null, -1, null, packet.payload)
                 else -> TODO()
             })
         }

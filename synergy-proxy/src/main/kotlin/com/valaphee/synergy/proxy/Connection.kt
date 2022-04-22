@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy.tcp
+package com.valaphee.synergy.proxy
 
-import com.valaphee.synergy.proxy.Connection
-import com.valaphee.synergy.proxy.Proxy
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.socket.SocketChannel
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-class TcpProxy : Proxy {
-    override fun newHandler(connection: Connection) = object : ChannelInitializer<SocketChannel>() {
-        override fun initChannel(channel: SocketChannel) {
-            channel.config().isAutoRead = false
-            channel.pipeline().addLast(FrontendHandler(this@TcpProxy, connection),)
-        }
-    }
-}
+class Connection(
+    val id: UUID,
+    val viaHost: String,
+    val viaPort: Int,
+    val remoteHost: String,
+    val remotePort: Int
+)

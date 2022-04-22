@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":synergy-proxy-http"))
     implementation(project(":synergy-proxy-mcbe"))
     implementation(project(":synergy-proxy-tcp"))
+    implementation("com.fasterxml.jackson.module:jackson-module-guice:2.13.2")
     implementation("com.hubspot.jackson:jackson-datatype-protobuf:0.9.12")
     implementation("io.ktor:ktor-server-call-logging-jvm:2.0.0")
     implementation("io.ktor:ktor-server-compression-jvm:2.0.0")

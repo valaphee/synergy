@@ -16,6 +16,9 @@
 
 package com.valaphee.synergy
 
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair
+import com.fasterxml.jackson.module.guice.GuiceAnnotationIntrospector
+import com.fasterxml.jackson.module.guice.GuiceInjectableValues
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
@@ -85,6 +88,10 @@ suspend fun main(arguments: Array<String>) {
         } else Config().also { objectMapper.writeValue(configFile, it) }
     })
 
+    objectMapper.injectableValues = GuiceInjectableValues(injector)
+    val guiceAnnotationIntrospector = GuiceAnnotationIntrospector()
+    objectMapper.setAnnotationIntrospectors(AnnotationIntrospectorPair(guiceAnnotationIntrospector, objectMapper.serializationConfig.annotationIntrospector), AnnotationIntrospectorPair(guiceAnnotationIntrospector, objectMapper.deserializationConfig.annotationIntrospector))
+
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
     val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
@@ -108,7 +115,7 @@ suspend fun main(arguments: Array<String>) {
             }
             webSocket("/message") { messages.collectLatest { send(objectMapper.writeValueAsString(it)) } }
 
-            post("/component") { call.respond(if (componentService.add(call.receive(Component::class).apply { injector.injectMembers(this) })) HttpStatusCode.OK else HttpStatusCode.BadRequest) }
+            post("/component") { call.respond(if (componentService.add(call.receive(Component::class))) HttpStatusCode.OK else HttpStatusCode.BadRequest) }
             delete("/component/{id}") { call.respond(componentService.remove(UUID.fromString(call.parameters["id"]))?.let { HttpStatusCode.OK } ?: HttpStatusCode.NotFound) }
             get("/component/") { call.respond(componentService.components) }
         }

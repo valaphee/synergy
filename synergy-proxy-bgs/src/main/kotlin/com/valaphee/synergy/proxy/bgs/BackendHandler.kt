@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy.proxy.bgs
 
+import com.valaphee.synergy.proxy.Connection
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFuture
@@ -34,10 +35,10 @@ import java.net.URI
  * @author Kevin Ludwig
  */
 class BackendHandler(
-    private val proxy: BgsProxy,
+    connection: Connection,
     private val inboundChannel: Channel
 ) : ChannelInboundHandlerAdapter() {
-    private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${proxy.remoteHost}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
+    private val handshaker = WebSocketClientHandshakerFactory.newHandshaker(URI("wss://${connection.remoteHost}/"), WebSocketVersion.V13, "v1.rpc.battle.net", false, DefaultHttpHeaders())
     private lateinit var handshakeFuture: ChannelPromise
 
     override fun handlerAdded(context: ChannelHandlerContext) {

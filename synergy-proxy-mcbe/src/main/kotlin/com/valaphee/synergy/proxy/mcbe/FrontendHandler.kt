@@ -20,6 +20,7 @@ import com.valaphee.netcode.mcbe.network.Compressor
 import com.valaphee.netcode.mcbe.network.Decompressor
 import com.valaphee.netcode.mcbe.network.PacketBuffer
 import com.valaphee.netcode.mcbe.network.PacketCodec
+import com.valaphee.synergy.proxy.Connection
 import com.valaphee.synergy.underlyingNetworking
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
@@ -38,7 +39,7 @@ import network.ycc.raknet.pipeline.UserDataCodec
  * @author Kevin Ludwig
  */
 class FrontendHandler(
-    private val proxy: McbeProxy
+    private val connection: Connection
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
@@ -58,8 +59,8 @@ class FrontendHandler(
             })
             .option(RakNet.MTU, 1_464)
             .option(RakNet.PROTOCOL_VERSION, 10)
-            .localAddress(proxy.viaHost, proxy.viaPort)
-            .remoteAddress(proxy.remoteHost, proxy.remotePort)
+            .localAddress(connection.viaHost, connection.viaPort)
+            .remoteAddress(connection.remoteHost, connection.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().config().isAutoRead = true

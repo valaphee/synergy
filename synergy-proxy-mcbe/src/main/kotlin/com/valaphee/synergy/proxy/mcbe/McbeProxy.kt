@@ -16,7 +16,6 @@
 
 package com.valaphee.synergy.proxy.mcbe
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -27,101 +26,18 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.valaphee.jackson.dataformat.nbt.NbtFactory
 import com.valaphee.jackson.dataformat.nbt.util.DeepEqualsLinkedHashMap
 import com.valaphee.jackson.dataformat.nbt.util.EmbeddedObjectDeserializationProblemHandler
-import com.valaphee.netcode.mcbe.latestProtocolVersion
-import com.valaphee.netcode.mcbe.latestVersion
-import com.valaphee.netcode.mcbe.network.Compressor
-import com.valaphee.netcode.mcbe.network.Decompressor
-import com.valaphee.netcode.mcbe.network.PacketBuffer
-import com.valaphee.netcode.mcbe.network.PacketCodec
-import com.valaphee.netcode.mcbe.network.Pong
-import com.valaphee.netcode.mcbe.world.GameMode
 import com.valaphee.netcode.mcbe.world.block.Block
 import com.valaphee.netcode.mcbe.world.block.BlockState
-import com.valaphee.synergy.bossGroup
+import com.valaphee.synergy.proxy.Connection
 import com.valaphee.synergy.proxy.Proxy
-import com.valaphee.synergy.underlyingNetworking
-import com.valaphee.synergy.workerGroup
-import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.Channel
-import io.netty.channel.ChannelFactory
-import io.netty.channel.ChannelFutureListener
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInitializer
-import io.netty.channel.socket.DatagramPacket
-import io.netty.util.ReferenceCountUtil
-import network.ycc.raknet.RakNet
-import network.ycc.raknet.packet.UnconnectedPing
-import network.ycc.raknet.packet.UnconnectedPong
 import network.ycc.raknet.pipeline.UserDataCodec
-import network.ycc.raknet.server.channel.RakNetServerChannel
-import network.ycc.raknet.server.pipeline.UdpPacketHandler
-import java.net.InetSocketAddress
-import java.net.URL
-import java.util.UUID
 import java.util.zip.GZIPInputStream
 
 /**
  * @author Kevin Ludwig
  */
-class McbeProxy(
-    id: UUID = UUID.randomUUID(),
-    scripts: List<URL>,
-    localHost: String?,
-    localPort: Int?,
-    remoteHost: String,
-    remotePort: Int = 19132,
-    viaHost: String,
-    viaPort: Int
-) : Proxy(id, scripts, localHost, localPort, remoteHost, remotePort, viaHost, viaPort) {
-    @JsonIgnore private var channel: Channel? = null
-
-    override suspend fun _start() {
-        require(channel == null)
-
-        super._start()
-
-        channel = ServerBootstrap()
-            .group(bossGroup, workerGroup)
-            .channelFactory(ChannelFactory { RakNetServerChannel(underlyingNetworking.datagramChannel) })
-            .handler(object : ChannelInitializer<Channel>() {
-                override fun initChannel(channel: Channel) {
-                    channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {
-                        override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
-                            val rakNetConfig = context.channel().config() as RakNet.Config
-                            val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, remotePort, remotePort, "Synergy").toString())
-                            val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
-                            try {
-                                rakNetConfig.codec.encode(unconnectedPong, buffer)
-                                repeat(3) { context.writeAndFlush(DatagramPacket(buffer.retainedSlice(), address)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE) }
-                            } finally {
-                                ReferenceCountUtil.safeRelease(unconnectedPong)
-                                buffer.release()
-                            }
-                        }
-                    })
-                }
-            })
-            .childHandler(object : ChannelInitializer<Channel>() {
-                override fun initChannel(channel: Channel) {
-                    channel.pipeline().addLast(UserDataCodec.NAME, userDataCodec)
-                    channel.pipeline().addLast(Compressor.NAME, Compressor(7))
-                    channel.pipeline().addLast(Decompressor.NAME, Decompressor())
-                    channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
-                    channel.pipeline().addLast(FrontendHandler(this@McbeProxy))
-                }
-            })
-            .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
-            .bind().channel()
-    }
-
-    override suspend fun _stop() {
-        channel?.let {
-            it.close()
-            channel = null
-
-            super._stop()
-        }
-    }
+class McbeProxy : Proxy {
+    override fun newHandler(connection: Connection) = TODO()
 
     companion object {
         internal val userDataCodec = UserDataCodec(0xFE)

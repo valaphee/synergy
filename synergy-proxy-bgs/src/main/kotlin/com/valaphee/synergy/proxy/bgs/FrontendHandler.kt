@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy.proxy.bgs
 
+import com.valaphee.synergy.proxy.Connection
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -27,37 +28,34 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
-import io.netty.handler.ssl.SslContextBuilder
-import java.security.KeyStore
-import javax.net.ssl.TrustManagerFactory
 
 /**
  * @author Kevin Ludwig
  */
 class FrontendHandler(
-    private val proxy: BgsProxy
+    private val proxy: BgsProxy,
+    private val connection: Connection,
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
 
     override fun channelActive(context: ChannelHandlerContext) {
-        val sslContext = SslContextBuilder.forClient().trustManager(TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(null as KeyStore?) }).build()
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
             .channel(context.channel()::class.java)
             .handler(object : ChannelInitializer<SocketChannel>() {
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline().addLast(
-                        sslContext.newHandler(channel.alloc()),
+                        proxy.clientSslContext.newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
                         PacketCodec(BgsProxy.services),
-                        EventEmitter(proxy, BgsProxy.services),
-                        BackendHandler(proxy, context.channel())
+                        EventEmitter(connection, BgsProxy.services),
+                        BackendHandler(connection, context.channel())
                     )
                 }
             })
-            .localAddress(proxy.viaHost, proxy.viaPort)
-            .remoteAddress(proxy.remoteHost, proxy.remotePort)
+            .localAddress(connection.viaHost, connection.viaPort)
+            .remoteAddress(connection.remoteHost, connection.remotePort)
             .connect().addListener(object : ChannelFutureListener {
                 override fun operationComplete(future: ChannelFuture) {
                     if (future.isSuccess) context.channel().read()
