@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":synergy"))
     implementation(project(":synergy-cv"))
     implementation(project(":synergy-input"))
+    implementation(project(":synergy-ngdp"))
     implementation(project(":synergy-proxy"))
     implementation(project(":synergy-proxy-bgs"))
     implementation(project(":synergy-proxy-http"))

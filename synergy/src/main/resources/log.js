@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-rootProject.name = "synergy"
-include("synergy")
-
-include("synergy-server")
-
-include("synergy-cv")
-include("synergy-input")
-
-include("synergy-ngdp")
-
-include("synergy-proxy")
-include("synergy-proxy-bgs")
-include("synergy-proxy-http")
-include("synergy-proxy-mcbe")
-include("synergy-proxy-tcp")
+({
+    on_message: function (message) {
+        console.log(JSON.stringify(message))
+    }
+})

@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-rootProject.name = "synergy"
-include("synergy")
+package com.valaphee.synergy.ngdp
 
-include("synergy-server")
+import org.apache.commons.vfs2.FileObject
 
-include("synergy-cv")
-include("synergy-input")
+/**
+ * @author Kevin Ludwig
+ */
+class Configuration(
+    configurationFile: FileObject
+) {
+    private val entries = mutableMapOf<String, List<String>>()
 
-include("synergy-ngdp")
+    init {
+        configurationFile.content.byteArray.decodeToString().lines().forEach {
+            val row = it.split('#', limit = 2).first().split('=', limit = 2)
+            if (row.size == 2) entries[row[0].trim()] = row[1].trim().split(' ')
+        }
+    }
 
-include("synergy-proxy")
-include("synergy-proxy-bgs")
-include("synergy-proxy-http")
-include("synergy-proxy-mcbe")
-include("synergy-proxy-tcp")
+    operator fun get(key: String) = entries[key]
+}
