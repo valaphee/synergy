@@ -18,12 +18,15 @@ package com.valaphee.synergy.proxy
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.sun.jna.platform.win32.Shell32
-import com.valaphee.synergy.bossGroup
+import com.valaphee.synergy.BossGroup
+import com.valaphee.synergy.WorkerGroup
 import com.valaphee.synergy.component.Component
-import com.valaphee.synergy.underlyingNetworking
-import com.valaphee.synergy.workerGroup
+import com.valaphee.synergy.component.StartAndStoppable
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.graalvm.polyglot.HostAccess
 import java.net.InetAddress
 import java.net.URL
@@ -42,26 +45,30 @@ class ProxyServer(
     @get:JsonProperty("remote_port") val remotePort: Int,
     @get:JsonProperty("via_host") val viaHost: String,
     @get:JsonProperty("via_port") val viaPort: Int,
-) : Component(id, scripts) {
+) : Component(id, scripts), StartAndStoppable {
     private var channel: Channel? = null
 
     @HostAccess.Export
-    fun start() {
-        if (localHost == null) {
-            Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" ${InetAddress.getByName(remoteHost).hostAddress}/32\"", null, 0)
-            Thread.sleep(250)
-        }
+    override fun start() {
+        GlobalScope.launch {
+            if (localHost == null) {
+                Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" ${InetAddress.getByName(remoteHost).hostAddress}/32\"", null, 0)
+                delay(250)
+            }
 
-        channel = ServerBootstrap()
-            .group(bossGroup, workerGroup)
-            .channel(underlyingNetworking.serverSocketChannel)
-            .childHandler(proxy.newHandler(Connection(UUID.randomUUID(), viaHost, viaPort, remoteHost, remotePort)))
-            .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
-            .bind().channel()
+            val connection = Connection(UUID.randomUUID(), viaHost, viaPort, remoteHost, remotePort)
+            channel = ServerBootstrap()
+                .group(BossGroup, WorkerGroup)
+                .channelFactory(proxy.channelFactory)
+                .apply { proxy.getHandler(connection)?.let { handler(it) } }
+                .childHandler(proxy.getChildHandler(connection))
+                .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
+                .bind().channel()
+        }
     }
 
     @HostAccess.Export
-    fun stop() {
+    override fun stop() {
         channel?.let {
             it.close()
             channel = null

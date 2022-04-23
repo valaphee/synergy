@@ -19,9 +19,9 @@ package com.valaphee.synergy.component
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.google.inject.Inject
 import com.google.inject.Singleton
+import com.valaphee.synergy.ObjectMapper
 import com.valaphee.synergy.config.Config
 import com.valaphee.synergy.messages
-import com.valaphee.synergy.objectMapper
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.runBlocking
 import org.graalvm.polyglot.Context
@@ -51,7 +51,9 @@ class ComponentServiceImpl @Inject constructor(
     override fun add(component: Component) = if (_components.putIfAbsent(component.id, component) == null) {
         component.scripts.forEach {
             val context = Context.create()
-            context.getBindings("js").putMember("component", component)
+            context.getBindings("js").apply {
+                putMember("component", component)
+            }
             val script = context.eval(Source.create("js", it.readText()))
             if (script.hasMember("on_remove")) onRemove[component.id] = script.getMember("on_remove")
             if (script.hasMember("on_message")) onMessage.getOrPut(component.id) { mutableListOf() } += script.getMember("on_message")
@@ -67,10 +69,12 @@ class ComponentServiceImpl @Inject constructor(
         return component
     }
 
-    override suspend fun run() {
-        messages.collectLatest {
-            val eventProxy = MapProxyObject(objectMapper.convertValue(it))
-            onMessage.values.forEach { it.forEach { it.executeVoid(eventProxy) } }
+    override fun run() {
+        runBlocking {
+            messages.collectLatest {
+                val eventProxy = MapProxyObject(ObjectMapper.convertValue(it))
+                onMessage.values.forEach { it.forEach { it.executeVoid(eventProxy) } }
+            }
         }
     }
 }

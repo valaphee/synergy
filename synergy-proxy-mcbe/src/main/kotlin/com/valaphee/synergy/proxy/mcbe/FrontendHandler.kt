@@ -20,8 +20,8 @@ import com.valaphee.netcode.mcbe.network.Compressor
 import com.valaphee.netcode.mcbe.network.Decompressor
 import com.valaphee.netcode.mcbe.network.PacketBuffer
 import com.valaphee.netcode.mcbe.network.PacketCodec
+import com.valaphee.synergy.CurrentUnderlyingNetworking
 import com.valaphee.synergy.proxy.Connection
-import com.valaphee.synergy.underlyingNetworking
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -47,7 +47,7 @@ class FrontendHandler(
         context.channel().config().isAutoRead = false
         outboundChannel = Bootstrap()
             .group(context.channel().eventLoop())
-            .channelFactory(ChannelFactory { RakNetClientChannel(underlyingNetworking.datagramChannel) })
+            .channelFactory(ChannelFactory { RakNetClientChannel(CurrentUnderlyingNetworking.datagramChannel) })
             .handler(object : ChannelInitializer<Channel>() {
                 override fun initChannel(channel: Channel) {
                     channel.pipeline().addLast(UserDataCodec.NAME, McbeProxy.userDataCodec)

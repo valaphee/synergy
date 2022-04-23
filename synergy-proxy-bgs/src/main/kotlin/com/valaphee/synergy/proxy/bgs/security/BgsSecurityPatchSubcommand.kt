@@ -18,8 +18,8 @@ package com.valaphee.synergy.proxy.bgs.security
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.inject.Inject
+import com.valaphee.synergy.ObjectMapper
 import com.valaphee.synergy.proxy.bgs.util.occurrencesOf
-import com.valaphee.synergy.objectMapper
 import io.ktor.util.encodeBase64
 import kotlinx.cli.ArgType
 import kotlinx.cli.Subcommand
@@ -56,9 +56,9 @@ class BgsSecurityPatchSubcommand : Subcommand("bgs-security-patch", "Patch secur
                     log.info("Certificate bundle found at 0x{}", certificateBundleIndex.toHexString().uppercase())
 
                     val certificateBundleEnd = bytes.occurrencesOf(separator.toByteArray()).single() + 1
-                    val certificateBundle = objectMapper.readValue<CertificateBundle>(bytes.copyOfRange(certificateBundleIndex, certificateBundleEnd))
+                    val certificateBundle = ObjectMapper.readValue<CertificateBundle>(bytes.copyOfRange(certificateBundleIndex, certificateBundleEnd))
                     val certificates = aliases.map { alias -> alias to checkNotNull(keyStore.getCertificate(alias)) }
-                    val certificateBundleBytes = objectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${keyStore.getCertificate("synergy").encoded.encodeBase64()}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
+                    val certificateBundleBytes = ObjectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${keyStore.getCertificate("synergy").encoded.encodeBase64()}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
                     val certificateBundleSize = certificateBundleEnd - certificateBundleIndex
                     if (certificateBundleSize >= certificateBundleBytes.size) {
                         val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()

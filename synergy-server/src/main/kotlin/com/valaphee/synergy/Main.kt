@@ -63,10 +63,10 @@ import java.io.File
 import java.security.Security
 import java.util.UUID
 
-suspend fun main(arguments: Array<String>) {
+fun main(arguments: Array<String>) {
     Security.addProvider(BouncyCastleProvider())
 
-    objectMapper.registerModule(ProtobufModule())
+    ObjectMapper.registerModule(ProtobufModule())
 
     val injector = Guice.createInjector(SecurityModule(), object : AbstractModule() {
         private val configFile = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "config.json")
@@ -82,15 +82,15 @@ suspend fun main(arguments: Array<String>) {
         @Singleton
         @Provides
         fun config() = if (configFile.exists()) try {
-            objectMapper.readValue(configFile)
+            ObjectMapper.readValue(configFile)
         } catch (_: Exception) {
-            Config().also { objectMapper.writeValue(configFile, it) }
-        } else Config().also { objectMapper.writeValue(configFile, it) }
+            Config().also { ObjectMapper.writeValue(configFile, it) }
+        } else Config().also { ObjectMapper.writeValue(configFile, it) }
     })
 
-    objectMapper.injectableValues = GuiceInjectableValues(injector)
+    ObjectMapper.injectableValues = GuiceInjectableValues(injector)
     val guiceAnnotationIntrospector = GuiceAnnotationIntrospector()
-    objectMapper.setAnnotationIntrospectors(AnnotationIntrospectorPair(guiceAnnotationIntrospector, objectMapper.serializationConfig.annotationIntrospector), AnnotationIntrospectorPair(guiceAnnotationIntrospector, objectMapper.deserializationConfig.annotationIntrospector))
+    ObjectMapper.setAnnotationIntrospectors(AnnotationIntrospectorPair(guiceAnnotationIntrospector, ObjectMapper.serializationConfig.annotationIntrospector), AnnotationIntrospectorPair(guiceAnnotationIntrospector, ObjectMapper.deserializationConfig.annotationIntrospector))
 
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
@@ -104,8 +104,8 @@ suspend fun main(arguments: Array<String>) {
 
     val componentService = injector.getInstance(ComponentService::class.java)
 
-    embeddedServer(Netty, port, host, emptyList(), { configureBootstrap = { group(bossGroup, workerGroup) } }) {
-        install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) }
+    embeddedServer(Netty, port, host, emptyList(), { configureBootstrap = { group(BossGroup, WorkerGroup) } }) {
+        install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(ObjectMapper)) }
         install(WebSockets)
 
         routing {
@@ -113,7 +113,7 @@ suspend fun main(arguments: Array<String>) {
                 call.respond(HttpStatusCode.OK)
                 messages.emit(call.receive())
             }
-            webSocket("/message") { messages.collectLatest { send(objectMapper.writeValueAsString(it)) } }
+            webSocket("/message") { messages.collectLatest { send(ObjectMapper.writeValueAsString(it)) } }
 
             post("/component") { call.respond(if (componentService.add(call.receive(Component::class))) HttpStatusCode.OK else HttpStatusCode.BadRequest) }
             delete("/component/{id}") { call.respond(componentService.remove(UUID.fromString(call.parameters["id"]))?.let { HttpStatusCode.OK } ?: HttpStatusCode.NotFound) }

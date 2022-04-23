@@ -25,10 +25,11 @@ import io.netty.channel.socket.SocketChannel
  * @author Kevin Ludwig
  */
 class TcpProxy : Proxy {
-    override fun newHandler(connection: Connection) = object : ChannelInitializer<SocketChannel>() {
+    override fun getChildHandler(connection: Connection) = object : ChannelInitializer<SocketChannel>() {
         override fun initChannel(channel: SocketChannel) {
             channel.config().isAutoRead = false
-            channel.pipeline().addLast(FrontendHandler(this@TcpProxy, connection),)
+
+            channel.pipeline().addLast(FrontendHandler(connection))
         }
     }
 }

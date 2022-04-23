@@ -44,12 +44,11 @@ import java.security.SecureRandom
 import java.security.cert.X509Certificate
 import java.util.Calendar
 import javax.net.ssl.ExtendedSSLSession
-import javax.net.ssl.KeyManager
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SSLEngine
-import javax.net.ssl.TrustManager
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509ExtendedKeyManager
+import javax.net.ssl.X509ExtendedTrustManager
 import kotlin.random.asKotlinRandom
 
 /**
@@ -77,7 +76,7 @@ class SecurityModule : AbstractModule() {
 
     @Singleton
     @Provides
-    fun keyManager(@Named("key-store") keyStoreFile: File, keyStore: KeyStore): KeyManager = object : X509ExtendedKeyManager() {
+    fun keyManager(@Named("key-store") keyStoreFile: File, keyStore: KeyStore) = object : X509ExtendedKeyManager() {
         override fun getClientAliases(keyType: String, issuers: Array<out Principal>?) = null
 
         override fun chooseClientAlias(keyType: Array<out String>, issuers: Array<out Principal>?, socket: Socket?) = null
@@ -88,7 +87,7 @@ class SecurityModule : AbstractModule() {
 
         override fun chooseEngineServerAlias(keyType: String, issuers: Array<out Principal>?, engine: SSLEngine): String? {
             val session = engine.handshakeSession
-            return if (session is ExtendedSSLSession) (session.requestedServerNames.first() as SNIHostName).asciiName else null
+            return if (session is ExtendedSSLSession) (session.requestedServerNames.single() as SNIHostName).asciiName else null
         }
 
         override fun getCertificateChain(alias: String): Array<X509Certificate> {
@@ -110,12 +109,12 @@ class SecurityModule : AbstractModule() {
             return arrayOf(serverCertificate, rootCertificate)
         }
 
-        override fun getPrivateKey(alias: String?) = keyStore.getKey(alias, "".toCharArray()) as PrivateKey
+        override fun getPrivateKey(alias: String) = keyStore.getKey(alias, "".toCharArray()) as PrivateKey
     }
 
     @Singleton
     @Provides
-    fun trustManager(): TrustManager = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(null as KeyStore?) }.trustManagers.first()
+    fun trustManager() = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply { init(null as KeyStore?) }.trustManagers.first() as X509ExtendedTrustManager
 
     companion object {
         private val random = SecureRandom().asKotlinRandom()

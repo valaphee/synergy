@@ -31,7 +31,7 @@ import com.valaphee.netcode.mcbe.util.parseAuthJws
 import com.valaphee.netcode.mcbe.util.parseServerToClientHandshakeJws
 import com.valaphee.netcode.mcbe.util.parseUserJws
 import com.valaphee.netcode.mcbe.world.entity.player.User
-import com.valaphee.synergy.httpClient
+import com.valaphee.synergy.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.headers
@@ -79,7 +79,7 @@ class BackendHandler(
                 clientPublicKey = verificationKey
                 val (_, user) = parseUserJws(message.userJws, verificationKey)
                 val authJwsChain = runBlocking {
-                    httpClient.post("https://multiplayer.minecraft.net/authentication") {
+                    HttpClient.post("https://multiplayer.minecraft.net/authentication") {
                         headers {
                             header("User-Agent", "MCPE/Android")
                             header("Client-Version", user.version)

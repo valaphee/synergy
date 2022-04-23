@@ -30,7 +30,6 @@ import io.netty.channel.ChannelOption
  * @author Kevin Ludwig
  */
 class FrontendHandler(
-    private val proxy: TcpProxy,
     private val connection: Connection
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null

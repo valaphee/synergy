@@ -21,13 +21,15 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.inject.Inject
 import com.valaphee.synergy.proxy.Connection
 import com.valaphee.synergy.proxy.Proxy
+import com.valaphee.synergy.util.defaultAlias
+import io.netty.channel.Channel
+import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelInitializer
-import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.ssl.SslContextBuilder
-import javax.net.ssl.KeyManager
-import javax.net.ssl.TrustManager
+import javax.net.ssl.X509ExtendedKeyManager
+import javax.net.ssl.X509ExtendedTrustManager
 
 /**
  * @author Kevin Ludwig
@@ -35,20 +37,23 @@ import javax.net.ssl.TrustManager
 class HttpProxy(
     @get:JsonProperty("ssl") val ssl: Boolean = true
 ) : Proxy {
-    @Inject private lateinit var keyManager: KeyManager
-    @get:JsonIgnore private val serverSslContext by lazy { SslContextBuilder.forServer(keyManager).build() }
-    @Inject private lateinit var trustManager: TrustManager
+    @Inject private lateinit var keyManager: X509ExtendedKeyManager
+    @Inject private lateinit var trustManager: X509ExtendedTrustManager
     @get:JsonIgnore internal val clientSslContext by lazy { SslContextBuilder.forClient().trustManager(trustManager).build() }
 
-    override fun newHandler(connection: Connection) = object : ChannelInitializer<SocketChannel>() {
-        override fun initChannel(channel: SocketChannel) {
-            channel.config().isAutoRead = false
-            if (ssl) channel.pipeline().addLast(serverSslContext.newHandler(channel.alloc()))
-            channel.pipeline().addLast(
-                HttpServerCodec(),
-                HttpObjectAggregator(1 * 1024 * 1024),
-                FrontendHandler(this@HttpProxy, connection)
-            )
+    override fun getChildHandler(connection: Connection): ChannelHandler {
+        val sslContext = if (ssl) SslContextBuilder.forServer(keyManager.defaultAlias(connection.remoteHost)).build() else null
+        return object : ChannelInitializer<Channel>() {
+            override fun initChannel(channel: Channel) {
+                channel.config().isAutoRead = false
+
+                sslContext?.let { channel.pipeline().addLast(it.newHandler(channel.alloc())) }
+                channel.pipeline().addLast(
+                    HttpServerCodec(),
+                    HttpObjectAggregator(1 * 1024 * 1024),
+                    FrontendHandler(this@HttpProxy, connection)
+                )
+            }
         }
     }
 }

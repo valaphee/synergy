@@ -26,20 +26,72 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.valaphee.jackson.dataformat.nbt.NbtFactory
 import com.valaphee.jackson.dataformat.nbt.util.DeepEqualsLinkedHashMap
 import com.valaphee.jackson.dataformat.nbt.util.EmbeddedObjectDeserializationProblemHandler
+import com.valaphee.netcode.mcbe.latestProtocolVersion
+import com.valaphee.netcode.mcbe.latestVersion
+import com.valaphee.netcode.mcbe.network.Compressor
+import com.valaphee.netcode.mcbe.network.Decompressor
+import com.valaphee.netcode.mcbe.network.PacketBuffer
+import com.valaphee.netcode.mcbe.network.PacketCodec
+import com.valaphee.netcode.mcbe.network.Pong
+import com.valaphee.netcode.mcbe.world.GameMode
 import com.valaphee.netcode.mcbe.world.block.Block
 import com.valaphee.netcode.mcbe.world.block.BlockState
+import com.valaphee.synergy.CurrentUnderlyingNetworking
 import com.valaphee.synergy.proxy.Connection
 import com.valaphee.synergy.proxy.Proxy
+import io.netty.channel.Channel
+import io.netty.channel.ChannelFactory
+import io.netty.channel.ChannelFutureListener
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInitializer
+import io.netty.channel.socket.DatagramPacket
+import io.netty.util.ReferenceCountUtil
+import network.ycc.raknet.RakNet
+import network.ycc.raknet.packet.UnconnectedPing
+import network.ycc.raknet.packet.UnconnectedPong
 import network.ycc.raknet.pipeline.UserDataCodec
+import network.ycc.raknet.server.channel.RakNetServerChannel
+import network.ycc.raknet.server.pipeline.UdpPacketHandler
+import java.net.InetSocketAddress
 import java.util.zip.GZIPInputStream
 
 /**
  * @author Kevin Ludwig
  */
 class McbeProxy : Proxy {
-    override fun newHandler(connection: Connection) = TODO()
+    override val channelFactory get() = McbeProxy.channelFactory
+
+    override fun getHandler(connection: Connection) = object : ChannelInitializer<Channel>() {
+            override fun initChannel(channel: Channel) {
+                channel.pipeline().addLast(object : UdpPacketHandler<UnconnectedPing>(UnconnectedPing::class.java) {
+                    override fun handle(context: ChannelHandlerContext, address: InetSocketAddress, unconnectedPing: UnconnectedPing) {
+                        val rakNetConfig = context.channel().config() as RakNet.Config
+                        val unconnectedPong = UnconnectedPong(unconnectedPing.clientTime, rakNetConfig.serverId, rakNetConfig.magic, Pong(rakNetConfig.serverId, "Synergy", latestVersion, latestProtocolVersion, "MCPE", false, GameMode.Survival, 0, 1, connection.remotePort, connection.remotePort, "Synergy").toString())
+                        val buffer = context.alloc().directBuffer(unconnectedPong.sizeHint())
+                        try {
+                            rakNetConfig.codec.encode(unconnectedPong, buffer)
+                            repeat(3) { context.writeAndFlush(DatagramPacket(buffer.retainedSlice(), address)).addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE) }
+                        } finally {
+                            ReferenceCountUtil.safeRelease(unconnectedPong)
+                            buffer.release()
+                        }
+                    }
+                })
+            }
+        }
+
+    override fun getChildHandler(connection: Connection) = object : ChannelInitializer<Channel>() {
+        override fun initChannel(channel: Channel) {
+            channel.pipeline().addLast(UserDataCodec.NAME, userDataCodec)
+            channel.pipeline().addLast(Compressor.NAME, Compressor(7))
+            channel.pipeline().addLast(Decompressor.NAME, Decompressor())
+            channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
+            channel.pipeline().addLast(FrontendHandler(connection))
+        }
+    }
 
     companion object {
+        private val channelFactory = ChannelFactory { RakNetServerChannel(CurrentUnderlyingNetworking.datagramChannel) }
         internal val userDataCodec = UserDataCodec(0xFE)
         internal val jsonObjectMapper = ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY).enable(JsonParser.Feature.ALLOW_COMMENTS)
         internal val nbtObjectMapper = ObjectMapper(NbtFactory())

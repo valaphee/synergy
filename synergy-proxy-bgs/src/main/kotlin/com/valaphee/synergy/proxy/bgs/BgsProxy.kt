@@ -26,34 +26,38 @@ import com.google.protobuf.kotlin.get
 import com.valaphee.synergy.proxy.Connection
 import com.valaphee.synergy.proxy.Proxy
 import com.valaphee.synergy.proxy.bgs.util.hashFnva32
+import com.valaphee.synergy.util.defaultAlias
+import io.netty.channel.Channel
+import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelInitializer
-import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
 import io.netty.handler.ssl.SslContextBuilder
-import javax.net.ssl.KeyManager
-import javax.net.ssl.TrustManager
+import javax.net.ssl.X509ExtendedKeyManager
+import javax.net.ssl.X509ExtendedTrustManager
 
 /**
  * @author Kevin Ludwig
  */
 class BgsProxy : Proxy {
-    @Inject private lateinit var keyManager: KeyManager
-    @get:JsonIgnore private val serverSslContext by lazy { SslContextBuilder.forServer(keyManager).build() }
-    @Inject private lateinit var trustManager: TrustManager
+    @Inject private lateinit var keyManager: X509ExtendedKeyManager
+    @Inject private lateinit var trustManager: X509ExtendedTrustManager
     @get:JsonIgnore internal val clientSslContext by lazy { SslContextBuilder.forClient().trustManager(trustManager).build() }
 
-    override fun newHandler(connection: Connection) = object : ChannelInitializer<SocketChannel>() {
-        override fun initChannel(channel: SocketChannel) {
-            channel.pipeline().addLast(
-                serverSslContext.newHandler(channel.alloc()),
-                HttpServerCodec(),
-                HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
-                PacketCodec(services),
-                FrontendHandler(this@BgsProxy, connection)
-            )
+    override fun getChildHandler(connection: Connection): ChannelHandler {
+        val sslContext = SslContextBuilder.forServer(keyManager.defaultAlias(connection.remoteHost)).build()
+        return object : ChannelInitializer<Channel>() {
+            override fun initChannel(channel: Channel) {
+                channel.pipeline().addLast(
+                    sslContext.newHandler(channel.alloc()),
+                    HttpServerCodec(),
+                    HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
+                    WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
+                    PacketCodec(services),
+                    FrontendHandler(this@BgsProxy, connection)
+                )
+            }
         }
     }
 

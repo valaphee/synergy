@@ -55,19 +55,19 @@ import io.netty.channel.socket.nio.NioDatagramChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import java.util.concurrent.ThreadFactory
 
-val underlyingNetworking = if (Epoll.isAvailable()) UnderlyingNetworking.Epoll else if (KQueue.isAvailable()) UnderlyingNetworking.Kqueue else UnderlyingNetworking.Nio
-val bossGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().build())
-val workerGroup = underlyingNetworking.groupFactory(0, ThreadFactoryBuilder().build())
+val CurrentUnderlyingNetworking = if (Epoll.isAvailable()) UnderlyingNetworking.Epoll else if (KQueue.isAvailable()) UnderlyingNetworking.Kqueue else UnderlyingNetworking.Nio
+val BossGroup = CurrentUnderlyingNetworking.groupFactory(0, ThreadFactoryBuilder().build())
+val WorkerGroup = CurrentUnderlyingNetworking.groupFactory(0, ThreadFactoryBuilder().build())
 
 enum class UnderlyingNetworking(
     val groupFactory: (Int, ThreadFactory) -> EventLoopGroup,
-    val serverSocketChannel: Class<out ServerSocketChannel>,
-    val datagramChannel: Class<out DatagramChannel>
+    val serverSocketChannel: () -> ServerSocketChannel,
+    val datagramChannel: () -> DatagramChannel
 ) {
-    Epoll({ threadCount, threadFactory -> EpollEventLoopGroup(threadCount, threadFactory) }, EpollServerSocketChannel::class.java, EpollDatagramChannel::class.java),
-    Kqueue({ threadCount, threadFactory -> KQueueEventLoopGroup(threadCount, threadFactory) }, KQueueServerSocketChannel::class.java, KQueueDatagramChannel::class.java),
-    Nio({ threadCount, threadFactory -> NioEventLoopGroup(threadCount, threadFactory) }, NioServerSocketChannel::class.java, NioDatagramChannel::class.java)
+    Epoll({ threadCount, threadFactory -> EpollEventLoopGroup(threadCount, threadFactory) }, { EpollServerSocketChannel() }, { EpollDatagramChannel() }),
+    Kqueue({ threadCount, threadFactory -> KQueueEventLoopGroup(threadCount, threadFactory) }, { KQueueServerSocketChannel() }, { KQueueDatagramChannel() }),
+    Nio({ threadCount, threadFactory -> NioEventLoopGroup(threadCount, threadFactory) }, { NioServerSocketChannel() }, { NioDatagramChannel() })
 }
 
-val objectMapper: ObjectMapper = jacksonObjectMapper().registerModule(SimpleModule().addSerializer(Float2::class, Float2Serializer).addDeserializer(Float2::class, Float2Deserializer).addSerializer(Float3::class, Float3Serializer).addDeserializer(Float3::class, Float3Deserializer).addSerializer(Int3::class, Int3Serializer).addDeserializer(Int3::class, Int3Deserializer).addSerializer(Int4::class, Int4Serializer).addDeserializer(Int4::class, Int4Deserializer))
-val httpClient = HttpClient(OkHttp) { install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(objectMapper)) } }
+val ObjectMapper: ObjectMapper = jacksonObjectMapper().registerModule(SimpleModule().addSerializer(Float2::class, Float2Serializer).addDeserializer(Float2::class, Float2Deserializer).addSerializer(Float3::class, Float3Serializer).addDeserializer(Float3::class, Float3Deserializer).addSerializer(Int3::class, Int3Serializer).addDeserializer(Int3::class, Int3Deserializer).addSerializer(Int4::class, Int4Serializer).addDeserializer(Int4::class, Int4Deserializer))
+val HttpClient = HttpClient(OkHttp) { install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(ObjectMapper)) } }

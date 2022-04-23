@@ -17,7 +17,7 @@
 package com.valaphee.synergy.proxy.bgs.security
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.valaphee.synergy.objectMapper
+import com.valaphee.synergy.ObjectMapper
 import com.valaphee.synergy.proxy.bgs.util.occurrencesOf
 import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.asn1.x509.X509CertificateStructure
@@ -41,7 +41,7 @@ object SignedCertificateBundle {
     internal val module = "Blizzard Certificate Bundle".toByteArray()
 
     fun sign(privateKey: PrivateKey, certificateBundle: CertificateBundle): ByteArray {
-        val certificateBundleBytes = objectMapper.writeValueAsBytes(certificateBundle)
+        val certificateBundleBytes = ObjectMapper.writeValueAsBytes(certificateBundle)
         val signedCertificateBundle = ByteArray(certificateBundleBytes.size + magic.size + 256)
         certificateBundleBytes.copyInto(signedCertificateBundle)
         magic.copyInto(signedCertificateBundle, certificateBundleBytes.size)
@@ -60,7 +60,7 @@ object SignedCertificateBundle {
             initVerify(publicKey)
             update(certificateBundle)
             update(module)
-        }.verify(signedCertificateBundle.copyOfRange(signatureOffset + magic.size, signedCertificateBundle.size).swap()) to objectMapper.readValue(certificateBundle)
+        }.verify(signedCertificateBundle.copyOfRange(signatureOffset + magic.size, signedCertificateBundle.size).swap()) to ObjectMapper.readValue(certificateBundle)
     }
 }
 

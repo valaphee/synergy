@@ -37,7 +37,6 @@ class InRangeProcessor(
     override fun process(image: Mat): Mat {
         val processedImage = Mat(image.width(), image.height(), CvType.CV_8UC1)
         Core.inRange(image, _lowerBound, _upperBound, processedImage)
-        //Imgproc.blur(processedImage, processedImage, Size(3.0, 3.0))
         return processedImage
     }
 }

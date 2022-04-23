@@ -19,7 +19,7 @@ package com.valaphee.synergy.proxy.mcbe.pack
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.netcode.mcbe.pack.Content
 import com.valaphee.netcode.mcbe.pack.Manifest
-import com.valaphee.synergy.objectMapper
+import com.valaphee.synergy.ObjectMapper
 import io.netty.buffer.Unpooled
 import kotlinx.cli.ArgType
 import kotlinx.cli.Subcommand
@@ -49,7 +49,7 @@ class McbePackEncryptSubcommand : Subcommand("mcbe-pack-encrypt", "Encrypt pack"
     override fun execute() {
         val inputPath = File(input)
         if (inputPath.exists()) {
-            val manifest = objectMapper.readValue<Manifest>(File(inputPath, "manifest.json"))
+            val manifest = ObjectMapper.readValue<Manifest>(File(inputPath, "manifest.json"))
 
             val outputPath = File(output)
             if (!outputPath.exists()) outputPath.mkdirs()
@@ -81,7 +81,7 @@ class McbePackEncryptSubcommand : Subcommand("mcbe-pack-encrypt", "Encrypt pack"
             outputBuffer.writeByte(manifest.header.id.toString().length)
             outputBuffer.writeBytes(manifest.header.id.toString().toByteArray())
             outputBuffer.writerIndex(0x100)
-            objectMapper.writeValue(File(inputPath, "contents.json"), content)
+            ObjectMapper.writeValue(File(inputPath, "contents.json"), content)
             File(inputPath, "contents.json").inputStream().use { inputStream ->
                 val cipher = key.encodeToByteArray().let { Cipher.getInstance("AES/CFB8/NoPadding").apply { init(Cipher.ENCRYPT_MODE, SecretKeySpec(it, "AES"), IvParameterSpec(it.copyOf(16))) } }
                 val buffer = ByteArray(64)

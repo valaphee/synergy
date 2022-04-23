@@ -18,7 +18,7 @@ package com.valaphee.synergy.proxy.mcbe.pack
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.netcode.mcbe.pack.Content
-import com.valaphee.synergy.objectMapper
+import com.valaphee.synergy.ObjectMapper
 import kotlinx.cli.ArgType
 import kotlinx.cli.Subcommand
 import kotlinx.cli.required
@@ -55,7 +55,7 @@ class McbePackDecryptSubcommand : Subcommand("mcbe-pack-decrypt", "Decrypt pack"
                 }
             }
 
-            objectMapper.readValue<Content>(File(outputPath, "contents.json")).content.forEach {
+            ObjectMapper.readValue<Content>(File(outputPath, "contents.json")).content.forEach {
                 it.key?.let { _ -> log.info("Decrypting {}, using key {}", it.path, it.key) } ?: log.info("Copying {}", it.path)
                 File(inputPath, it.path).inputStream().use { inputStream ->
                     val outputFile = File(outputPath, it.path)

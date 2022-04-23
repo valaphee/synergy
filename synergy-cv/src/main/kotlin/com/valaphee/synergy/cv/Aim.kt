@@ -21,12 +21,14 @@ import com.google.common.math.IntMath
 import com.valaphee.foundry.math.Double2
 import com.valaphee.foundry.math.Int2
 import com.valaphee.foundry.math.Int4
+import com.valaphee.synergy.component.StartAndStoppable
 import com.valaphee.synergy.cv.extractor.Extractor
 import com.valaphee.synergy.cv.processsor.Processor
 import com.valaphee.synergy.mouse.HidMouse
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import nu.pattern.OpenCV
+import org.graalvm.polyglot.HostAccess
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import java.awt.Rectangle
@@ -51,41 +53,41 @@ class Aim(
     @get:JsonProperty("view") val view: Int4,
     @get:JsonProperty("processors") val processors: List<Processor>,
     @get:JsonProperty("extractor") val extractor: Extractor
-) : HidMouse(id, scripts, sensitivity, epsilon) {
+) : HidMouse(id, scripts, sensitivity, epsilon), StartAndStoppable {
     private var running = false
 
-    suspend fun start() {
+    @HostAccess.Export
+    override fun start() {
         require(!running)
 
-        coroutineScope {
-            launch {
-                val image = Mat(view.w, view.z, CvType.CV_8UC3)
-                val centerFloat = Double2(view.z / 2.0, view.w / 2.0)
-                val centerInt = centerFloat.toInt2()
+        val image = Mat(view.w, view.z, CvType.CV_8UC3)
+        val centerFloat = Double2(view.z / 2.0, view.w / 2.0)
+        val centerInt = centerFloat.toInt2()
 
-                running = true
-                while (running) {
-                    val _image = robot.createScreenCapture(Rectangle(view.x, view.y, view.z, view.w))
-                    image.put(0, 0, (BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(_image.width, _image.height), false, null).apply {
-                        createGraphics().apply {
-                            drawImage(_image, 0, 0, null)
-                            dispose()
-                        }
-                    }.raster.dataBuffer as DataBufferByte).data)
-
-                    var processedImage = image
-                    processors.forEach { processor -> processedImage = processor.process(processedImage) }
-                    val extractedPoints = extractor.extract(processedImage)
-                    extractedPoints.minByOrNull { it.distance2(centerFloat) }?.let {
-                        val target = it.toInt2()
-                        if (IntMath.pow(target.x - centerInt.x, 2) + IntMath.pow(target.y - centerInt.y, 2) > epsilon) mouseMoveRaw(Int2(target.x - centerInt.x, target.y - centerInt.y))
+        GlobalScope.launch {
+            running = true
+            while (running) {
+                val _image = robot.createScreenCapture(Rectangle(view.x, view.y, view.z, view.w))
+                image.put(0, 0, (BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(_image.width, _image.height), false, null).apply {
+                    createGraphics().apply {
+                        drawImage(_image, 0, 0, null)
+                        dispose()
                     }
+                }.raster.dataBuffer as DataBufferByte).data)
+
+                var processedImage = image
+                processors.forEach { processor -> processedImage = processor.process(processedImage) }
+                val extractedPoints = extractor.extract(processedImage)
+                extractedPoints.minByOrNull { it.distance2(centerFloat) }?.let {
+                    val target = it.toInt2()
+                    if (IntMath.pow(target.x - centerInt.x, 2) + IntMath.pow(target.y - centerInt.y, 2) > epsilon) mouseMoveRaw(Int2(target.x - centerInt.x, target.y - centerInt.y))
                 }
             }
         }
     }
 
-    fun stop() {
+    @HostAccess.Export
+    override fun stop() {
         running = false
     }
 

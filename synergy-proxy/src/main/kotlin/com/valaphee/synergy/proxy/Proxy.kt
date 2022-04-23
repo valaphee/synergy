@@ -16,13 +16,25 @@
 
 package com.valaphee.synergy.proxy
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.valaphee.synergy.CurrentUnderlyingNetworking
+import io.netty.channel.ChannelFactory
 import io.netty.channel.ChannelHandler
+import io.netty.channel.ServerChannel
 
 /**
  * @author Kevin Ludwig
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 interface Proxy {
-    fun newHandler(connection: Connection): ChannelHandler
+    @get:JsonIgnore val channelFactory: ChannelFactory<out ServerChannel> get() = Proxy.channelFactory
+
+    fun getHandler(connection: Connection): ChannelHandler? = null
+
+    fun getChildHandler(connection: Connection): ChannelHandler
+
+    companion object {
+        private val channelFactory = ChannelFactory { CurrentUnderlyingNetworking.serverSocketChannel() }
+    }
 }

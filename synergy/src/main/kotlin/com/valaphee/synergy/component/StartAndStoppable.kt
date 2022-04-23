@@ -16,17 +16,11 @@
 
 package com.valaphee.synergy.component
 
-import java.util.UUID
-
 /**
  * @author Kevin Ludwig
  */
-interface ComponentService {
-    val components: List<Component>
+interface StartAndStoppable {
+    fun start()
 
-    fun add(component: Component): Boolean
-
-    fun remove(id: UUID): Component?
-
-    fun run()
+    fun stop()
 }

@@ -21,7 +21,7 @@ import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
 import com.sun.jna.platform.win32.WinUser
-import com.valaphee.synergy.httpClient
+import com.valaphee.synergy.HttpClient
 import com.valaphee.synergy.keyboard.Key
 import com.valaphee.synergy.keyboard.KeyboardMessage
 import io.ktor.client.request.post
@@ -75,7 +75,7 @@ class WindowsHookSubcommand : Subcommand("windows-hook", "Windows Hook")/*, Coro
                     try {
                         Key.byVkCode(lParam.vkCode)?.let {
                             runBlocking {
-                                httpClient.post("$url/message") {
+                                HttpClient.post("$url/message") {
                                     contentType(ContentType.Application.Json)
                                     setBody(KeyboardMessage(emitterId, now, it, if (wParam.toInt() == User32.WM_KEYDOWN) KeyboardMessage.Action.Down else 0 or if (wParam.toInt() == User32.WM_KEYUP) KeyboardMessage.Action.Up else 0, if (lParam.flags and (1 shl 5) != 0) KeyboardMessage.Modifier.Alt else 0))
                                 }
