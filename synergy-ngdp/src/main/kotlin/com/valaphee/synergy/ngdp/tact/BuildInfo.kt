@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp
-
-import org.apache.commons.vfs2.FileObject
+package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.tact
 
 /**
  * @author Kevin Ludwig
  */
 class BuildInfo(
-    buildInfoFile: FileObject
+    buildInfo: String
 ) {
     class Key(
         val name: String,
@@ -31,16 +29,17 @@ class BuildInfo(
     )
 
     private val keys = mutableListOf<Key>()
-    private val entries = mutableListOf<Map<String, String>>()
+    private val _entries = mutableListOf<Map<String, String>>()
+    val entries: List<Map<String, String>> get() = _entries
 
     init {
-        buildInfoFile.content.byteArray.decodeToString().lines().forEach {
+        buildInfo.lines().forEach {
             val row = it.split('|')
             if (keys.isEmpty()) keys += row.map {
                 val (name, typeAndLength) = it.split('!', limit = 2)
                 val (type, length) = typeAndLength.split(':', limit = 2)
                 Key(name, type, length.toInt())
-            } else entries += row.mapIndexed { i, cell -> keys[i].name to cell }.toMap()
+            } else if (row.size == keys.size) _entries += row.mapIndexed { i, cell -> keys[i].name to cell }.toMap()
         }
     }
 

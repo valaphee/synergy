@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.casc.util
+package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.util
 
 import io.netty.buffer.ByteBuf
+import io.netty.buffer.Unpooled
+
+fun ByteArray.hashLookup3(offset: Int = 0, length: Int = size, init: Pair<Int, Int> = 0 to 0) = Unpooled.wrappedBuffer(this).hashLookup3(offset, length, init)
 
 fun ByteBuf.hashLookup3(offset: Int = readerIndex(), length: Int = readableBytes(), init: Pair<Int, Int> = 0 to 0): Pair<Int, Int> {
     var a = 0xDEADBEEF.toInt() + length + init.first

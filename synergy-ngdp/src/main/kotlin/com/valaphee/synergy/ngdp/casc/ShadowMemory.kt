@@ -27,8 +27,8 @@ class ShadowMemory(
 ) {
     val path: FileObject
     val versions = mutableMapOf<Int, Int>()
-    val freeSpaceLength = mutableListOf<Reference>()
-    val freeSpaceOffset = mutableListOf<Reference>()
+    private val freeSpaceLength = mutableListOf<Reference>()
+    private val freeSpaceOffset = mutableListOf<Reference>()
 
     init {
         val buffer = Unpooled.wrappedBuffer(shadowMemoryFile.content.byteArray)

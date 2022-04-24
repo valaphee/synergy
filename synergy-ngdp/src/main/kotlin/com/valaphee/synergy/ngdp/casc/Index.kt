@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.casc
+package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.ngdp.casc.Reference
-import com.valaphee.synergy.ngdp.casc.util.hashLookup3
+import com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.util.hashLookup3
 import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.FileObject
+import java.math.BigInteger
 
 /**
  * @author Kevin Ludwig
@@ -28,7 +28,7 @@ class Index(
     path: FileObject,
     versions: Map<Int, Int>
 ) {
-    val files = mutableMapOf<Int, Reference>()
+    private val entries = mutableMapOf<BigInteger, Reference>()
 
     init {
         versions.forEach { (bucket, version) ->
@@ -53,9 +53,11 @@ class Index(
             repeat(entriesSize / (keySize + locationSize + lengthSize)) {
                 /*entryHash = buffer.hashLookup3(length = keySize + locationSize + lengthSize, init = entryHash)*/
                 val reference = Reference(buffer, keySize, locationSize, lengthSize, segmentBits)
-                files[reference.key] = reference
+                entries[reference.key] = reference
             }
             /*check(entryHash.first == entriesHash)*/
         }
     }
+
+    operator fun get(key: BigInteger) = entries[key]
 }

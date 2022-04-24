@@ -16,19 +16,20 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.ngdp.casc.util.hashLookup3
+import com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.util.toBigInteger
 import io.netty.buffer.ByteBuf
+import java.math.BigInteger
 
 /**
  * @author Kevin Ludwig
  */
 class Reference {
-    val key: Int
+    val key: BigInteger
     val file: Int
     val offset: Int
     val size: Int
 
-    constructor(key: Int, file: Int, offset: Int, size: Int) {
+    constructor(key: BigInteger, file: Int, offset: Int, size: Int) {
         this.key = key
         this.file = file
         this.offset = offset
@@ -38,8 +39,7 @@ class Reference {
     constructor(buffer: ByteBuf, keySize: Int, locationSize: Int, lengthSize: Int, segmentBits: Int) {
         val offsetSize = (segmentBits + 7) / 8
         val fileSize = locationSize - offsetSize
-        key = buffer.hashLookup3(length = keySize).first
-        buffer.skipBytes(keySize)
+        key = ByteArray(keySize).apply { buffer.readBytes(this) }.toBigInteger()
         val file = buffer.readIntLE(fileSize)
         val offset = buffer.readInt(offsetSize)
         val extraBits = (offsetSize * 8) - segmentBits

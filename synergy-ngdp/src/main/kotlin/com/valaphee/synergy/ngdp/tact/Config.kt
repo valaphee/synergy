@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp
-
-import org.apache.commons.vfs2.FileObject
+package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.tact
 
 /**
  * @author Kevin Ludwig
  */
-class Configuration(
-    configurationFile: FileObject
+class Config(
+    config: String
 ) {
     private val entries = mutableMapOf<String, List<String>>()
 
     init {
-        configurationFile.content.byteArray.decodeToString().lines().forEach {
+        config.lines().forEach {
             val row = it.split('#', limit = 2).first().split('=', limit = 2)
             if (row.size == 2) entries[row[0].trim()] = row[1].trim().split(' ')
         }
