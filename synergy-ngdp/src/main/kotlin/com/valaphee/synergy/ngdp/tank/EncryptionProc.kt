@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.util
+package com.valaphee.synergy.ngdp.tank
 
-import java.math.BigInteger
+/**
+ * @author Kevin Ludwig
+ */
+interface EncryptionProc<T> {
+    fun getKey(header: T): ByteArray
 
-fun ByteArray.toBigInteger(): BigInteger =
-    if (isEmpty()) BigInteger.ZERO
-    else if (first().toInt() < 0) {
-        val bytes = ByteArray(size + 1)
-        copyInto(bytes, 1)
-        BigInteger(bytes)
-    } else BigInteger(this)
+    fun getIv(header: T, name: String): ByteArray
+}

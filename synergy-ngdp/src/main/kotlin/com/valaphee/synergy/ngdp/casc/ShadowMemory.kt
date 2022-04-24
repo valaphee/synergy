@@ -32,39 +32,33 @@ class ShadowMemory(
 
     init {
         val buffer = Unpooled.wrappedBuffer(shadowMemoryFile.content.byteArray)
-        val headerType = buffer.readIntLE()
-        when (headerType) {
-            4 -> {
-                val headerSize = buffer.readIntLE()
-
-                val rawPath = ByteArray(0x100).apply { buffer.readBytes(this) }
-                val path = rawPath.copyOf(rawPath.indexOf(0x00)).decodeToString().split('\\', limit = 2)
-                this.path = shadowMemoryFile.fileSystem.fileSystemManager.resolveFile("${when (path[0]) {
+        require(buffer.readIntLE() == headerType)
+        val headerSize = buffer.readIntLE()
+        val rawPath = ByteArray(0x100).apply { buffer.readBytes(this) }
+        val path = rawPath.copyOf(rawPath.indexOf(0)).decodeToString().split('\\', limit = 2)
+        this.path = shadowMemoryFile.fileSystem.fileSystemManager.resolveFile(
+            "${
+                when (path[0]) {
                     "Global" -> "file"
                     else -> TODO(path[0])
-                }}:${path[1]}")
-                this.path.children.forEach { if (it.name.extension == "idx") versions[it.name.baseName.substring(0, 2).toInt(16)] = 0 }
-
-                val blockCount = (headerSize - 264 - versions.size * 4) / (4 * 2)
-                val blocks = List(blockCount) { buffer.readIntLE() to buffer.readIntLE() }
-                repeat(versions.size) { versions[it] = buffer.readIntLE() }
-
-                blocks.forEach {
-                    buffer.readerIndex(it.second)
-
-                    val freeSpaceType = buffer.readIntLE()
-                    val freeSpaceSize = buffer.readIntLE()
-                    when (freeSpaceType) {
-                        1 -> {
-                            buffer.skipBytes(24)
-                            repeat(freeSpaceSize) { freeSpaceLength += Reference(buffer, 0, 5, 0, 30) }
-                            repeat(freeSpaceSize) { freeSpaceOffset += Reference(buffer, 0, 5, 0, 30) }
-                        }
-                        else -> TODO("$freeSpaceType")
-                    }
                 }
-            }
-            else -> TODO("$headerType")
+            }:${path[1]}"
+        )
+        this.path.children.forEach { if (it.name.extension == "idx") versions[it.name.baseName.substring(0, 2).toInt(16)] = 0 }
+        val blocks = List((headerSize - buffer.readerIndex() - versions.size * 4) / (4 * 2)) { buffer.readIntLE() to buffer.readIntLE() }
+        repeat(versions.size) { versions[it] = buffer.readIntLE() }
+        blocks.forEach {
+            buffer.readerIndex(it.second)
+            require(buffer.readIntLE() == freeSpaceType)
+            val freeSpaceSize = buffer.readIntLE()
+            buffer.skipBytes(0x18)
+            repeat(freeSpaceSize) { freeSpaceLength += Reference(buffer, 0, 5, 0, 30) }
+            repeat(freeSpaceSize) { freeSpaceOffset += Reference(buffer, 0, 5, 0, 30) }
         }
+    }
+
+    companion object {
+        private const val freeSpaceType = 1
+        private const val headerType = 4
     }
 }

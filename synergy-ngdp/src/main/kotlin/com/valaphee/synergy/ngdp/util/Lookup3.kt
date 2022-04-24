@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.util
+package com.valaphee.synergy.ngdp.util
 
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled

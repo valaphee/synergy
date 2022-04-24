@@ -16,7 +16,7 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.util.toBigInteger
+import com.valaphee.synergy.ngdp.util.toBigInteger
 import io.netty.buffer.ByteBuf
 import java.math.BigInteger
 

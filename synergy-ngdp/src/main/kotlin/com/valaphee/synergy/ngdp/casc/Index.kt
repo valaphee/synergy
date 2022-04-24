@@ -16,7 +16,7 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.util.hashLookup3
+import com.valaphee.synergy.ngdp.util.hashLookup3
 import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.FileObject
 import java.math.BigInteger
@@ -28,7 +28,8 @@ class Index(
     path: FileObject,
     versions: Map<Int, Int>
 ) {
-    private val entries = mutableMapOf<BigInteger, Reference>()
+    private val _entries = mutableMapOf<BigInteger, Reference>()
+    val entries: Map<BigInteger, Reference> get() = _entries
 
     init {
         versions.forEach { (bucket, version) ->
@@ -36,15 +37,15 @@ class Index(
             val buffer = Unpooled.wrappedBuffer(indexFile.content.byteArray)
             val headerSize = buffer.readIntLE()
             check(buffer.readIntLE() == buffer.hashLookup3(length = headerSize).first)
-            buffer.readUnsignedShortLE()
-            check(bucket == buffer.readUnsignedShortLE())
+            check(buffer.readUnsignedShortLE() == Index.version)
+            check(buffer.readUnsignedShortLE() == bucket)
             val lengthSize = buffer.readUnsignedByte().toInt()
             val locationSize = buffer.readUnsignedByte().toInt()
             val keySize = buffer.readUnsignedByte().toInt()
             val segmentBits = buffer.readUnsignedByte().toInt()
-            repeat((headerSize - 8) / 8) {
-                val dataBegin = buffer.readIntLE()
-                val dataEnd = buffer.readIntLE()
+            repeat((headerSize - (4 + 4)) / (4 + 4)) {
+                buffer.readIntLE()
+                buffer.readIntLE()
             }
             buffer.skipBytes(16 - ((8 + headerSize) % 16))
             val entriesSize = buffer.readIntLE()
@@ -53,11 +54,15 @@ class Index(
             repeat(entriesSize / (keySize + locationSize + lengthSize)) {
                 /*entryHash = buffer.hashLookup3(length = keySize + locationSize + lengthSize, init = entryHash)*/
                 val reference = Reference(buffer, keySize, locationSize, lengthSize, segmentBits)
-                entries[reference.key] = reference
+                _entries[reference.key] = reference
             }
             /*check(entryHash.first == entriesHash)*/
         }
     }
 
-    operator fun get(key: BigInteger) = entries[key]
+    operator fun get(key: BigInteger) = _entries[key]
+
+    companion object {
+        private const val version = 7
+    }
 }

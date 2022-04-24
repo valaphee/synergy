@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.tact
+package com.valaphee.synergy.ngdp.tact
 
 /**
  * @author Kevin Ludwig
  */
-class BuildInfo(
-    buildInfo: String
-) {
+class BuildInfo {
     class Key(
         val name: String,
         val type: String,
@@ -32,7 +30,7 @@ class BuildInfo(
     private val _entries = mutableListOf<Map<String, String>>()
     val entries: List<Map<String, String>> get() = _entries
 
-    init {
+    constructor(buildInfo: String) {
         buildInfo.lines().forEach {
             val row = it.split('|')
             if (keys.isEmpty()) keys += row.map {

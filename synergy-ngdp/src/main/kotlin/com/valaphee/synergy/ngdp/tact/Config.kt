@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.tact
+package com.valaphee.synergy.ngdp.tact
 
 /**
  * @author Kevin Ludwig
  */
-class Config(
-    config: String
-) {
+class Config {
     private val entries = mutableMapOf<String, List<String>>()
 
-    init {
+    constructor(config: String) {
         config.lines().forEach {
             val row = it.split('#', limit = 2).first().split('=', limit = 2)
             if (row.size == 2) entries[row[0].trim()] = row[1].trim().split(' ')

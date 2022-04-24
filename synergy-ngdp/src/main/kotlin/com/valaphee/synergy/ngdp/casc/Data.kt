@@ -14,38 +14,48 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.casc.com.valaphee.synergy.ngdp.casc
+package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.ngdp.casc.Reference
+import com.valaphee.synergy.ngdp.util.Blte
+import com.valaphee.synergy.ngdp.util.toBigInteger
 import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.FileObject
 import org.apache.commons.vfs2.RandomAccessContent
 import org.apache.commons.vfs2.util.RandomAccessMode
 import java.io.Closeable
+import java.io.DataInputStream
+import java.io.InputStream
 
 /**
  * @author Kevin Ludwig
  */
 class Data(
     path: FileObject,
-    private val reference: Reference
+    reference: Reference
 ) : Closeable {
     private val content: RandomAccessContent = path.resolveFile(String.format("data.%03d", reference.file)).content.getRandomAccessContent(RandomAccessMode.READ)
 
     init {
         content.seek(reference.offset.toLong())
-        val headerBuffer = Unpooled.wrappedBuffer(ByteArray(0x1E).apply { content.readFully(this) })
-        ByteArray(0x10).apply { headerBuffer.readBytes(this) }
-        val size = headerBuffer.readIntLE()
-        check(size == reference.size)
-        headerBuffer.readShortLE()
-        headerBuffer.readIntLE()
-        headerBuffer.readIntLE()
+        val buffer = Unpooled.wrappedBuffer(ByteArray(eKeySize + 4 + 2 + 4 + 4).apply { content.readFully(this) })
+        check(ByteArray(eKeySize).apply {
+            buffer.readBytes(this)
+            reverse()
+        }.copyOf(9).toBigInteger() == reference.key)
+        check(buffer.readIntLE() == reference.size)
+        buffer.readUnsignedShortLE()
+        buffer.readIntLE()
+        buffer.readIntLE()
     }
 
-    val blteStream get() = BlteStream(content, reference.offset)
+    val blte get() = Blte(DataInputStream(content.inputStream))
+    val blteInputStream: InputStream get() = blte.inputStream
 
     override fun close() {
         content.close()
+    }
+
+    companion object {
+        private const val eKeySize = 0x10
     }
 }
