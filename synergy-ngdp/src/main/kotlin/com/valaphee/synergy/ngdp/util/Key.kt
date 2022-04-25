@@ -16,12 +16,34 @@
 
 package com.valaphee.synergy.ngdp.util
 
-import java.math.BigInteger
+import com.google.common.primitives.UnsignedBytes
 
-fun ByteArray.toBigInteger(): BigInteger =
-    if (isEmpty()) BigInteger.ZERO
-    else if (first().toInt() < 0) {
-        val bytes = ByteArray(size + 1)
-        copyInto(bytes, 1)
-        BigInteger(bytes)
-    } else BigInteger(this)
+/**
+ * @author Kevin Ludwig
+ */
+class Key(
+    private val bytes: ByteArray
+) : Comparable<Key> {
+    constructor(key: String) : this(key.asHexStringToByteArray())
+
+    override fun compareTo(other: Key) = comparator.compare(bytes, other.bytes)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Key
+
+        if (!bytes.contentEquals(other.bytes)) return false
+
+        return true
+    }
+
+    override fun hashCode() = bytes.contentHashCode()
+
+    override fun toString() = bytes.toHexString()
+
+    companion object {
+        private val comparator = UnsignedBytes.lexicographicalComparator()
+    }
+}

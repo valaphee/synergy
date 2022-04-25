@@ -16,9 +16,8 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.ngdp.util.toBigInteger
+import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.Unpooled
-import io.netty.util.internal.StringUtil
 import org.apache.commons.vfs2.Capability
 import org.apache.commons.vfs2.FileName
 import org.apache.commons.vfs2.FileObject
@@ -49,12 +48,12 @@ class CascFileSystem(
     }
 
     override fun addCapabilities(capabilities: MutableCollection<Capability>) {
-        capabilities += CascFileProvider._capabilities
+        capabilities += CascFileProvider.Capabilities
     }
 
     override fun createFile(name: AbstractFileName) = if (name.path != "/") {
         val key = if (name.path.length and 0x1 == 0) "0${name.path.substring(1)}" else name.path.substring(1)
-        CascFileObject(name, this, index!![StringUtil.decodeHexDump(key, 0, min(9 * 2, key.length)).toBigInteger()]?.let { Data(data.getOrPut(it.file) { shadowMemory!!.path.resolveFile(String.format("data.%03d", it.file)).content.getRandomAccessContent(RandomAccessMode.READ) }, it) })
+        CascFileObject(name, this, index!![Key(key.substring(0, min(9 * 2, key.length)))]?.let { Data(data.getOrPut(it.file) { shadowMemory!!.path.resolveFile(String.format("data.%03d", it.file)).content.getRandomAccessContent(RandomAccessMode.READ) }, it) })
     } else CascRootObject(name, this, index!!)
 
     override fun doCloseCommunicationLink() {

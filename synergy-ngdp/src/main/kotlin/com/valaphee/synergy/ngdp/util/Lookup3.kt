@@ -65,124 +65,35 @@ fun ByteBuf.hashLookup3(offset: Int = readerIndex(), length: Int = readableBytes
         _length -= 12
     }
 
-    when (_length) {
-        12 -> {
-            c += getByte(_offset + 11).toInt() shl 24
-            c += getByte(_offset + 10).toInt() shl 16
-            c += getByte(_offset + 9).toInt() shl 8
-            c += getByte(_offset + 8).toInt()
-            b += getByte(_offset + 7).toInt() shl 24
-            b += getByte(_offset + 6).toInt() shl 16
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        11 -> {
-            c += getByte(_offset + 10).toInt() shl 16
-            c += getByte(_offset + 9).toInt() shl 8
-            c += getByte(_offset + 8).toInt()
-            b += getByte(_offset + 7).toInt() shl 24
-            b += getByte(_offset + 6).toInt() shl 16
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        10 -> {
-            c += getByte(_offset + 9).toInt() shl 8
-            c += getByte(_offset + 8).toInt()
-            b += getByte(_offset + 7).toInt() shl 24
-            b += getByte(_offset + 6).toInt() shl 16
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        9 -> {
-            c += getByte(_offset + 8).toInt()
-            b += getByte(_offset + 7).toInt() shl 24
-            b += getByte(_offset + 6).toInt() shl 16
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        8 -> {
-            b += getByte(_offset + 7).toInt() shl 24
-            b += getByte(_offset + 6).toInt() shl 16
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        7 -> {
-            b += getByte(_offset + 6).toInt() shl 16
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        6 -> {
-            b += getByte(_offset + 5).toInt() shl 8
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        5 -> {
-            b += getByte(_offset + 4).toInt()
-            a += getByte(_offset + 3).toInt() shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        4 -> {
-            a += getByte(_offset + 3).toInt()shl 24
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        3 -> {
-            a += getByte(_offset + 2).toInt() shl 16
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        2 -> {
-            a += getByte(_offset + 1).toInt() shl 8
-            a += getByte(_offset + 0).toInt()
-        }
-        1 -> a += getByte(_offset + 0).toInt()
-        0 -> return c to b
-    }
+    if (_length > 0) {
+        if (_length == 12) c += getByte(_offset + 11).toInt() shl 24
+        if (_length >= 11) c += getByte(_offset + 10).toInt() shl 16
+        if (_length >= 10) c += getByte(_offset + 9).toInt() shl 8
+        if (_length >= 9) c += getByte(_offset + 8).toInt()
+        if (_length >= 8) b += getByte(_offset + 7).toInt() shl 24
+        if (_length >= 7) b += getByte(_offset + 6).toInt() shl 16
+        if (_length >= 6) b += getByte(_offset + 5).toInt() shl 8
+        if (_length >= 5) b += getByte(_offset + 4).toInt()
+        if (_length >= 4) a += getByte(_offset + 3).toInt() shl 24
+        if (_length >= 3) a += getByte(_offset + 2).toInt() shl 16
+        if (_length >= 2) a += getByte(_offset + 1).toInt() shl 8
+        a += getByte(_offset + 0).toInt()
 
-    c = c xor b
-    c -= rot(b, 14).toInt()
-    a = a xor c
-    a -= rot(c, 11).toInt()
-    b = b xor a
-    b -= rot(a, 25).toInt()
-    c = c xor b
-    c -= rot(b, 16).toInt()
-    a = a xor c
-    a -= rot(c, 4).toInt()
-    b = b xor a
-    b -= rot(a, 14).toInt()
-    c = c xor b
-    c -= rot(b, 24).toInt()
+        c = c xor b
+        c -= rot(b, 14).toInt()
+        a = a xor c
+        a -= rot(c, 11).toInt()
+        b = b xor a
+        b -= rot(a, 25).toInt()
+        c = c xor b
+        c -= rot(b, 16).toInt()
+        a = a xor c
+        a -= rot(c, 4).toInt()
+        b = b xor a
+        b -= rot(a, 14).toInt()
+        c = c xor b
+        c -= rot(b, 24).toInt()
+    }
 
     return c to b
 }

@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.tact
+package com.valaphee.synergy.ngdp.util
+
+import java.io.FilterInputStream
+import java.io.InputStream
 
 /**
  * @author Kevin Ludwig
  */
-class Config {
-    private val _entries = mutableMapOf<String, List<String>>()
-    val entries: Map<String, List<String>> get() = _entries
-
-    constructor(config: String) {
-        config.lines().forEach {
-            val row = it.split('#', limit = 2).first().split('=', limit = 2)
-            if (row.size == 2) _entries[row[0].trim()] = row[1].trim().split(' ')
-        }
-    }
-
-    operator fun get(key: String) = _entries[key]
+class KeepAliveInputStream(
+    stream: InputStream
+) : FilterInputStream(stream) {
+    override fun close() = Unit
 }

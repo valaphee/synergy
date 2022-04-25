@@ -16,10 +16,10 @@
 
 package com.valaphee.synergy.ngdp.casc
 
+import com.valaphee.synergy.ngdp.util.Key
 import com.valaphee.synergy.ngdp.util.hashLookup3
 import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.FileObject
-import java.math.BigInteger
 
 /**
  * @author Kevin Ludwig
@@ -28,8 +28,8 @@ class Index(
     path: FileObject,
     versions: Map<Int, Int>
 ) {
-    private val _entries = mutableMapOf<BigInteger, Reference>()
-    val entries: Map<BigInteger, Reference> get() = _entries
+    private val _entries = mutableMapOf<Key, Reference>()
+    val entries: Map<Key, Reference> get() = _entries
 
     init {
         versions.forEach { (bucket, version) ->
@@ -37,7 +37,7 @@ class Index(
             val buffer = Unpooled.wrappedBuffer(indexFile.content.byteArray)
             val headerSize = buffer.readIntLE()
             check(buffer.readIntLE() == buffer.hashLookup3(length = headerSize).first)
-            check(buffer.readUnsignedShortLE() == Index.version)
+            check(buffer.readUnsignedShortLE() == Version)
             check(buffer.readUnsignedShortLE() == bucket)
             val lengthSize = buffer.readUnsignedByte().toInt()
             val locationSize = buffer.readUnsignedByte().toInt()
@@ -60,9 +60,9 @@ class Index(
         }
     }
 
-    operator fun get(key: BigInteger) = _entries[key]
+    operator fun get(key: Key) = _entries[key]
 
     companion object {
-        private const val version = 7
+        const val Version = 7
     }
 }

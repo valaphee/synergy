@@ -16,13 +16,12 @@
 
 package com.valaphee.synergy.ngdp.tact
 
-import com.valaphee.synergy.ngdp.util.toBigInteger
+import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.InputStream
-import java.math.BigInteger
 import java.security.MessageDigest
 
 /**
@@ -34,34 +33,34 @@ class Encoding {
     private val eKeySpecPageTable = mutableListOf<EKeySpecPage>()
 
     class CeKeyPage(
-        val firstCKey: BigInteger,
-        val checksum: BigInteger
+        val firstCKey: Key,
+        val checksum: ByteArray
     ) {
         lateinit var ceKeys: List<CeKey>
     }
 
     class CeKey(
-        val cKey: BigInteger,
-        val eKeys: List<BigInteger>,
+        val cKey: Key,
+        val eKeys: List<Key>,
         val fileSize: Long,
     )
 
     class EKeySpecPage(
-        val firstEKey: BigInteger,
-        val checksum: BigInteger
+        val firstEKey: Key,
+        val checksum: ByteArray
     ) {
         lateinit var eKeySpecs: List<EKeySpec>
     }
 
     class EKeySpec(
-        val eKey: BigInteger,
+        val eKey: Key,
         val eSpecIndex: Int,
         val fileSize: Long,
     )
 
     constructor(stream: DataInputStream) {
-        check(stream.readUnsignedShort() == magic)
-        check(stream.readUnsignedByte() == version)
+        check(stream.readUnsignedShort() == Magic)
+        check(stream.readUnsignedByte() == Version)
         val cKeySize = stream.readUnsignedByte()
         val eKeySize = stream.readUnsignedByte()
         val ceKeyPageTableSize = stream.readUnsignedShort()
@@ -71,27 +70,27 @@ class Encoding {
         check(stream.readByte() == 0.toByte())
         val eSpecBlock = ByteArrayInputStream(ByteArray(stream.readInt()).apply { stream.readFully(this) })
         while (eSpecBlock.available() != 0) eSpecs += eSpecBlock.readString()
-        repeat(ceKeyPageTableCount) { ceKeyPageTable += CeKeyPage(ByteArray(cKeySize).apply { stream.readFully(this) }.toBigInteger(), ByteArray(0x10).apply { stream.readFully(this) }.toBigInteger()) }
+        repeat(ceKeyPageTableCount) { ceKeyPageTable += CeKeyPage(Key(ByteArray(cKeySize).apply { stream.readFully(this) }), ByteArray(0x10).apply { stream.readFully(this) }) }
         ceKeyPageTable.forEach {
             val ceKeyPage = Unpooled.wrappedBuffer(ByteArray(ceKeyPageTableSize * 1024).apply { stream.readFully(this) })
-            check(it.checksum == MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(ceKeyPage)).toBigInteger())
+            check(it.checksum.contentEquals(MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(ceKeyPage))))
             it.ceKeys = mutableListOf<CeKey>().apply {
                 while (ceKeyPage.isReadable(6 + cKeySize)) {
                     val keyCount = ceKeyPage.readUnsignedByte().toInt()
                     val fileSize = ceKeyPage.readUnsignedInt() shl 8 and ceKeyPage.readUnsignedByte().toLong()
-                    val cKey = ByteArray(cKeySize).apply { ceKeyPage.readBytes(this) }.toBigInteger()
-                    val eKeys = List(keyCount) { ByteArray(eKeySize).apply { ceKeyPage.readBytes(this) }.toBigInteger() }
+                    val cKey = Key(ByteArray(cKeySize).apply { ceKeyPage.readBytes(this) })
+                    val eKeys = List(keyCount) { Key(ByteArray(eKeySize).apply { ceKeyPage.readBytes(this) }) }
                     add(CeKey(cKey, eKeys, fileSize))
                 }
             }
         }
-        repeat(eKeySpecPageTableCount) { eKeySpecPageTable += EKeySpecPage(ByteArray(eKeySize).apply { stream.readFully(this) }.toBigInteger(), ByteArray(0x10).apply { stream.readFully(this) }.toBigInteger()) }
+        repeat(eKeySpecPageTableCount) { eKeySpecPageTable += EKeySpecPage(Key(ByteArray(eKeySize).apply { stream.readFully(this) }), ByteArray(0x10).apply { stream.readFully(this) }) }
         eKeySpecPageTable.forEach {
             val eKeySpecPage = Unpooled.wrappedBuffer(ByteArray(eKeySpecPageTableSize * 1024).apply { stream.readFully(this) })
-            check(it.checksum == MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(eKeySpecPage)).toBigInteger())
+            check(it.checksum.contentEquals(MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(eKeySpecPage))))
             it.eKeySpecs = mutableListOf<EKeySpec>().apply {
                 while (eKeySpecPage.isReadable(9 + eKeySize)) {
-                    val eKey = ByteArray(eKeySize).apply { eKeySpecPage.readBytes(this) }.toBigInteger()
+                    val eKey = Key(ByteArray(eKeySize).apply { eKeySpecPage.readBytes(this) })
                     val eSpecIndex = eKeySpecPage.readInt()
                     val fileSize = eKeySpecPage.readUnsignedInt() shl 8 and eKeySpecPage.readUnsignedByte().toLong()
                     add(EKeySpec(eKey, eSpecIndex, fileSize))
@@ -100,13 +99,13 @@ class Encoding {
         }
     }
 
-    fun getEKeysOrNull(cKey: BigInteger) = ceKeyPageTable.lastOrNull { it.firstCKey <= cKey }?.ceKeys?.find { it.cKey == cKey }?.eKeys
+    fun getEKeysOrNull(cKey: Key) = ceKeyPageTable.lastOrNull { it.firstCKey <= cKey }?.ceKeys?.find { it.cKey == cKey }?.eKeys
 
-    fun getESpecOrNull(eKey: BigInteger) = eKeySpecPageTable.lastOrNull { it.firstEKey <= eKey }?.eKeySpecs?.find { it.eKey == eKey }?.eSpecIndex?.let { eSpecs[it] }
+    fun getESpecOrNull(eKey: Key) = eKeySpecPageTable.lastOrNull { it.firstEKey <= eKey }?.eKeySpecs?.find { it.eKey == eKey }?.eSpecIndex?.let { eSpecs[it] }
 
     companion object {
-        private const val magic = 0x454E
-        private const val version = 1
+        const val Magic = 0x454E
+        const val Version = 1
 
         private fun InputStream.readString() = StringBuilder().apply {
             var value = read()

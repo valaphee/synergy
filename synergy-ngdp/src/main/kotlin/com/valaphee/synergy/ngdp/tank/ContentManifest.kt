@@ -16,11 +16,9 @@
 
 package com.valaphee.synergy.ngdp.tank
 
-import com.valaphee.synergy.ngdp.util.toBigInteger
+import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.Unpooled
 import java.io.InputStream
-import java.math.BigInteger
-import java.security.Key
 import java.security.MessageDigest
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
@@ -56,7 +54,7 @@ class ContentManifest {
         val guid: Long,
         val size: Int,
         val unknown0C: Byte,
-        val cKey: BigInteger
+        val cKey: Key
     )
 
     val header: Header
@@ -66,16 +64,16 @@ class ContentManifest {
     constructor(name: String, stream: InputStream) {
         val headerBuffer = Unpooled.wrappedBuffer(stream.readNBytes(12 * 4))
         header = Header(headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE())
-        val buffer = Unpooled.wrappedBuffer((if (header.magic ushr 8 == encryptionMagic) {
+        val buffer = Unpooled.wrappedBuffer((if (header.magic ushr 8 == EncryptionMagic) {
             val encryptionProc = encryptionProc.first()
-            CipherInputStream(stream, Cipher.getInstance("AES/CBC/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(encryptionProc.getKey(header), "AES") as Key, IvParameterSpec(encryptionProc.getIv(header, name))) })
+            CipherInputStream(stream, Cipher.getInstance("AES/CBC/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(encryptionProc.getKey(header), "AES") as java.security.Key, IvParameterSpec(encryptionProc.getIv(header, name))) })
         } else stream).readAllBytes())
         entries = List(header.entryCount) { Entry(buffer.readIntLE(), buffer.readLongLE(), buffer.readLongLE()) }
-        datas = List(header.dataCount) { Data(buffer.readLongLE(), buffer.readIntLE(), buffer.readByte(), ByteArray(16).apply { buffer.readBytes(this) }.toBigInteger()) }
+        datas = List(header.dataCount) { Data(buffer.readLongLE(), buffer.readIntLE(), buffer.readByte(), Key(ByteArray(16).apply { buffer.readBytes(this) })) }
     }
 
     companion object {
-        private const val encryptionMagic = 0x636D66
+        const val EncryptionMagic = 0x636D66
         private val encryptionProc = listOf(
             object : EncryptionProc<Header> {
                 override fun getKey(header: Header): ByteArray {

@@ -19,7 +19,6 @@ package com.valaphee.synergy.ngdp.casc
 import io.netty.buffer.ByteBuf
 import org.apache.commons.vfs2.FileObject
 import org.apache.commons.vfs2.FileSystemManager
-import java.math.BigInteger
 
 /**
  * @author Kevin Ludwig
@@ -33,7 +32,7 @@ class ShadowMemory(
     private val freeSpace = mutableListOf<Reference>()
 
     init {
-        require(shadowMemory.readIntLE() == headerType)
+        require(shadowMemory.readIntLE() == HeaderType)
         val headerSize = shadowMemory.readIntLE()
         val rawPath = ByteArray(0x100).apply { shadowMemory.readBytes(this) }
         val path = rawPath.copyOf(rawPath.indexOf(0)).decodeToString().split('\\', limit = 2)
@@ -52,17 +51,17 @@ class ShadowMemory(
         val freeSpaceOffset = mutableListOf<Reference>()
         blocks.forEach {
             shadowMemory.readerIndex(it.second)
-            require(shadowMemory.readIntLE() == freeSpaceType)
+            require(shadowMemory.readIntLE() == FreeSpaceType)
             val freeSpaceSize = shadowMemory.readIntLE()
             shadowMemory.skipBytes(0x18)
             repeat(freeSpaceSize) { freeSpaceLength += Reference(shadowMemory, 0, 5, 0, 30) }
             repeat(freeSpaceSize) { freeSpaceOffset += Reference(shadowMemory, 0, 5, 0, 30) }
         }
-        freeSpace += freeSpaceLength.zip(freeSpaceOffset).map { Reference(BigInteger.ZERO, it.second.file, it.second.offset, it.first.offset) }
+        freeSpace += freeSpaceLength.zip(freeSpaceOffset).map { Reference(file = it.second.file, offset = it.second.offset, size = it.first.offset) }
     }
 
     companion object {
-        private const val freeSpaceType = 1
-        private const val headerType = 4
+        const val FreeSpaceType = 1
+        const val HeaderType = 4
     }
 }

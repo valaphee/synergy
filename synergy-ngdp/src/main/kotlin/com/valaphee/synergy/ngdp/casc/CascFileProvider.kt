@@ -28,11 +28,11 @@ import org.apache.commons.vfs2.provider.LayeredFileName
  * @author Kevin Ludwig
  */
 class CascFileProvider : AbstractLayeredFileProvider() {
-    override fun getCapabilities() = _capabilities
+    override fun getCapabilities() = Capabilities
 
     override fun doCreateFileSystem(scheme: String, file: FileObject, fileSystemOptions: FileSystemOptions?) = CascFileSystem(LayeredFileName(scheme, file.name, FileName.ROOT_PATH, FileType.FOLDER), file, fileSystemOptions)
 
     companion object {
-        internal val _capabilities = listOf(Capability.READ_CONTENT, Capability.LIST_CHILDREN)
+        val Capabilities = listOf(Capability.READ_CONTENT, Capability.LIST_CHILDREN)
     }
 }

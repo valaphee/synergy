@@ -16,37 +16,36 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import com.valaphee.synergy.ngdp.util.Blte
-import com.valaphee.synergy.ngdp.util.toBigInteger
+import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.RandomAccessContent
-import java.io.DataInputStream
 
 /**
  * @author Kevin Ludwig
  */
 class Data(
     private val data: RandomAccessContent,
-    private val reference: Reference
+    val reference: Reference
 ) {
+    private val noData: Boolean
+
     init {
         data.seek(reference.offset.toLong())
-        val dataHeader = Unpooled.wrappedBuffer(ByteArray(dataHeaderSize).apply { data.readFully(this) })
-        check(ByteArray(eKeySize).apply {
+        val dataHeader = Unpooled.wrappedBuffer(ByteArray(HeaderSize).apply { data.readFully(this) })
+        check(Key(ByteArray(KeySize).apply {
             dataHeader.readBytes(this)
             reverse()
-        }.copyOf(9).toBigInteger() == reference.key)
+        }.copyOf(9)) == reference.key)
         check(dataHeader.readIntLE() == reference.size)
-        dataHeader.readUnsignedShortLE()
+        noData = dataHeader.readUnsignedShortLE() and 0b1 == 1
         dataHeader.readIntLE()
         dataHeader.readIntLE()
     }
 
-    val blte get() = Blte(DataInputStream(data.apply { seek(reference.offset.toLong() + dataHeaderSize) }.inputStream))
-    val blteInputStream get() = blte.inputStream
+    val inputStream get() = if (!noData) data.apply { seek(reference.offset.toLong() + HeaderSize) }.inputStream else null
 
     companion object {
-        private const val eKeySize = 0x10
-        private const val dataHeaderSize = eKeySize + 4 + 2 + 4 + 4
+        const val KeySize = 0x10
+        const val HeaderSize = KeySize + 4 + 2 + 4 + 4
     }
 }

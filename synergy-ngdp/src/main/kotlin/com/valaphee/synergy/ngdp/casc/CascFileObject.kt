@@ -16,6 +16,8 @@
 
 package com.valaphee.synergy.ngdp.casc
 
+import com.google.common.io.ByteStreams
+import com.valaphee.synergy.ngdp.util.KeepAliveInputStream
 import org.apache.commons.vfs2.FileSystemException
 import org.apache.commons.vfs2.FileType
 import org.apache.commons.vfs2.provider.AbstractFileName
@@ -27,13 +29,14 @@ import org.apache.commons.vfs2.provider.AbstractFileObject
 class CascFileObject(
     name: AbstractFileName,
     fileSystem: CascFileSystem,
-    val data: Data?
+    private val data: Data?
 ) : AbstractFileObject<CascFileSystem>(name, fileSystem) {
     override fun doGetType() = if (data != null) FileType.FILE else FileType.IMAGINARY
 
     override fun doListChildren() = null
 
-    override fun doGetContentSize() = data?.blte?.chunks?.sumOf { it.uncompressedSize }?.toLong() ?: 0L
+    override fun doGetContentSize() = data?.reference?.size?.toLong() ?: 0L
 
-    override fun doGetInputStream() = data?.blteInputStream ?: throw FileSystemException("vfs.provider/read-not-file.error", name)
+    @Suppress("UnstableApiUsage")
+    override fun doGetInputStream() = data?.let { data -> data.inputStream?.let { KeepAliveInputStream(ByteStreams.limit(it, data.reference.size.toLong())) } } ?: throw FileSystemException("vfs.provider/read-not-file.error", name)
 }

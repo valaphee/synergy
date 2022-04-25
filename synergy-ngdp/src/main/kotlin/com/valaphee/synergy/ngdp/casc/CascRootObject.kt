@@ -16,7 +16,6 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import io.netty.util.internal.StringUtil
 import org.apache.commons.vfs2.FileSystemException
 import org.apache.commons.vfs2.FileType
 import org.apache.commons.vfs2.provider.AbstractFileName
@@ -32,7 +31,7 @@ class CascRootObject(
 ) : AbstractFileObject<CascFileSystem>(name, fileSystem) {
     override fun doGetType() = FileType.FOLDER
 
-    override fun doListChildren() = index.entries.map { StringUtil.toHexString(it.key.toByteArray()) }.toTypedArray()
+    override fun doListChildren() = index.entries.map { it.key.toString() }.toTypedArray()
 
     override fun doGetContentSize() = 0L
 
