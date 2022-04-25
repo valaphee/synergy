@@ -16,7 +16,6 @@
 
 package com.valaphee.synergy.proxy.mcbe
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.valaphee.netcode.mcbe.latestProtocolVersion
 import com.valaphee.netcode.mcbe.network.EncryptionInitializer
 import com.valaphee.netcode.mcbe.network.PacketBuffer
@@ -31,14 +30,7 @@ import com.valaphee.netcode.mcbe.util.parseAuthJws
 import com.valaphee.netcode.mcbe.util.parseServerToClientHandshakeJws
 import com.valaphee.netcode.mcbe.util.parseUserJws
 import com.valaphee.netcode.mcbe.world.entity.player.User
-import com.valaphee.synergy.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.header
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
+import com.valaphee.synergy.proxy.mcbe.auth.DefaultAuth
 import io.ktor.util.encodeBase64
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
@@ -47,12 +39,8 @@ import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
-import kotlinx.coroutines.runBlocking
-import org.jose4j.jwa.AlgorithmConstraints
 import org.jose4j.jws.JsonWebSignature
-import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import java.security.PublicKey
-import java.util.Base64
 
 /**
  * @author Kevin Ludwig
@@ -63,6 +51,7 @@ class BackendHandler(
     private var version = latestProtocolVersion
     private val keyPair = generateKeyPair()
     private lateinit var clientPublicKey: PublicKey
+    private val auth = DefaultAuth(keyPair)
 
     override fun channelInactive(context: ChannelHandlerContext) {
         if (inboundChannel.isActive) inboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)
@@ -78,30 +67,8 @@ class BackendHandler(
                 val (_, verificationKey, _) = parseAuthJws(message.authJws)
                 clientPublicKey = verificationKey
                 val (_, user) = parseUserJws(message.userJws, verificationKey)
-                val authJwsChain = runBlocking {
-                    HttpClient.post("https://multiplayer.minecraft.net/authentication") {
-                        headers {
-                            header("User-Agent", "MCPE/Android")
-                            header("Client-Version", user.version)
-                            header("Authorization", "")
-                        }
-                        contentType(ContentType.Application.Json)
-                        setBody(mapOf("identityPublicKey" to keyPair.public.encoded.encodeBase64()))
-                    }.body<Map<*, *>>()["chain"] as List<*>
-                }
-                val authJwtContext = JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").apply { setSkipSignatureVerification() }.build().process(authJwsChain.first() as String)
                 LoginPacket(
-                    message.protocolVersion, McbeProxy.jsonObjectMapper.writeValueAsString(
-                        mapOf(
-                            "chain" to listOf(JsonWebSignature().apply {
-                                setHeader("alg", "ES384")
-                                setHeader("x5u", Base64.getEncoder().encodeToString(keyPair.public.encoded))
-                                val authJwsHeaders = authJwtContext.joseObjects.single().headers
-                                payload = jacksonObjectMapper().writeValueAsString(mapOf("nbf" to authJwsHeaders.getStringHeaderValue("nbf"), "exp" to authJwsHeaders.getStringHeaderValue("exp"), "certificateAuthority" to true, "identityPublicKey" to authJwsHeaders.getStringHeaderValue("x5u")))
-                                key = keyPair.private
-                            }.compactSerialization) + authJwsChain
-                        )
-                    ), JsonWebSignature().apply {
+                    message.protocolVersion, auth.authJws, JsonWebSignature().apply {
                         setHeader("alg", "ES384")
                         setHeader("x5u", keyPair.public.encoded.encodeBase64())
                         payload = McbeProxy.jsonObjectMapper.writeValueAsString(user.copy(operatingSystem = User.OperatingSystem.Android))

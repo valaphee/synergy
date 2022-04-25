@@ -19,43 +19,34 @@ package com.valaphee.synergy.ngdp.casc
 import com.valaphee.synergy.ngdp.util.Blte
 import com.valaphee.synergy.ngdp.util.toBigInteger
 import io.netty.buffer.Unpooled
-import org.apache.commons.vfs2.FileObject
 import org.apache.commons.vfs2.RandomAccessContent
-import org.apache.commons.vfs2.util.RandomAccessMode
-import java.io.Closeable
 import java.io.DataInputStream
-import java.io.InputStream
 
 /**
  * @author Kevin Ludwig
  */
 class Data(
-    path: FileObject,
-    reference: Reference
-) : Closeable {
-    private val content: RandomAccessContent = path.resolveFile(String.format("data.%03d", reference.file)).content.getRandomAccessContent(RandomAccessMode.READ)
-
+    private val data: RandomAccessContent,
+    private val reference: Reference
+) {
     init {
-        content.seek(reference.offset.toLong())
-        val buffer = Unpooled.wrappedBuffer(ByteArray(eKeySize + 4 + 2 + 4 + 4).apply { content.readFully(this) })
+        data.seek(reference.offset.toLong())
+        val dataHeader = Unpooled.wrappedBuffer(ByteArray(dataHeaderSize).apply { data.readFully(this) })
         check(ByteArray(eKeySize).apply {
-            buffer.readBytes(this)
+            dataHeader.readBytes(this)
             reverse()
         }.copyOf(9).toBigInteger() == reference.key)
-        check(buffer.readIntLE() == reference.size)
-        buffer.readUnsignedShortLE()
-        buffer.readIntLE()
-        buffer.readIntLE()
+        check(dataHeader.readIntLE() == reference.size)
+        dataHeader.readUnsignedShortLE()
+        dataHeader.readIntLE()
+        dataHeader.readIntLE()
     }
 
-    val blte get() = Blte(DataInputStream(content.inputStream))
-    val blteInputStream: InputStream get() = blte.inputStream
-
-    override fun close() {
-        content.close()
-    }
+    val blte get() = Blte(DataInputStream(data.apply { seek(reference.offset.toLong() + dataHeaderSize) }.inputStream))
+    val blteInputStream get() = blte.inputStream
 
     companion object {
         private const val eKeySize = 0x10
+        private const val dataHeaderSize = eKeySize + 4 + 2 + 4 + 4
     }
 }

@@ -25,7 +25,7 @@ import org.apache.commons.vfs2.provider.AbstractFileObject
 /**
  * @author Kevin Ludwig
  */
-class CascRootFileObject(
+class CascRootObject(
     name: AbstractFileName,
     fileSystem: CascFileSystem,
     private val index: Index

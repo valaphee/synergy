@@ -77,6 +77,5 @@ class BlteInputStream(
     override fun close() {
         chunk = null
         position = 0
-        stream.close()
     }
 }

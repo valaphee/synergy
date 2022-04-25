@@ -17,13 +17,16 @@
 package com.valaphee.synergy.ngdp.casc
 
 import com.valaphee.synergy.ngdp.util.toBigInteger
+import io.netty.buffer.Unpooled
 import io.netty.util.internal.StringUtil
 import org.apache.commons.vfs2.Capability
 import org.apache.commons.vfs2.FileName
 import org.apache.commons.vfs2.FileObject
 import org.apache.commons.vfs2.FileSystemOptions
+import org.apache.commons.vfs2.RandomAccessContent
 import org.apache.commons.vfs2.provider.AbstractFileName
 import org.apache.commons.vfs2.provider.AbstractFileSystem
+import org.apache.commons.vfs2.util.RandomAccessMode
 import kotlin.math.min
 
 /**
@@ -34,14 +37,15 @@ class CascFileSystem(
     parentLayer: FileObject,
     fileSystemOptions: FileSystemOptions?
 ) : AbstractFileSystem(rootFileName, parentLayer, fileSystemOptions) {
-    private lateinit var shadowMemory: ShadowMemory
-    private lateinit var index: Index
+    private var shadowMemory: ShadowMemory? = null
+    private var index: Index? = null
+    private var data = mutableMapOf<Int, RandomAccessContent>()
 
     override fun init() {
         super.init()
 
-        shadowMemory = ShadowMemory(parentLayer.resolveFile("shmem"))
-        index = Index(shadowMemory.path, shadowMemory.versions)
+        shadowMemory = ShadowMemory(fileSystemManager, Unpooled.wrappedBuffer(parentLayer.resolveFile("shmem").content.byteArray))
+        index = Index(shadowMemory!!.path, shadowMemory!!.versions)
     }
 
     override fun addCapabilities(capabilities: MutableCollection<Capability>) {
@@ -50,6 +54,13 @@ class CascFileSystem(
 
     override fun createFile(name: AbstractFileName) = if (name.path != "/") {
         val key = if (name.path.length and 0x1 == 0) "0${name.path.substring(1)}" else name.path.substring(1)
-        CascFileObject(name, this, index[StringUtil.decodeHexDump(key, 0, min(9 * 2, key.length)).toBigInteger()]?.let { Data(shadowMemory.path, it) })
-    } else CascRootFileObject(name, this, index)
+        CascFileObject(name, this, index!![StringUtil.decodeHexDump(key, 0, min(9 * 2, key.length)).toBigInteger()]?.let { Data(data.getOrPut(it.file) { shadowMemory!!.path.resolveFile(String.format("data.%03d", it.file)).content.getRandomAccessContent(RandomAccessMode.READ) }, it) })
+    } else CascRootObject(name, this, index!!)
+
+    override fun doCloseCommunicationLink() {
+        data.values.forEach { it.close() }
+        data.clear()
+        index = null
+        shadowMemory = null
+    }
 }

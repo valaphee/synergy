@@ -16,27 +16,28 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import io.netty.buffer.Unpooled
+import io.netty.buffer.ByteBuf
 import org.apache.commons.vfs2.FileObject
+import org.apache.commons.vfs2.FileSystemManager
+import java.math.BigInteger
 
 /**
  * @author Kevin Ludwig
  */
 class ShadowMemory(
-    shadowMemoryFile: FileObject
+    fileSystemManager: FileSystemManager,
+    shadowMemory: ByteBuf,
 ) {
     val path: FileObject
     val versions = mutableMapOf<Int, Int>()
-    private val freeSpaceLength = mutableListOf<Reference>()
-    private val freeSpaceOffset = mutableListOf<Reference>()
+    private val freeSpace = mutableListOf<Reference>()
 
     init {
-        val buffer = Unpooled.wrappedBuffer(shadowMemoryFile.content.byteArray)
-        require(buffer.readIntLE() == headerType)
-        val headerSize = buffer.readIntLE()
-        val rawPath = ByteArray(0x100).apply { buffer.readBytes(this) }
+        require(shadowMemory.readIntLE() == headerType)
+        val headerSize = shadowMemory.readIntLE()
+        val rawPath = ByteArray(0x100).apply { shadowMemory.readBytes(this) }
         val path = rawPath.copyOf(rawPath.indexOf(0)).decodeToString().split('\\', limit = 2)
-        this.path = shadowMemoryFile.fileSystem.fileSystemManager.resolveFile(
+        this.path = fileSystemManager.resolveFile(
             "${
                 when (path[0]) {
                     "Global" -> "file"
@@ -45,16 +46,19 @@ class ShadowMemory(
             }:${path[1]}"
         )
         this.path.children.forEach { if (it.name.extension == "idx") versions[it.name.baseName.substring(0, 2).toInt(16)] = 0 }
-        val blocks = List((headerSize - buffer.readerIndex() - versions.size * 4) / (4 * 2)) { buffer.readIntLE() to buffer.readIntLE() }
-        repeat(versions.size) { versions[it] = buffer.readIntLE() }
+        val blocks = List((headerSize - shadowMemory.readerIndex() - versions.size * 4) / (4 * 2)) { shadowMemory.readIntLE() to shadowMemory.readIntLE() }
+        repeat(versions.size) { versions[it] = shadowMemory.readIntLE() }
+        val freeSpaceLength = mutableListOf<Reference>()
+        val freeSpaceOffset = mutableListOf<Reference>()
         blocks.forEach {
-            buffer.readerIndex(it.second)
-            require(buffer.readIntLE() == freeSpaceType)
-            val freeSpaceSize = buffer.readIntLE()
-            buffer.skipBytes(0x18)
-            repeat(freeSpaceSize) { freeSpaceLength += Reference(buffer, 0, 5, 0, 30) }
-            repeat(freeSpaceSize) { freeSpaceOffset += Reference(buffer, 0, 5, 0, 30) }
+            shadowMemory.readerIndex(it.second)
+            require(shadowMemory.readIntLE() == freeSpaceType)
+            val freeSpaceSize = shadowMemory.readIntLE()
+            shadowMemory.skipBytes(0x18)
+            repeat(freeSpaceSize) { freeSpaceLength += Reference(shadowMemory, 0, 5, 0, 30) }
+            repeat(freeSpaceSize) { freeSpaceOffset += Reference(shadowMemory, 0, 5, 0, 30) }
         }
+        freeSpace += freeSpaceLength.zip(freeSpaceOffset).map { Reference(BigInteger.ZERO, it.second.file, it.second.offset, it.first.offset) }
     }
 
     companion object {
