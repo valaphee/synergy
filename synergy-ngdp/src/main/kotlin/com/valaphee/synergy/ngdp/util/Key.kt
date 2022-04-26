@@ -22,7 +22,7 @@ import com.google.common.primitives.UnsignedBytes
  * @author Kevin Ludwig
  */
 class Key(
-    private val bytes: ByteArray
+    internal val bytes: ByteArray
 ) : Comparable<Key> {
     constructor(key: String) : this(key.asHexStringToByteArray())
 

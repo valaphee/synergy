@@ -33,6 +33,6 @@ class CascFileProvider : AbstractLayeredFileProvider() {
     override fun doCreateFileSystem(scheme: String, file: FileObject, fileSystemOptions: FileSystemOptions?) = CascFileSystem(LayeredFileName(scheme, file.name, FileName.ROOT_PATH, FileType.FOLDER), file, fileSystemOptions)
 
     companion object {
-        val Capabilities = listOf(Capability.READ_CONTENT, Capability.LIST_CHILDREN)
+        val Capabilities = listOf(Capability.READ_CONTENT, Capability.WRITE_CONTENT, Capability.CREATE, Capability.DELETE, Capability.GET_TYPE, Capability.LIST_CHILDREN, Capability.URI, Capability.VIRTUAL)
     }
 }

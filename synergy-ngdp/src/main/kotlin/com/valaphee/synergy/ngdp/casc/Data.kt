@@ -36,7 +36,7 @@ class Data(
             dataHeader.readBytes(this)
             reverse()
         }.copyOf(9)) == reference.key)
-        check(dataHeader.readIntLE() == reference.size)
+        check(dataHeader.readIntLE() == reference.length)
         noData = dataHeader.readUnsignedShortLE() and 0b1 == 1
         dataHeader.readIntLE()
         dataHeader.readIntLE()

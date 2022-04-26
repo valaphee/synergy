@@ -31,6 +31,7 @@ class Encoding {
     private val eSpecs = mutableListOf<String>()
     private val ceKeyPageTable = mutableListOf<CeKeyPage>()
     private val eKeySpecPageTable = mutableListOf<EKeySpecPage>()
+    private val eSpec: String
 
     class CeKeyPage(
         val firstCKey: Key,
@@ -97,6 +98,7 @@ class Encoding {
                 }
             }
         }
+        eSpec = stream.readAllBytes().decodeToString()
     }
 
     fun getEKeysOrNull(cKey: Key) = ceKeyPageTable.lastOrNull { it.firstCKey <= cKey }?.ceKeys?.find { it.cKey == cKey }?.eKeys

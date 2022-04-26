@@ -17,7 +17,6 @@
 package com.valaphee.synergy.ngdp.casc
 
 import com.valaphee.synergy.ngdp.util.Key
-import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.Capability
 import org.apache.commons.vfs2.FileName
 import org.apache.commons.vfs2.FileObject
@@ -43,8 +42,8 @@ class CascFileSystem(
     override fun init() {
         super.init()
 
-        shadowMemory = ShadowMemory(fileSystemManager, Unpooled.wrappedBuffer(parentLayer.resolveFile("shmem").content.byteArray))
-        index = Index(shadowMemory!!.path, shadowMemory!!.versions)
+        shadowMemory = ShadowMemory(parentLayer.resolveFile("shmem"))
+        index = Index(shadowMemory!!)
     }
 
     override fun addCapabilities(capabilities: MutableCollection<Capability>) {

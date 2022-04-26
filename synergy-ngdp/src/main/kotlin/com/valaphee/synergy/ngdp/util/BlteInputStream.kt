@@ -17,14 +17,15 @@
 package com.valaphee.synergy.ngdp.util
 
 import com.google.common.io.ByteStreams
+import org.bouncycastle.crypto.engines.RC4Engine
+import org.bouncycastle.crypto.engines.Salsa20Engine
+import org.bouncycastle.crypto.io.CipherInputStream
+import org.bouncycastle.crypto.params.KeyParameter
+import org.bouncycastle.crypto.params.ParametersWithIV
 import java.io.DataInputStream
 import java.io.InputStream
 import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
 import kotlin.math.min
 
 /**
@@ -92,28 +93,30 @@ class BlteInputStream(
         val chunk = chunks[chunkIndex++]
         @Suppress("UnstableApiUsage") val chunkStream = DataInputStream(ByteStreams.limit(stream, chunk.compressedSize.toLong()))
         chunk to when (val mode = chunkStream.readUnsignedByte().toChar()) {
-            'N' -> chunkStream
-            'Z' -> InflaterInputStream(chunkStream, Inflater(), chunk.compressedSize - 1)
             'E' -> {
                 val keySize = chunkStream.readUnsignedByte()
                 val key = Key(ByteArray(keySize).apply { chunkStream.readFully(this); reverse() })
                 keyring[key]?.let {
-                    val iv = ByteArray(8).apply { chunkStream.readFully(this, 0, chunkStream.readUnsignedByte()) }
-
-                    var shift = 0
-                    var i = 0
-                    while (i < 4) {
-                        iv[i] = (iv[i].toInt() xor (chunkIndex shr shift and 0xFF)).toByte()
-                        shift += 8
-                        i++
-                    }
-
-                    when (val encryptionMode = chunkStream.readUnsignedByte().toChar()) {
-                        'S' -> CipherInputStream(chunkStream, Cipher.getInstance("SALSA20", "BC").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(it, "SALSA20"), IvParameterSpec(iv)) })
+                    val iv = ByteArray(chunkStream.readUnsignedByte()).apply { chunkStream.readFully(this) }
+                    CipherInputStream(chunkStream, when (val encryptionMode = chunkStream.readUnsignedByte().toChar()) {
+                        'A' -> RC4Engine().apply { init(false, KeyParameter(it)) }
+                        'S' -> {
+                            val _iv = iv.copyOf(8)
+                            var shift = 0
+                            var i = 0
+                            while (i < 4) {
+                                _iv[i] = (_iv[i].toInt() xor (chunkIndex shr shift and 0xFF)).toByte()
+                                shift += 8
+                                i++
+                            }
+                            Salsa20Engine().apply { init(false, ParametersWithIV(KeyParameter(it), _iv)) }
+                        }
                         else -> TODO("$encryptionMode")
-                    }
+                    })
                 } ?: error("Missing key $key")
             }
+            'N' -> chunkStream
+            'Z' -> InflaterInputStream(chunkStream, Inflater(), chunk.compressedSize - 1)
             else -> TODO("$mode")
         }
     } else null

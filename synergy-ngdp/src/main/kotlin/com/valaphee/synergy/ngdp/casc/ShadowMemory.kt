@@ -16,27 +16,28 @@
 
 package com.valaphee.synergy.ngdp.casc
 
-import io.netty.buffer.ByteBuf
+import com.valaphee.synergy.ngdp.util.Key
+import io.netty.buffer.Unpooled
 import org.apache.commons.vfs2.FileObject
-import org.apache.commons.vfs2.FileSystemManager
 
 /**
  * @author Kevin Ludwig
  */
 class ShadowMemory(
-    fileSystemManager: FileSystemManager,
-    shadowMemory: ByteBuf,
+    private val shadowMemoryPath: FileObject
 ) {
     val path: FileObject
     val versions = mutableMapOf<Int, Int>()
     private val freeSpace = mutableListOf<Reference>()
 
     init {
-        require(shadowMemory.readIntLE() == HeaderType)
+        val shadowMemory = Unpooled.wrappedBuffer(shadowMemoryPath.content.byteArray)
+        val headerType = shadowMemory.readIntLE()
+        check(headerType == HeaderType || headerType == HeaderIndexType)
         val headerSize = shadowMemory.readIntLE()
         val rawPath = ByteArray(0x100).apply { shadowMemory.readBytes(this) }
         val path = rawPath.copyOf(rawPath.indexOf(0)).decodeToString().split('\\', limit = 2)
-        this.path = fileSystemManager.resolveFile(
+        this.path = shadowMemoryPath.fileSystem.fileSystemManager.resolveFile(
             "${
                 when (path[0]) {
                     "Global" -> "file"
@@ -50,18 +51,47 @@ class ShadowMemory(
         val freeSpaceLength = mutableListOf<Reference>()
         val freeSpaceOffset = mutableListOf<Reference>()
         blocks.forEach {
-            shadowMemory.readerIndex(it.second)
-            require(shadowMemory.readIntLE() == FreeSpaceType)
+            if (headerType != HeaderIndexType) shadowMemory.readerIndex(it.second)
+            check(shadowMemory.readIntLE() == FreeSpaceType)
             val freeSpaceSize = shadowMemory.readIntLE()
             shadowMemory.skipBytes(0x18)
             repeat(freeSpaceSize) { freeSpaceLength += Reference(shadowMemory, 0, 5, 0, 30) }
             repeat(freeSpaceSize) { freeSpaceOffset += Reference(shadowMemory, 0, 5, 0, 30) }
         }
-        freeSpace += freeSpaceLength.zip(freeSpaceOffset).map { Reference(file = it.second.file, offset = it.second.offset, size = it.first.offset) }
+        freeSpace += freeSpaceLength.zip(freeSpaceOffset).map { Reference(emptyKey, it.second.file, it.second.offset, it.first.offset) }
+    }
+
+    fun write() {
+        val shadowMemory = Unpooled.buffer()
+        shadowMemory.writeIntLE(HeaderType)
+        val headerSizeIndex = shadowMemory.writerIndex()
+        shadowMemory.writeIntLE(0)
+        val path = path.toString().split(":///", limit = 2)
+        shadowMemory.writeBytes("${when (path[0]) {
+            "file" -> "Global"
+            else -> TODO(path[0])
+        }}\\${path[1]}".encodeToByteArray().copyOf(0x100))
+        val blockSizeIndex = shadowMemory.writerIndex()
+        shadowMemory.writeIntLE(0)
+        val blockOffsetIndex = shadowMemory.writerIndex()
+        shadowMemory.writeIntLE(0)
+        versions.forEach { shadowMemory.writeIntLE(it.value) }
+        shadowMemory.setIntLE(headerSizeIndex, shadowMemory.writerIndex())
+        shadowMemory.setIntLE(blockOffsetIndex, shadowMemory.writerIndex())
+        val blockOffset = shadowMemory.writerIndex()
+        shadowMemory.writeIntLE(FreeSpaceType)
+        shadowMemory.writeIntLE(freeSpace.size)
+        shadowMemory.writeZero(0x18)
+        freeSpace.forEach { shadowMemory.writeBytes(Reference(emptyKey, 0, it.length, 0).toBuffer(keySize = 0, lengthSize = 0)) }
+        freeSpace.forEach { shadowMemory.writeBytes(Reference(emptyKey, it.file, it.offset, 0).toBuffer(keySize = 0, lengthSize = 0)) }
+        shadowMemory.setIntLE(blockSizeIndex, shadowMemory.writerIndex() - blockOffset)
+        shadowMemory.writeZero(0x0B)
     }
 
     companion object {
         const val FreeSpaceType = 1
         const val HeaderType = 4
+        const val HeaderIndexType = 5
+        private val emptyKey = Key(byteArrayOf())
     }
 }

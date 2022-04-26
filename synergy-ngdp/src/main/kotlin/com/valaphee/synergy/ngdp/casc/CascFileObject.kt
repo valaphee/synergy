@@ -35,8 +35,10 @@ class CascFileObject(
 
     override fun doListChildren() = null
 
-    override fun doGetContentSize() = data?.reference?.size?.toLong() ?: 0L
+    override fun doGetContentSize() = data?.reference?.length?.toLong() ?: 0L
 
     @Suppress("UnstableApiUsage")
-    override fun doGetInputStream() = data?.let { data -> data.inputStream?.let { KeepAliveInputStream(ByteStreams.limit(it, data.reference.size.toLong())) } } ?: throw FileSystemException("vfs.provider/read-not-file.error", name)
+    override fun doGetInputStream() = data?.let { data -> data.inputStream?.let { KeepAliveInputStream(ByteStreams.limit(it, data.reference.length.toLong())) } } ?: throw FileSystemException("vfs.provider/read-not-file.error", name)
+
+    override fun doGetOutputStream(append: Boolean) = throw FileSystemException("vfs.provider/write-not-supported.error")
 }

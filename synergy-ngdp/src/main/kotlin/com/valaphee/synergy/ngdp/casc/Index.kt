@@ -17,52 +17,94 @@
 package com.valaphee.synergy.ngdp.casc
 
 import com.valaphee.synergy.ngdp.util.Key
+import com.valaphee.synergy.ngdp.util.asHexStringToByteArray
 import com.valaphee.synergy.ngdp.util.hashLookup3
+import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
-import org.apache.commons.vfs2.FileObject
 
 /**
  * @author Kevin Ludwig
  */
 class Index(
-    path: FileObject,
-    versions: Map<Int, Int>
+    private val shadowMemory: ShadowMemory
 ) {
+    val entriesHash = mutableMapOf<Int, Int>()
     private val _entries = mutableMapOf<Key, Reference>()
     val entries: Map<Key, Reference> get() = _entries
 
     init {
-        versions.forEach { (bucket, version) ->
-            val indexFile = path.getChild(String.format("%02x%08x.idx", bucket, version))
-            val buffer = Unpooled.wrappedBuffer(indexFile.content.byteArray)
-            val headerSize = buffer.readIntLE()
-            check(buffer.readIntLE() == buffer.hashLookup3(length = headerSize).first)
-            check(buffer.readUnsignedShortLE() == Version)
-            check(buffer.readUnsignedShortLE() == bucket)
-            val lengthSize = buffer.readUnsignedByte().toInt()
-            val locationSize = buffer.readUnsignedByte().toInt()
-            val keySize = buffer.readUnsignedByte().toInt()
-            val segmentBits = buffer.readUnsignedByte().toInt()
-            repeat((headerSize - (4 + 4)) / (4 + 4)) {
-                buffer.readIntLE()
-                buffer.readIntLE()
-            }
-            buffer.skipBytes(16 - ((8 + headerSize) % 16))
-            val entriesSize = buffer.readIntLE()
-            val entriesHash = buffer.readIntLE()
-            /*var entryHash = 0 to 0*/
+        shadowMemory.versions.forEach { (bucket, version) ->
+            val indexFile = shadowMemory.path.resolveFile(String.format("%02x%08x.idx", bucket, version))
+            val index = Unpooled.wrappedBuffer(indexFile.content.byteArray)
+            val headerSize = index.readIntLE()
+            check(index.readIntLE() == index.hashLookup3(length = headerSize).first)
+            check(index.readUnsignedShortLE() == Version)
+            check(index.readUnsignedShortLE() == bucket)
+            val lengthSize = index.readUnsignedByte().toInt()
+            val locationSize = index.readUnsignedByte().toInt()
+            val keySize = index.readUnsignedByte().toInt()
+            val segmentBits = index.readUnsignedByte().toInt()
+            check(index.readLongLE() == 0x4000000000)
+            index.skipBytes(16 - ((8 + headerSize) % 16))
+            val entriesSize = index.readIntLE()
+            /*check(*/index.readIntLE()/* == index.hashLookup3(length = entriesSize).first)*/
             repeat(entriesSize / (keySize + locationSize + lengthSize)) {
-                /*entryHash = buffer.hashLookup3(length = keySize + locationSize + lengthSize, init = entryHash)*/
-                val reference = Reference(buffer, keySize, locationSize, lengthSize, segmentBits)
+                val reference = Reference(index, keySize, locationSize, lengthSize, segmentBits)
+                val referenceBucket = reference.key.toBucket()
+                if (referenceBucket != bucket) check((referenceBucket + 1) and 0xF == bucket)
                 _entries[reference.key] = reference
             }
-            /*check(entryHash.first == entriesHash)*/
         }
     }
 
-    operator fun get(key: Key) = _entries[key]
+    operator fun get(key: Key) = entries[key]
+
+    fun write() {
+        val entries = entries.values.groupBy { if (it.key.isCrossReference()) it.key.asCrossReferenceToBucket() else it.key.toBucket() }
+        shadowMemory.versions.forEach { (bucket, version) ->
+            val index = Unpooled.buffer()
+            val headerSizeIndex = index.writerIndex()
+            index.writeIntLE(0)
+            val headerHashIndex = index.writerIndex()
+            index.writeIntLE(0)
+            val headerOffset = index.writerIndex()
+            index.writeShortLE(Version)
+            index.writeShortLE(bucket)
+            index.writeByte(Reference.LengthSize)
+            index.writeByte(Reference.LocationSize)
+            index.writeByte(Reference.KeySize)
+            index.writeByte(Reference.SegmentBits)
+            val headerSize = index.writerIndex() - headerSizeIndex
+            index.writeLongLE(0x4000000000)
+            index.writeZero(8)
+            index.setIntLE(headerSizeIndex, headerSize)
+            index.setIntLE(headerHashIndex, index.hashLookup3(headerOffset, headerSize).first)
+            val entriesSizeIndex = index.writerIndex()
+            index.writeIntLE(0)
+            val entriesHashIndex = index.writerIndex()
+            index.writeIntLE(0)
+            val entriesOffset = index.writerIndex()
+            entries[bucket]?.forEach { index.writeBytes(it.toBuffer()) }
+            val entriesSize = index.writerIndex() - entriesOffset
+            index.setIntLE(entriesSizeIndex, entriesSize)
+            index.setIntLE(entriesHashIndex, index.hashLookup3(entriesOffset, entriesSize).first)
+            val mod64k = index.writerIndex() % 65536
+            if (mod64k != 0) index.writeZero(65536 - mod64k)
+            shadowMemory.path.resolveFile(String.format("%02x%08x.idx", bucket, version)).content.outputStream.write(ByteBufUtil.getBytes(index))
+        }
+    }
 
     companion object {
         const val Version = 7
+        val CrossReferenceKeySuffix = "99bd34280ef31a".asHexStringToByteArray()
+
+        fun Key.toBucket(): Int {
+            val value = bytes.fold(0) { value, byte -> value xor (byte.toInt() and 0xFF) }
+            return value and 0xF xor (value shr 4)
+        }
+
+        fun Key.isCrossReference() = bytes.copyOfRange(2, bytes.size).contentEquals(CrossReferenceKeySuffix)
+
+        fun Key.asCrossReferenceToBucket() = (toBucket() + 1) and 0xF
     }
 }
