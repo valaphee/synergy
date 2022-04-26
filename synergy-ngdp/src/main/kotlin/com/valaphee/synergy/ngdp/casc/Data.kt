@@ -27,7 +27,7 @@ class Data(
     private val data: RandomAccessContent,
     val reference: Reference
 ) {
-    private val noData: Boolean
+    private val crossLink: Boolean
 
     init {
         data.seek(reference.offset.toLong())
@@ -37,12 +37,12 @@ class Data(
             reverse()
         }.copyOf(9)) == reference.key)
         check(dataHeader.readIntLE() == reference.length)
-        noData = dataHeader.readUnsignedShortLE() and 0b1 == 1
+        crossLink = dataHeader.readUnsignedShortLE() and 0b1 == 1
         dataHeader.readIntLE()
         dataHeader.readIntLE()
     }
 
-    val inputStream get() = if (!noData) data.apply { seek(reference.offset.toLong() + HeaderSize) }.inputStream else null
+    val inputStream get() = if (!crossLink) data.apply { seek(reference.offset.toLong() + HeaderSize) }.inputStream else null
 
     companion object {
         const val KeySize = 0x10

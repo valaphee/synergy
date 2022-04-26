@@ -17,6 +17,7 @@
 package com.valaphee.synergy.ngdp.util
 
 import com.google.common.primitives.UnsignedBytes
+import com.valaphee.synergy.ngdp.casc.Reference
 
 /**
  * @author Kevin Ludwig
@@ -34,12 +35,12 @@ class Key(
 
         other as Key
 
-        if (!bytes.contentEquals(other.bytes)) return false
+        if (!bytes.copyOf(Reference.KeySize).contentEquals(other.bytes.copyOf(Reference.KeySize))) return false
 
         return true
     }
 
-    override fun hashCode() = bytes.contentHashCode()
+    override fun hashCode() = bytes.hashLookup3(0, Reference.KeySize).first
 
     override fun toString() = bytes.toHexString()
 

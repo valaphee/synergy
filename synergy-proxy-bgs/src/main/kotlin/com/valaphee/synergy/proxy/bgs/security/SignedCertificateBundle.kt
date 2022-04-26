@@ -35,41 +35,32 @@ import java.util.Base64
  * @author Kevin Ludwig
  */
 object SignedCertificateBundle {
-    private val keyFactory = KeyFactory.getInstance("RSA")
-    internal val key = keyFactory.generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB"))) as RSAPublicKey
-    private val magic = "NGIS".toByteArray()
-    internal val module = "Blizzard Certificate Bundle".toByteArray()
+    val Magic = "NGIS".toByteArray()
+    val Module = "Blizzard Certificate Bundle".toByteArray()
+    val Key = KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlJgdPIKILnrsqpbKQjb62cMYlQ/BS7s2CzQAP0U8BPw6u5UrhgcuvyBX8DPkRXfuHKL1vKPCzM4r76ZpDUTZYk02oMpQUP35WVs9JO9/RPo/MjFS+Fw3LeCPt8YXdBUndp6E9UT1u65hiA8ggQhFZiXVN7GwqJtT4gObUfVQsubVi7yTdhDb/Rpe0oBce0Ffeirv8q4QhJMf1heIZpD3jKShrRI7mrX1jwU1snsr++cP6+Ubc7zKaQ4dsr2Zoj2gH/J1YZ3alZ8fmw6eKDh74xsJR/EY/cydy5js6/kVN1gZWFZYCxOvTRCIHgyz/+gxTvAbfLWkN/DU08Qz5xf/NQIDAQAB"))) as RSAPublicKey
 
     fun sign(privateKey: PrivateKey, certificateBundle: CertificateBundle): ByteArray {
         val certificateBundleBytes = ObjectMapper.writeValueAsBytes(certificateBundle)
-        val signedCertificateBundle = ByteArray(certificateBundleBytes.size + magic.size + 256)
+        val signedCertificateBundle = ByteArray(certificateBundleBytes.size + Magic.size + 256)
         certificateBundleBytes.copyInto(signedCertificateBundle)
-        magic.copyInto(signedCertificateBundle, certificateBundleBytes.size)
+        Magic.copyInto(signedCertificateBundle, certificateBundleBytes.size)
         Signature.getInstance("SHA256withRSA").apply {
             initSign(privateKey)
             update(certificateBundleBytes)
-            update(module)
-        }.sign().swap().copyInto(signedCertificateBundle, certificateBundleBytes.size + 4)
+            update(Module)
+        }.sign().apply { reverse() }.copyInto(signedCertificateBundle, certificateBundleBytes.size + 4)
         return signedCertificateBundle
     }
 
-    fun parse(signedCertificateBundle: ByteArray, publicKey: PublicKey = key): Pair<Boolean, CertificateBundle> {
-        val signatureOffset = signedCertificateBundle.occurrencesOf(magic).single()
+    fun parse(signedCertificateBundle: ByteArray, publicKey: PublicKey = Key): Pair<Boolean, CertificateBundle> {
+        val signatureOffset = signedCertificateBundle.occurrencesOf(Magic).single()
         val certificateBundle = signedCertificateBundle.copyOf(signatureOffset)
         return Signature.getInstance("SHA256withRSA").apply {
             initVerify(publicKey)
             update(certificateBundle)
-            update(module)
-        }.verify(signedCertificateBundle.copyOfRange(signatureOffset + magic.size, signedCertificateBundle.size).swap()) to ObjectMapper.readValue(certificateBundle)
+            update(Module)
+        }.verify(signedCertificateBundle.copyOfRange(signatureOffset + Magic.size, signedCertificateBundle.size).apply { reverse() }) to ObjectMapper.readValue(certificateBundle)
     }
 }
 
-fun ASN1Sequence.hash() = Hex.toHexString(MessageDigest.getInstance("SHA256").digest(X509CertificateStructure.getInstance(this).subjectPublicKeyInfo.publicKeyData.bytes)).uppercase()
-
-internal fun ByteArray.swap() = apply {
-    repeat(size / 2) {
-        val value = this[it]
-        this[it] = this[size - it - 1]
-        this[size - it - 1] = value
-    }
-}
+fun ASN1Sequence.hashSha256() = Hex.toHexString(MessageDigest.getInstance("SHA256").digest(X509CertificateStructure.getInstance(this).subjectPublicKeyInfo.publicKeyData.bytes)).uppercase()

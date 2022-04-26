@@ -50,7 +50,7 @@ class BgsSecurityPatchSubcommand : Subcommand("bgs-security-patch", "Patch secur
             log.info("Patching {}", inputFile)
 
             val bytes = inputFile.readBytes()
-            bytes.occurrencesOf(SignedCertificateBundle.key.modulus.toByteArray().swap().copyOf(256)).singleOrNull()?.let { modulusIndex ->
+            bytes.occurrencesOf(SignedCertificateBundle.Key.modulus.toByteArray().apply { reverse() }.copyOf(256)).singleOrNull()?.let { modulusIndex ->
                 log.info("Modulus found at 0x{}", modulusIndex.toHexString().uppercase())
                 bytes.occurrencesOf(prefix.toByteArray()).singleOrNull()?.let { certificateBundleIndex ->
                     log.info("Certificate bundle found at 0x{}", certificateBundleIndex.toHexString().uppercase())
@@ -58,13 +58,13 @@ class BgsSecurityPatchSubcommand : Subcommand("bgs-security-patch", "Patch secur
                     val certificateBundleEnd = bytes.occurrencesOf(separator.toByteArray()).single() + 1
                     val certificateBundle = ObjectMapper.readValue<CertificateBundle>(bytes.copyOfRange(certificateBundleIndex, certificateBundleEnd))
                     val certificates = aliases.map { alias -> alias to checkNotNull(keyStore.getCertificate(alias)) }
-                    val certificateBundleBytes = ObjectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hash()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${keyStore.getCertificate("synergy").encoded.encodeBase64()}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hash())))
+                    val certificateBundleBytes = ObjectMapper.writeValueAsBytes(CertificateBundle(certificateBundle.created, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hashSha256()) }, certificates.map { CertificateBundle.UriKeyPair(it.first, (ASN1Sequence.fromByteArray(it.second.encoded) as ASN1Sequence).hashSha256()) }, listOf(CertificateBundle.RawCertificate("-----BEGIN CERTIFICATE-----${keyStore.getCertificate("synergy").encoded.encodeBase64()}-----END CERTIFICATE-----")), listOf((ASN1Sequence.fromByteArray(keyStore.getCertificate("synergy").encoded) as ASN1Sequence).hashSha256())))
                     val certificateBundleSize = certificateBundleEnd - certificateBundleIndex
                     if (certificateBundleSize >= certificateBundleBytes.size) {
                         val keyPair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
                         val publicKey = keyPair.public as RSAPublicKey
-                        publicKey.modulus.toByteArray().swap().copyInto(bytes, modulusIndex, endIndex = 256)
-                        publicKey.publicExponent.toByteArray().swap().copyInto(bytes, modulusIndex + 256)
+                        publicKey.modulus.toByteArray().apply { reverse() }.copyInto(bytes, modulusIndex, endIndex = 256)
+                        publicKey.publicExponent.toByteArray().apply { reverse() }.copyInto(bytes, modulusIndex + 256)
                         log.info("Modulus and exponent overwritten")
 
                         val certificateBundleBytesPadded = ByteArray(certificateBundleSize) { 0x20 }
@@ -74,8 +74,8 @@ class BgsSecurityPatchSubcommand : Subcommand("bgs-security-patch", "Patch secur
                         Signature.getInstance("SHA256withRSA").apply {
                             initSign(keyPair.private)
                             update(certificateBundleBytesPadded)
-                            update(SignedCertificateBundle.module)
-                        }.sign().swap().copyInto(bytes, certificateBundleEnd + 4)
+                            update(SignedCertificateBundle.Module)
+                        }.sign().apply { reverse() }.copyInto(bytes, certificateBundleEnd + 4)
                         log.info("Signed certificate bundle overwritten (size: {}, new size: {})", certificateBundleSize, certificateBundleBytes.size)
                     } else log.error("Patch too large")
                 }

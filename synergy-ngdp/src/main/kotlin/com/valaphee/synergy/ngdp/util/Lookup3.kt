@@ -17,11 +17,11 @@
 package com.valaphee.synergy.ngdp.util
 
 import io.netty.buffer.ByteBuf
-import io.netty.buffer.Unpooled
+import io.netty.buffer.ByteBufUtil
 
-fun ByteArray.hashLookup3(offset: Int = 0, length: Int = size, init: Pair<Int, Int> = 0 to 0) = Unpooled.wrappedBuffer(this).hashLookup3(offset, length, init)
+fun ByteBuf.hashLookup3(offset: Int = readerIndex(), length: Int = readableBytes(), init: Pair<Int, Int> = 0 to 0) = ByteBufUtil.getBytes(this, offset, length).hashLookup3(init = init)
 
-fun ByteBuf.hashLookup3(offset: Int = readerIndex(), length: Int = readableBytes(), init: Pair<Int, Int> = 0 to 0): Pair<Int, Int> {
+fun ByteArray.hashLookup3(offset: Int = 0, length: Int = size, init: Pair<Int, Int> = 0 to 0): Pair<Int, Int> {
     var a = 0xDEADBEEF.toInt() + length + init.first
     var b = a
     var c = a + init.second
@@ -29,18 +29,18 @@ fun ByteBuf.hashLookup3(offset: Int = readerIndex(), length: Int = readableBytes
     var _offset = offset
     var _length = length
     while (_length > 12) {
-        a += getByte(_offset + 0).toInt()
-        a += getByte(_offset + 1).toInt() shl 8
-        a += getByte(_offset + 2).toInt() shl 16
-        a += getByte(_offset + 3).toInt() shl 24
-        b += getByte(_offset + 4).toInt()
-        b += getByte(_offset + 5).toInt() shl 8
-        b += getByte(_offset + 6).toInt() shl 16
-        b += getByte(_offset + 7).toInt() shl 24
-        c += getByte(_offset + 8).toInt()
-        c += getByte(_offset + 9).toInt() shl 8
-        c += getByte(_offset + 10).toInt() shl 16
-        c += getByte(_offset + 11).toInt() shl 24
+        a += this[_offset + 0].toInt()
+        a += this[_offset + 1].toInt() shl 8
+        a += this[_offset + 2].toInt() shl 16
+        a += this[_offset + 3].toInt() shl 24
+        b += this[_offset + 4].toInt()
+        b += this[_offset + 5].toInt() shl 8
+        b += this[_offset + 6].toInt() shl 16
+        b += this[_offset + 7].toInt() shl 24
+        c += this[_offset + 8].toInt()
+        c += this[_offset + 9].toInt() shl 8
+        c += this[_offset + 10].toInt() shl 16
+        c += this[_offset + 11].toInt() shl 24
 
         a -= c
         a = a xor rot(c, 4).toInt()
@@ -66,18 +66,18 @@ fun ByteBuf.hashLookup3(offset: Int = readerIndex(), length: Int = readableBytes
     }
 
     if (_length > 0) {
-        if (_length == 12) c += getByte(_offset + 11).toInt() shl 24
-        if (_length >= 11) c += getByte(_offset + 10).toInt() shl 16
-        if (_length >= 10) c += getByte(_offset + 9).toInt() shl 8
-        if (_length >= 9) c += getByte(_offset + 8).toInt()
-        if (_length >= 8) b += getByte(_offset + 7).toInt() shl 24
-        if (_length >= 7) b += getByte(_offset + 6).toInt() shl 16
-        if (_length >= 6) b += getByte(_offset + 5).toInt() shl 8
-        if (_length >= 5) b += getByte(_offset + 4).toInt()
-        if (_length >= 4) a += getByte(_offset + 3).toInt() shl 24
-        if (_length >= 3) a += getByte(_offset + 2).toInt() shl 16
-        if (_length >= 2) a += getByte(_offset + 1).toInt() shl 8
-        a += getByte(_offset + 0).toInt()
+        if (_length == 12) c += this[_offset + 11].toInt() shl 24
+        if (_length >= 11) c += this[_offset + 10].toInt() shl 16
+        if (_length >= 10) c += this[_offset + 9].toInt() shl 8
+        if (_length >= 9) c += this[_offset + 8].toInt()
+        if (_length >= 8) b += this[_offset + 7].toInt() shl 24
+        if (_length >= 7) b += this[_offset + 6].toInt() shl 16
+        if (_length >= 6) b += this[_offset + 5].toInt() shl 8
+        if (_length >= 5) b += this[_offset + 4].toInt()
+        if (_length >= 4) a += this[_offset + 3].toInt() shl 24
+        if (_length >= 3) a += this[_offset + 2].toInt() shl 16
+        if (_length >= 2) a += this[_offset + 1].toInt() shl 8
+        a += this[_offset + 0].toInt()
 
         c = c xor b
         c -= rot(b, 14).toInt()

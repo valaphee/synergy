@@ -16,14 +16,14 @@
 
 package com.valaphee.synergy.ngdp.util
 
-import com.google.common.io.ByteStreams
-import org.bouncycastle.crypto.engines.RC4Engine
 import org.bouncycastle.crypto.engines.Salsa20Engine
 import org.bouncycastle.crypto.io.CipherInputStream
 import org.bouncycastle.crypto.params.KeyParameter
 import org.bouncycastle.crypto.params.ParametersWithIV
+import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.InputStream
+import java.security.MessageDigest
 import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
 import kotlin.math.min
@@ -47,11 +47,14 @@ class BlteInputStream(
     private var chunk: Pair<Chunk, InputStream>?
     private var chunkPosition = 0
 
+    constructor(stream: InputStream, keyring: Map<Key, ByteArray> = emptyMap()) : this(DataInputStream(stream), keyring)
+
     init {
         check(stream.readInt() == Magic)
-        stream.readInt()
+        val headerSize = stream.readInt()
         check(stream.readUnsignedByte() == Flags)
         chunks = List(stream.readUnsignedShort() shl 8 or stream.readUnsignedByte()) { Chunk(stream.readInt(), stream.readInt(), ByteArray(0x10).apply { stream.readFully(this) }) }
+        check(headerSize == 4 + 4 + 1 + 2 + 1 + chunks.size * (4 + 4 + 0x10))
         chunk = nextChunk()
     }
 
@@ -91,15 +94,16 @@ class BlteInputStream(
 
     private fun nextChunk() = if (chunkIndex < chunks.size) {
         val chunk = chunks[chunkIndex++]
-        @Suppress("UnstableApiUsage") val chunkStream = DataInputStream(ByteStreams.limit(stream, chunk.compressedSize.toLong()))
-        chunk to when (val mode = chunkStream.readUnsignedByte().toChar()) {
+        val chunkStream = ByteArrayInputStream(stream.readNBytes(chunk.compressedSize).also { check(MessageDigest.getInstance("MD5").digest(it).contentEquals(chunk.checksum)) })
+        chunk to when (val mode = chunkStream.read().toChar()) {
+            /*'4' -> Unit*/
             'E' -> {
-                val keySize = chunkStream.readUnsignedByte()
-                val key = Key(ByteArray(keySize).apply { chunkStream.readFully(this); reverse() })
+                val keySize = chunkStream.read()
+                val key = Key(ByteArray(keySize).apply { chunkStream.read(this); reverse() })
                 keyring[key]?.let {
-                    val iv = ByteArray(chunkStream.readUnsignedByte()).apply { chunkStream.readFully(this) }
-                    CipherInputStream(chunkStream, when (val encryptionMode = chunkStream.readUnsignedByte().toChar()) {
-                        'A' -> RC4Engine().apply { init(false, KeyParameter(it)) }
+                    val iv = ByteArray(chunkStream.read()).apply { chunkStream.read(this) }
+                    CipherInputStream(chunkStream, when (val encryptionMode = chunkStream.read().toChar()) {
+                        /*'A' -> RC4Engine().apply { init(false, KeyParameter(it)) }*/
                         'S' -> {
                             val _iv = iv.copyOf(8)
                             var shift = 0

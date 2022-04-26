@@ -59,6 +59,8 @@ class Encoding {
         val fileSize: Long,
     )
 
+    constructor(stream: InputStream) : this(DataInputStream(stream))
+
     constructor(stream: DataInputStream) {
         check(stream.readUnsignedShort() == Magic)
         check(stream.readUnsignedByte() == Version)
@@ -74,7 +76,7 @@ class Encoding {
         repeat(ceKeyPageTableCount) { ceKeyPageTable += CeKeyPage(Key(ByteArray(cKeySize).apply { stream.readFully(this) }), ByteArray(0x10).apply { stream.readFully(this) }) }
         ceKeyPageTable.forEach {
             val ceKeyPage = Unpooled.wrappedBuffer(ByteArray(ceKeyPageTableSize * 1024).apply { stream.readFully(this) })
-            check(it.checksum.contentEquals(MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(ceKeyPage))))
+            check(MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(ceKeyPage)).contentEquals(it.checksum))
             it.ceKeys = mutableListOf<CeKey>().apply {
                 while (ceKeyPage.isReadable(6 + cKeySize)) {
                     val keyCount = ceKeyPage.readUnsignedByte().toInt()
@@ -88,7 +90,7 @@ class Encoding {
         repeat(eKeySpecPageTableCount) { eKeySpecPageTable += EKeySpecPage(Key(ByteArray(eKeySize).apply { stream.readFully(this) }), ByteArray(0x10).apply { stream.readFully(this) }) }
         eKeySpecPageTable.forEach {
             val eKeySpecPage = Unpooled.wrappedBuffer(ByteArray(eKeySpecPageTableSize * 1024).apply { stream.readFully(this) })
-            check(it.checksum.contentEquals(MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(eKeySpecPage))))
+            check(MessageDigest.getInstance("MD5").digest(ByteBufUtil.getBytes(eKeySpecPage)).contentEquals(it.checksum))
             it.eKeySpecs = mutableListOf<EKeySpec>().apply {
                 while (eKeySpecPage.isReadable(9 + eKeySize)) {
                     val eKey = Key(ByteArray(eKeySize).apply { eKeySpecPage.readBytes(this) })

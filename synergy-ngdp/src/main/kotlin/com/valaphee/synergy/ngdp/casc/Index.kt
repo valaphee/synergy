@@ -28,7 +28,6 @@ import io.netty.buffer.Unpooled
 class Index(
     private val shadowMemory: ShadowMemory
 ) {
-    val entriesHash = mutableMapOf<Int, Int>()
     private val _entries = mutableMapOf<Key, Reference>()
     val entries: Map<Key, Reference> get() = _entries
 
@@ -60,7 +59,7 @@ class Index(
     operator fun get(key: Key) = entries[key]
 
     fun write() {
-        val entries = entries.values.groupBy { if (it.key.isCrossReference()) it.key.asCrossReferenceToBucket() else it.key.toBucket() }
+        val entries = entries.values.groupBy { if (it.key.isCrossLink()) it.key.asCrossLinkToBucket() else it.key.toBucket() }
         shadowMemory.versions.forEach { (bucket, version) ->
             val index = Unpooled.buffer()
             val headerSizeIndex = index.writerIndex()
@@ -88,23 +87,23 @@ class Index(
             val entriesSize = index.writerIndex() - entriesOffset
             index.setIntLE(entriesSizeIndex, entriesSize)
             index.setIntLE(entriesHashIndex, index.hashLookup3(entriesOffset, entriesSize).first)
-            val mod64k = index.writerIndex() % 65536
-            if (mod64k != 0) index.writeZero(65536 - mod64k)
+            val pad = index.writerIndex() % 65536
+            if (pad != 0) index.writeZero(65536 - pad)
             shadowMemory.path.resolveFile(String.format("%02x%08x.idx", bucket, version)).content.outputStream.write(ByteBufUtil.getBytes(index))
         }
     }
 
     companion object {
         const val Version = 7
-        val CrossReferenceKeySuffix = "99bd34280ef31a".asHexStringToByteArray()
+        val CrossLinkKeySuffix = "99bd34280ef31a".asHexStringToByteArray()
 
         fun Key.toBucket(): Int {
             val value = bytes.fold(0) { value, byte -> value xor (byte.toInt() and 0xFF) }
             return value and 0xF xor (value shr 4)
         }
 
-        fun Key.isCrossReference() = bytes.copyOfRange(2, bytes.size).contentEquals(CrossReferenceKeySuffix)
+        fun Key.isCrossLink() = bytes.copyOfRange(2, bytes.size).contentEquals(CrossLinkKeySuffix)
 
-        fun Key.asCrossReferenceToBucket() = (toBucket() + 1) and 0xF
+        fun Key.asCrossLinkToBucket() = (toBucket() + 1) and 0xF
     }
 }
