@@ -18,6 +18,7 @@ package com.valaphee.synergy.ngdp.util
 
 import com.google.common.primitives.UnsignedBytes
 import com.valaphee.synergy.ngdp.casc.Reference
+import com.valaphee.synergy.ngdp.casc.util.hashLookup3
 
 /**
  * @author Kevin Ludwig

@@ -14,22 +14,6 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.tank
+package com.valaphee.synergy.ngdp.util
 
-/**
- * @author Kevin Ludwig
- */
-class Root {
-    private val keys = mutableListOf<String>()
-    private val _entries = mutableListOf<Map<String, String>>()
-    val entries: List<Map<String, String>> get() = _entries
-
-    constructor(root: String) {
-        root.lines().forEach {
-            val row = it.split('|')
-            if (keys.isEmpty()) keys += row else if (row.size == keys.size) _entries += row.mapIndexed { i, cell -> keys[i] to cell }.toMap()
-        }
-    }
-
-    operator fun get(index: Int) = _entries[index]
-}
+infix fun Int.fmod(other: Int) = ((this % other) + other) % other

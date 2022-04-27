@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-rootProject.name = "synergy"
-include("synergy")
+package com.valaphee.synergy
 
-include("synergy-api")
-include("synergy-browse")
+import tornadofx.View
+import tornadofx.vbox
 
-include("synergy-cv")
-include("synergy-input")
-
-include("synergy-ngdp")
-
-include("synergy-proxy")
-include("synergy-proxy-bgs")
-include("synergy-proxy-http")
-include("synergy-proxy-mcbe")
-include("synergy-proxy-tcp")
+/**
+ * @author Kevin Ludwig
+ */
+class MainView : View("Synergy Browse") {
+    override val root = vbox {
+    }
+}

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.util
+package com.valaphee.synergy.ngdp.blte
 
+import com.valaphee.synergy.ngdp.util.Key
 import org.bouncycastle.crypto.engines.Salsa20Engine
 import org.bouncycastle.crypto.io.CipherInputStream
 import org.bouncycastle.crypto.params.KeyParameter
@@ -24,15 +25,16 @@ import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 import java.io.InputStream
 import java.security.MessageDigest
-import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
 import kotlin.math.min
 
 /**
+ * Block Table-encoded
+ *
  * @author Kevin Ludwig
  */
 class BlteInputStream(
-    stream: DataInputStream,
+    private val stream: DataInputStream,
     private val keyring: Map<Key, ByteArray> = emptyMap()
 ) : InputStream() {
     class Chunk(
@@ -41,7 +43,6 @@ class BlteInputStream(
         val checksum: ByteArray
     )
 
-    private val stream: InputStream = KeepAliveInputStream(stream)
     private val chunks: List<Chunk>
     private var chunkIndex = 0
     private var chunk: Pair<Chunk, InputStream>?
@@ -93,37 +94,36 @@ class BlteInputStream(
     }
 
     private fun nextChunk() = if (chunkIndex < chunks.size) {
-        val chunk = chunks[chunkIndex++]
-        val chunkStream = ByteArrayInputStream(stream.readNBytes(chunk.compressedSize).also { check(MessageDigest.getInstance("MD5").digest(it).contentEquals(chunk.checksum)) })
-        chunk to when (val mode = chunkStream.read().toChar()) {
-            /*'4' -> Unit*/
-            'E' -> {
-                val keySize = chunkStream.read()
-                val key = Key(ByteArray(keySize).apply { chunkStream.read(this); reverse() })
-                keyring[key]?.let {
-                    val iv = ByteArray(chunkStream.read()).apply { chunkStream.read(this) }
-                    CipherInputStream(chunkStream, when (val encryptionMode = chunkStream.read().toChar()) {
-                        /*'A' -> RC4Engine().apply { init(false, KeyParameter(it)) }*/
-                        'S' -> {
-                            val _iv = iv.copyOf(8)
-                            var shift = 0
-                            var i = 0
-                            while (i < 4) {
-                                _iv[i] = (_iv[i].toInt() xor (chunkIndex shr shift and 0xFF)).toByte()
-                                shift += 8
-                                i++
-                            }
-                            Salsa20Engine().apply { init(false, ParametersWithIV(KeyParameter(it), _iv)) }
-                        }
-                        else -> TODO("$encryptionMode")
-                    })
-                } ?: error("Missing key $key")
-            }
-            'N' -> chunkStream
-            'Z' -> InflaterInputStream(chunkStream, Inflater(), chunk.compressedSize - 1)
-            else -> TODO("$mode")
-        }
+        val chunk = chunks[chunkIndex]
+        chunk to ByteArrayInputStream(stream.readNBytes(chunk.compressedSize).also { check(MessageDigest.getInstance("MD5").digest(it).contentEquals(chunk.checksum)) }).handleChunk().also { chunkIndex++ }
     } else null
+
+    private fun InputStream.handleChunk(): InputStream = when (val mode = read().toChar()) {
+        'N' -> this
+        'Z' -> InflaterInputStream(this)
+        'E' -> {
+            val keySize = read()
+            val key = Key(ByteArray(keySize).apply { read(this); reverse() })
+            keyring[key]?.let {
+                val iv = ByteArray(read()).apply { read(this) }
+                CipherInputStream(this, when (val encryptionMode = read().toChar()) {
+                    'S' -> {
+                        val _iv = iv.copyOf(8)
+                        var shift = 0
+                        var i = 0
+                        while (i < 4) {
+                            _iv[i] = (_iv[i].toInt() xor (chunkIndex shr shift and 0xFF)).toByte()
+                            shift += 8
+                            i++
+                        }
+                        Salsa20Engine().apply { init(false, ParametersWithIV(KeyParameter(it), _iv)) }
+                    }
+                    else -> TODO("$encryptionMode")
+                }).handleChunk()
+            } ?: error("Missing key $key")
+        }
+        else -> TODO("$mode")
+    }
 
     override fun close() {
         chunk?.second?.close()

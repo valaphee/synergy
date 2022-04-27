@@ -53,8 +53,8 @@ class BgsProxy : Proxy {
                     sslContext.newHandler(channel.alloc()),
                     HttpServerCodec(),
                     HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                    WebSocketServerProtocolHandler("/", "v1.rpc.battle.net"),
-                    PacketCodec(services),
+                    WebSocketServerProtocolHandler("/", SubProtocol),
+                    PacketCodec(Services),
                     FrontendHandler(this@BgsProxy, connection)
                 )
             }
@@ -62,7 +62,8 @@ class BgsProxy : Proxy {
     }
 
     companion object {
-        internal val services = listOf(
+        const val SubProtocol = "v1.rpc.battle.net"
+        val Services = listOf(
             bgs.protocol.account.v1.AccountListener::class,
             bgs.protocol.account.v1.AccountService::class,
             bgs.protocol.authentication.v1.AuthenticationListener::class,

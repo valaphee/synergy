@@ -16,6 +16,8 @@
 
 package com.valaphee.synergy.ngdp.tact
 
+import com.valaphee.synergy.ngdp.blte.ESpec
+import com.valaphee.synergy.ngdp.blte.ESpec.Companion.toESpec
 import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
@@ -28,10 +30,10 @@ import java.security.MessageDigest
  * @author Kevin Ludwig
  */
 class Encoding {
-    private val eSpecs = mutableListOf<String>()
+    private val eSpecs = mutableListOf<ESpec>()
     private val ceKeyPageTable = mutableListOf<CeKeyPage>()
     private val eKeySpecPageTable = mutableListOf<EKeySpecPage>()
-    private val eSpec: String
+    private val eSpec: ESpec
 
     class CeKeyPage(
         val firstCKey: Key,
@@ -72,7 +74,7 @@ class Encoding {
         val eKeySpecPageTableCount = stream.readInt()
         check(stream.readByte() == 0.toByte())
         val eSpecBlock = ByteArrayInputStream(ByteArray(stream.readInt()).apply { stream.readFully(this) })
-        while (eSpecBlock.available() != 0) eSpecs += eSpecBlock.readString()
+        while (eSpecBlock.available() != 0) eSpecs += eSpecBlock.readString().toESpec()
         repeat(ceKeyPageTableCount) { ceKeyPageTable += CeKeyPage(Key(ByteArray(cKeySize).apply { stream.readFully(this) }), ByteArray(0x10).apply { stream.readFully(this) }) }
         ceKeyPageTable.forEach {
             val ceKeyPage = Unpooled.wrappedBuffer(ByteArray(ceKeyPageTableSize * 1024).apply { stream.readFully(this) })
@@ -100,7 +102,7 @@ class Encoding {
                 }
             }
         }
-        eSpec = stream.readAllBytes().decodeToString()
+        eSpec = stream.readAllBytes().decodeToString().toESpec()
     }
 
     fun getEKeysOrNull(cKey: Key) = ceKeyPageTable.lastOrNull { it.firstCKey <= cKey }?.ceKeys?.find { it.cKey == cKey }?.eKeys

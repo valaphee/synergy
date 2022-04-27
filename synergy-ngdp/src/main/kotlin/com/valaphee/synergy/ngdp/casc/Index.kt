@@ -18,7 +18,7 @@ package com.valaphee.synergy.ngdp.casc
 
 import com.valaphee.synergy.ngdp.util.Key
 import com.valaphee.synergy.ngdp.util.asHexStringToByteArray
-import com.valaphee.synergy.ngdp.util.hashLookup3
+import com.valaphee.synergy.ngdp.casc.util.hashLookup3
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
 

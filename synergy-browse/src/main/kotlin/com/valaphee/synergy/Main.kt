@@ -14,13 +14,23 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.tank
+package com.valaphee.synergy
+
+import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
+import javafx.scene.image.Image
+import tornadofx.App
+import tornadofx.launch
+import kotlin.system.exitProcess
 
 /**
  * @author Kevin Ludwig
  */
-interface EncryptionProc<T> {
-    fun getKey(header: T): ByteArray
+class Main : App(Image(Main::class.java.getResourceAsStream("/app.png")), MainView::class)
 
-    fun getIv(header: T, name: String): ByteArray
+fun main(arguments: Array<String>) {
+    SvgImageLoaderFactory.install()
+
+    launch<Main>(arguments)
+
+    exitProcess(0)
 }

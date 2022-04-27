@@ -16,8 +16,7 @@
 
 package com.valaphee.synergy.ngdp.tank
 
-import com.valaphee.synergy.ngdp.tank.encryption.cmf.CmfEncryptionProc96894
-import com.valaphee.synergy.ngdp.util.Key
+import com.valaphee.synergy.ngdp.tank.encryption.trg.TrgEncryptionProc96894
 import io.netty.buffer.Unpooled
 import java.io.InputStream
 import javax.crypto.Cipher
@@ -28,54 +27,42 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * @author Kevin Ludwig
  */
-class ContentManifest {
+class TankResourceGraph {
     class Header(
+        val unknown00: Int,
         val version: Int,
-        val unknown04: Int,
         val unknown08: Int,
         val unknown0C: Int,
         val unknown10: Int,
         val unknown14: Int,
-        val unknown18: Int,
-        val dataPatchRecordCount: Int,
-        val dataCount: Int,
-        val entryPatchRecordCount: Int,
-        val entryCount: Int,
+        val packageCount: Int,
+        val packageBlockSize: Int,
+        val skinCount: Int,
+        val skinBlockSize: Int,
+        val typeBundleIndexCount: Int,
+        val typeBundleIndexBlockSize: Int,
+        val unknown30: Int,
+        val unknown34: Int,
+        val graphBlockSize: Int,
         val magic: Int
     )
 
-    data class Entry(
-        val index: Int,
-        val hashA: Long,
-        val hashB: Long
-    )
-
-    data class Data(
-        val guid: Long,
-        val size: Int,
-        val unknown0C: Byte,
-        val cKey: Key
-    )
-
     private val header: Header
-    private val entries: List<Entry>
-    private val data: List<Data>
 
     constructor(name: String, stream: InputStream) {
-        val headerBuffer = Unpooled.wrappedBuffer(stream.readNBytes(12 * 4))
-        header = Header(headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE())
-        val buffer = Unpooled.wrappedBuffer((if (header.magic ushr 8 == EncryptionMagic) {
+        val headerBuffer = Unpooled.wrappedBuffer(stream.readNBytes(16 * 4))
+        header = Header(headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE())
+        val buffer = Unpooled.wrappedBuffer((if (header.magic ushr 8 == EncryptedMagic) {
             val encryptionProc = checkNotNull(encryptionProcByVersion[header.version])
             CipherInputStream(stream, Cipher.getInstance("AES/CBC/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(encryptionProc.getKey(header, 32), "AES") as java.security.Key, IvParameterSpec(encryptionProc.getIv(header, name, 16))) })
         } else stream).readAllBytes())
-        entries = List(header.entryCount) { Entry(buffer.readIntLE(), buffer.readLongLE(), buffer.readLongLE()) }
-        data = List(header.dataCount) { Data(buffer.readLongLE(), buffer.readIntLE(), buffer.readByte(), Key(ByteArray(16).apply { buffer.readBytes(this) })) }
     }
 
     companion object {
-        const val EncryptionMagic = 0x636D66
+        const val EncryptedMagic = 0x677274
+        const val UnencryptedMagic = 0x747267
         private val encryptionProcByVersion = mapOf(
-            96894 to CmfEncryptionProc96894
+            96894 to TrgEncryptionProc96894
         )
     }
 }

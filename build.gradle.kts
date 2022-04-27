@@ -20,6 +20,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.0.0"
     id("com.palantir.git-version") version "0.12.3"
     kotlin("jvm") version "1.6.20"
+    id("org.openjfx.javafxplugin") version "0.0.10"
     signing
 }
 

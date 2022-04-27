@@ -94,7 +94,7 @@ class McbeProxy : Proxy {
         private val channelFactory = ChannelFactory { RakNetServerChannel(CurrentUnderlyingNetworking.datagramChannel) }
         internal val userDataCodec = UserDataCodec(0xFE)
         internal val jsonObjectMapper = ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY).enable(JsonParser.Feature.ALLOW_COMMENTS)
-        internal val nbtObjectMapper = ObjectMapper(NbtFactory())
+        private val nbtObjectMapper = ObjectMapper(NbtFactory())
         internal val nbtLeObjectMapper = ObjectMapper(NbtFactory().enable(NbtFactory.Feature.LittleEndian))
         internal val nbtLeVarIntObjectMapper = ObjectMapper(NbtFactory().enable(NbtFactory.Feature.LittleEndian).enable(NbtFactory.Feature.VarInt))
         internal val nbtLeVarIntNoWrapObjectMapper = ObjectMapper(NbtFactory().enable(NbtFactory.Feature.LittleEndian).enable(NbtFactory.Feature.VarInt).enable(NbtFactory.Feature.NoWrap))

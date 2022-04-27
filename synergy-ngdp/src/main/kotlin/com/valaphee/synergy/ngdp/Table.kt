@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.util
-
-import java.io.FilterInputStream
-import java.io.InputStream
+package com.valaphee.synergy.ngdp
 
 /**
  * @author Kevin Ludwig
  */
-class KeepAliveInputStream(
-    stream: InputStream
-) : FilterInputStream(stream) {
-    override fun close() = Unit
+class Table {
+    private val keys = mutableListOf<String>()
+    private val _entries = mutableListOf<Map<String, String>>()
+    val entries: List<Map<String, String>> get() = _entries
+
+    constructor(table: String) {
+        table.lines().forEach {
+            val row = it.split('|')
+            if (keys.isEmpty()) keys += row else if (row.size == keys.size) _entries += row.mapIndexed { i, cell -> keys[i] to cell }.toMap()
+        }
+    }
+
+    operator fun get(index: Int) = _entries[index]
 }

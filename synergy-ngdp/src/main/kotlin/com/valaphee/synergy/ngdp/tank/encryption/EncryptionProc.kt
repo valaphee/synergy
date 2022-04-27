@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.tact
+package com.valaphee.synergy.ngdp.tank.encryption
 
 /**
  * @author Kevin Ludwig
  */
-class Config {
-    private val _entries = mutableMapOf<String, List<String>>()
-    val entries: Map<String, List<String>> get() = _entries
+interface EncryptionProc<T> {
+    fun getKey(header: T, length: Int): ByteArray
 
-    constructor(config: String) {
-        config.lines().forEach {
-            val row = it.split('#', limit = 2).first().split('=', limit = 2)
-            if (row.size == 2) _entries[row[0].trim()] = row[1].trim().split(' ')
-        }
-    }
-
-    operator fun get(key: String) = _entries[key]
+    fun getIv(header: T, name: String, length: Int): ByteArray
 }

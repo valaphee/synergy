@@ -48,8 +48,8 @@ class FrontendHandler(
                         proxy.clientSslContext.newHandler(channel.alloc()),
                         HttpClientCodec(),
                         HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        PacketCodec(BgsProxy.services),
-                        EventEmitter(connection, BgsProxy.services),
+                        PacketCodec(BgsProxy.Services),
+                        EventEmitter(connection, BgsProxy.Services),
                         BackendHandler(connection, context.channel())
                     )
                 }

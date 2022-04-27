@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-rootProject.name = "synergy"
-include("synergy")
+package com.valaphee.synergy.ngdp.blte
 
-include("synergy-api")
-include("synergy-browse")
+import java.io.FilterInputStream
+import java.io.InputStream
 
-include("synergy-cv")
-include("synergy-input")
-
-include("synergy-ngdp")
-
-include("synergy-proxy")
-include("synergy-proxy-bgs")
-include("synergy-proxy-http")
-include("synergy-proxy-mcbe")
-include("synergy-proxy-tcp")
+/**
+ * @author Kevin Ludwig
+ */
+class KeepAliveInputStream(
+    stream: InputStream
+) : FilterInputStream(stream) {
+    override fun close() = Unit
+}

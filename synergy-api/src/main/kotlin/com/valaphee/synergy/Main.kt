@@ -88,9 +88,9 @@ fun main(arguments: Array<String>) {
         } else Config().also { ObjectMapper.writeValue(configFile, it) }
     })
 
-    ObjectMapper.injectableValues = GuiceInjectableValues(injector)
     val guiceAnnotationIntrospector = GuiceAnnotationIntrospector()
     ObjectMapper.setAnnotationIntrospectors(AnnotationIntrospectorPair(guiceAnnotationIntrospector, ObjectMapper.serializationConfig.annotationIntrospector), AnnotationIntrospectorPair(guiceAnnotationIntrospector, ObjectMapper.deserializationConfig.annotationIntrospector))
+    ObjectMapper.injectableValues = GuiceInjectableValues(injector)
 
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
