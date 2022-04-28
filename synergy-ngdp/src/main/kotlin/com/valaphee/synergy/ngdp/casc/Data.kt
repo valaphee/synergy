@@ -18,13 +18,14 @@ package com.valaphee.synergy.ngdp.casc
 
 import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.Unpooled
-import org.apache.commons.vfs2.RandomAccessContent
+import java.io.RandomAccessFile
+import java.nio.channels.Channels
 
 /**
  * @author Kevin Ludwig
  */
 class Data(
-    private val data: RandomAccessContent,
+    private val data: RandomAccessFile,
     val reference: Reference
 ) {
     private val crossLink: Boolean
@@ -42,7 +43,7 @@ class Data(
         dataHeader.readIntLE()
     }
 
-    val inputStream get() = if (!crossLink) data.apply { seek(reference.offset.toLong() + HeaderSize) }.inputStream else null
+    val inputStream get() = if (!crossLink) Channels.newInputStream(data.apply { seek(reference.offset.toLong() + HeaderSize) }.channel) else null
 
     companion object {
         const val KeySize = 0x10

@@ -16,11 +16,12 @@
 
 package com.valaphee.synergy.ngdp.casc
 
+import com.valaphee.synergy.ngdp.casc.util.hashLookup3
 import com.valaphee.synergy.ngdp.util.Key
 import com.valaphee.synergy.ngdp.util.asHexStringToByteArray
-import com.valaphee.synergy.ngdp.casc.util.hashLookup3
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
+import java.io.File
 
 /**
  * @author Kevin Ludwig
@@ -33,8 +34,7 @@ class Index(
 
     init {
         shadowMemory.versions.forEach { (bucket, version) ->
-            val indexFile = shadowMemory.path.resolveFile(String.format("%02x%08x.idx", bucket, version))
-            val index = Unpooled.wrappedBuffer(indexFile.content.byteArray)
+            val index = Unpooled.wrappedBuffer(File(shadowMemory.path, String.format("%02x%08x.idx", bucket, version)).readBytes())
             val headerSize = index.readIntLE()
             check(index.readIntLE() == index.hashLookup3(length = headerSize).first)
             check(index.readUnsignedShortLE() == Version)
@@ -89,7 +89,7 @@ class Index(
             index.setIntLE(entriesHashIndex, index.hashLookup3(entriesOffset, entriesSize).first)
             val pad = index.writerIndex() % 65536
             if (pad != 0) index.writeZero(65536 - pad)
-            shadowMemory.path.resolveFile(String.format("%02x%08x.idx", bucket, version)).content.outputStream.write(ByteBufUtil.getBytes(index))
+            File(shadowMemory.path, String.format("%02x%08x.idx", bucket, version)).writeBytes(ByteBufUtil.getBytes(index))
         }
     }
 

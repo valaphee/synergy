@@ -18,7 +18,6 @@ rootProject.name = "synergy"
 include("synergy")
 
 include("synergy-api")
-include("synergy-browse")
 
 include("synergy-cv")
 include("synergy-input")

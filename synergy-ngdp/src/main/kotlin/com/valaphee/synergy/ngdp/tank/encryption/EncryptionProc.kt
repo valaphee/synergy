@@ -16,11 +16,21 @@
 
 package com.valaphee.synergy.ngdp.tank.encryption
 
+import io.netty.buffer.ByteBuf
+
 /**
  * @author Kevin Ludwig
  */
-interface EncryptionProc<T> {
-    fun getKey(header: T, length: Int): ByteArray
+interface EncryptionProc {
+    fun getKey(headerBuffer: ByteBuf, length: Int): ByteArray
 
-    fun getIv(header: T, name: String, length: Int): ByteArray
+    fun getIv(nameHash: ByteArray, headerBuffer: ByteBuf, length: Int): ByteArray
+
+    companion object {
+        private val byVersion = mapOf(
+            96894 to EncryptionProc96894
+        )
+
+        fun byVersionOrNull(version: Int) = byVersion[version]
+    }
 }

@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy
-
-import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
-import javafx.scene.image.Image
-import tornadofx.App
-import tornadofx.launch
-import kotlin.system.exitProcess
+package com.valaphee.synergy.ngdp.tank.util
 
 /**
  * @author Kevin Ludwig
  */
-class Main : App(Image(Main::class.java.getResourceAsStream("/app.png")), MainView::class)
-
-fun main(arguments: Array<String>) {
-    SvgImageLoaderFactory.install()
-
-    launch<Main>(arguments)
-
-    exitProcess(0)
+class Guid(
+    val usage: Int,
+    val type: Int,
+    val platform: Int,
+    val region: Int,
+    val locale: Int,
+    val id: Int
+) {
+    constructor(value: Long) : this((value ushr 60).toInt() and 0xF, (value ushr 48).toInt() and 0xFFF, (value ushr 44).toInt() and 0xF, (value ushr 39).toInt() and 0x1F, (value ushr 34).toInt() and 0x1F, value.toInt())
 }

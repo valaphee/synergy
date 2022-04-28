@@ -19,34 +19,28 @@ package com.valaphee.synergy.ngdp.casc
 import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
-import org.apache.commons.vfs2.FileObject
+import java.io.File
 
 /**
  * @author Kevin Ludwig
  */
 class ShadowMemory(
-    private val shadowMemoryPath: FileObject
+    private val shadowMemoryFile: File
 ) {
-    val path: FileObject
+    val path: File
     val versions = mutableMapOf<Int, Int>()
     private val freeSpace = mutableListOf<Reference>()
 
     init {
-        val shadowMemory = Unpooled.wrappedBuffer(shadowMemoryPath.content.byteArray)
+        val shadowMemory = Unpooled.wrappedBuffer(shadowMemoryFile.readBytes())
         val headerType = shadowMemory.readIntLE()
         check(headerType == HeaderType)
         val headerSize = shadowMemory.readIntLE()
         val rawPath = ByteArray(0x100).apply { shadowMemory.readBytes(this) }
         val path = rawPath.copyOf(rawPath.indexOf(0)).decodeToString().split('\\', limit = 2)
-        this.path = shadowMemoryPath.fileSystem.fileSystemManager.resolveFile(
-            "${
-                when (path[0]) {
-                    "Global" -> "file"
-                    else -> TODO(path[0])
-                }
-            }:${path[1]}"
-        )
-        this.path.children.forEach { if (it.name.extension == "idx") versions[it.name.baseName.substring(0, 2).toInt(16)] = 0 }
+        check(path[0] == "Global")
+        this.path = File(path[1])
+        this.path.listFiles { file -> file.extension == "idx" }!!.forEach { versions[it.name.substring(0, 2).toInt(16)] = 0 }
         val blocks = List((headerSize - shadowMemory.readerIndex() - versions.size * 4) / (4 * 2)) { shadowMemory.readIntLE() to shadowMemory.readIntLE() }
         repeat(versions.size) { versions[it] = shadowMemory.readIntLE() }
         val freeSpaceLength = mutableListOf<Reference>()
@@ -67,10 +61,10 @@ class ShadowMemory(
         shadowMemory.writeIntLE(HeaderType)
         val headerSizeIndex = shadowMemory.writerIndex()
         shadowMemory.writeIntLE(0)
-        shadowMemory.writeBytes("${when (path.uri.scheme) {
+        /*shadowMemory.writeBytes("${when (path.uri.scheme) {
             "file" -> "Global"
             else -> TODO(path.uri.scheme)
-        }}\\${path.uri.path.removePrefix("/")}".encodeToByteArray().copyOf(0x100))
+        }}\\${path.uri.path.removePrefix("/")}".encodeToByteArray().copyOf(0x100)) TODO*/
         val blockSizeIndex = shadowMemory.writerIndex()
         shadowMemory.writeIntLE(0)
         val blockOffsetIndex = shadowMemory.writerIndex()
@@ -86,7 +80,7 @@ class ShadowMemory(
         freeSpace.forEach { shadowMemory.writeBytes(Reference(emptyKey, it.file, it.offset, 0).toBuffer(keySize = 0, lengthSize = 0)) }
         shadowMemory.setIntLE(blockSizeIndex, shadowMemory.writerIndex() - blockOffset)
         shadowMemory.writeZero(0x0B)
-        shadowMemoryPath.content.outputStream.write(ByteBufUtil.getBytes(shadowMemory))
+        shadowMemoryFile.writeBytes(ByteBufUtil.getBytes(shadowMemory))
     }
 
     companion object {

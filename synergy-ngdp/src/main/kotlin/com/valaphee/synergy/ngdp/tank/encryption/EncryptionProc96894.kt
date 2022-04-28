@@ -16,11 +16,25 @@
 
 package com.valaphee.synergy.ngdp.tank.encryption
 
+import com.valaphee.synergy.ngdp.util.fmod
+import io.netty.buffer.ByteBuf
+
 /**
  * @author Kevin Ludwig
  */
-object EncryptionProc96894 {
-    val KeyTable = shortArrayOf(
+object EncryptionProc96894 : EncryptionProc {
+    override fun getKey(headerBuffer: ByteBuf, length: Int): ByteArray {
+        var keyIndex = keyTable[length + 256].toInt()
+        return ByteArray(length) { keyTable[keyIndex fmod 512].also { keyIndex += 3 } }
+    }
+
+    override fun getIv(nameHash: ByteArray, headerBuffer: ByteBuf, length: Int): ByteArray {
+        var keyIndex = length * headerBuffer.getIntLE(0)
+        val _keyIndex = keyIndex
+        return ByteArray(length) { (keyTable[keyIndex fmod 512].also { keyIndex += if ((nameHash[3].toInt() and 1) != 0) 37 else _keyIndex fmod 61 }.toInt() xor nameHash[(keyIndex - it) fmod 20].toInt()).toByte() }
+    }
+
+    private val keyTable = shortArrayOf(
         0x56, 0x78, 0xCD, 0xE6, 0x3E, 0xB8, 0x03, 0x00, 0x28, 0x38, 0x12, 0xC9, 0x15, 0x64, 0x20, 0x9F,
         0x9F, 0x4B, 0x82, 0x8A, 0x63, 0x98, 0x7E, 0x53, 0x87, 0xA7, 0xA9, 0xE1, 0x0A, 0x54, 0x84, 0xA1,
         0x5F, 0xAB, 0xAE, 0x8B, 0x7C, 0x83, 0x75, 0xEF, 0xA2, 0x1F, 0xE4, 0x88, 0x45, 0xD3, 0x9B, 0x5B,

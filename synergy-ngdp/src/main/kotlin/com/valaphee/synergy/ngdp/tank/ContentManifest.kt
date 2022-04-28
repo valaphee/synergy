@@ -16,10 +16,12 @@
 
 package com.valaphee.synergy.ngdp.tank
 
-import com.valaphee.synergy.ngdp.tank.encryption.cmf.CmfEncryptionProc96894
 import com.valaphee.synergy.ngdp.util.Key
+import com.valaphee.synergy.ngdp.tank.encryption.EncryptionProc
+import com.valaphee.synergy.ngdp.tank.util.Guid
 import io.netty.buffer.Unpooled
 import java.io.InputStream
+import java.security.MessageDigest
 import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.spec.IvParameterSpec
@@ -30,7 +32,7 @@ import javax.crypto.spec.SecretKeySpec
  */
 class ContentManifest {
     class Header(
-        val version: Int,
+        val buildVersion: Int,
         val unknown04: Int,
         val unknown08: Int,
         val unknown0C: Int,
@@ -51,31 +53,28 @@ class ContentManifest {
     )
 
     data class Data(
-        val guid: Long,
+        val guid: Guid,
         val size: Int,
         val unknown0C: Byte,
         val cKey: Key
     )
 
-    private val header: Header
-    private val entries: List<Entry>
-    private val data: List<Data>
+    val header: Header
+    val entries: List<Entry>
+    val data: List<Data>
 
     constructor(name: String, stream: InputStream) {
         val headerBuffer = Unpooled.wrappedBuffer(stream.readNBytes(12 * 4))
         header = Header(headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE(), headerBuffer.readIntLE())
         val buffer = Unpooled.wrappedBuffer((if (header.magic ushr 8 == EncryptionMagic) {
-            val encryptionProc = checkNotNull(encryptionProcByVersion[header.version])
-            CipherInputStream(stream, Cipher.getInstance("AES/CBC/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(encryptionProc.getKey(header, 32), "AES") as java.security.Key, IvParameterSpec(encryptionProc.getIv(header, name, 16))) })
+            val encryptionProc = checkNotNull(EncryptionProc.byVersionOrNull(header.buildVersion))
+            CipherInputStream(stream, Cipher.getInstance("AES/CBC/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(encryptionProc.getKey(headerBuffer, 32), "AES"), IvParameterSpec(encryptionProc.getIv(MessageDigest.getInstance("SHA1").digest(name.toByteArray()), headerBuffer, 16))) })
         } else stream).readAllBytes())
         entries = List(header.entryCount) { Entry(buffer.readIntLE(), buffer.readLongLE(), buffer.readLongLE()) }
-        data = List(header.dataCount) { Data(buffer.readLongLE(), buffer.readIntLE(), buffer.readByte(), Key(ByteArray(16).apply { buffer.readBytes(this) })) }
+        data = List(header.dataCount) { Data(Guid(buffer.readLongLE()), buffer.readIntLE(), buffer.readByte(), Key(ByteArray(16).apply { buffer.readBytes(this) })) }
     }
 
     companion object {
         const val EncryptionMagic = 0x636D66
-        private val encryptionProcByVersion = mapOf(
-            96894 to CmfEncryptionProc96894
-        )
     }
 }

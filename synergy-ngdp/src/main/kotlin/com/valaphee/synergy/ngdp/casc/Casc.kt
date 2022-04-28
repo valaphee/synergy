@@ -17,9 +17,8 @@
 package com.valaphee.synergy.ngdp.casc
 
 import com.valaphee.synergy.ngdp.util.Key
-import org.apache.commons.vfs2.FileObject
-import org.apache.commons.vfs2.RandomAccessContent
-import org.apache.commons.vfs2.util.RandomAccessMode
+import java.io.File
+import java.io.RandomAccessFile
 import java.security.MessageDigest
 
 /**
@@ -28,16 +27,16 @@ import java.security.MessageDigest
  * @author Kevin Ludwig
  */
 class Casc(
-    path: FileObject
+    path: File
 ) {
-    private val shadowMemory = ShadowMemory(path.resolveFile("shmem"))
+    private val shadowMemory = ShadowMemory(File(path, "shmem"))
     private val index = Index(shadowMemory)
-    private var data = mutableMapOf<Int, RandomAccessContent>()
+    private var data = mutableMapOf<Int, RandomAccessFile>()
 
     @Deprecated("")
-    val entries get() = index.entries.values.asSequence().map { Data(data.getOrPut(it.file) { shadowMemory.path.resolveFile(String.format("data.%03d", it.file)).content.getRandomAccessContent(RandomAccessMode.READ) }, it) }
+    val entries get() = index.entries.values.asSequence().map { Data(data.getOrPut(it.file) { RandomAccessFile(File(shadowMemory.path, String.format("data.%03d", it.file)), "r") }, it) }
 
-    operator fun get(key: Key) = index[key]?.let { Data(data.getOrPut(it.file) { shadowMemory.path.resolveFile(String.format("data.%03d", it.file)).content.getRandomAccessContent(RandomAccessMode.READ) }, it) }
+    operator fun get(key: Key) = index[key]?.let { Data(data.getOrPut(it.file) { RandomAccessFile(File(shadowMemory.path, String.format("data.%03d", it.file)), "r") }, it) }
 
     fun add(data: ByteArray) = Key(MessageDigest.getInstance("MD5").digest(data))
 
