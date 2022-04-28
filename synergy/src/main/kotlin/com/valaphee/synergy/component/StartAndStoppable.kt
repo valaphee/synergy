@@ -16,11 +16,15 @@
 
 package com.valaphee.synergy.component
 
+import org.graalvm.polyglot.HostAccess
+
 /**
  * @author Kevin Ludwig
  */
 interface StartAndStoppable {
+    @HostAccess.Export
     fun start()
 
+    @HostAccess.Export
     fun stop()
 }

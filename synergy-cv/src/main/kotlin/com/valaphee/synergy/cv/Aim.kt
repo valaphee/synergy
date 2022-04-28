@@ -28,7 +28,6 @@ import com.valaphee.synergy.mouse.HidMouse
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import nu.pattern.OpenCV
-import org.graalvm.polyglot.HostAccess
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import java.awt.Rectangle
@@ -49,14 +48,13 @@ class Aim(
     id: UUID,
     scripts: List<URL>,
     sensitivity: Float,
-    epsilon: Int,
+    precision: Int,
     @get:JsonProperty("view") val view: Int4,
     @get:JsonProperty("processors") val processors: List<Processor>,
     @get:JsonProperty("extractor") val extractor: Extractor
-) : HidMouse(id, scripts, sensitivity, epsilon), StartAndStoppable {
+) : HidMouse(id, scripts, sensitivity, precision), StartAndStoppable {
     private var running = false
 
-    @HostAccess.Export
     override fun start() {
         require(!running)
 
@@ -80,13 +78,12 @@ class Aim(
                 val extractedPoints = extractor.extract(processedImage)
                 extractedPoints.minByOrNull { it.distance2(centerFloat) }?.let {
                     val target = it.toInt2()
-                    if (IntMath.pow(target.x - centerInt.x, 2) + IntMath.pow(target.y - centerInt.y, 2) > epsilon) mouseMoveRaw(Int2(target.x - centerInt.x, target.y - centerInt.y))
+                    if (IntMath.pow(target.x - centerInt.x, 2) + IntMath.pow(target.y - centerInt.y, 2) > precision) mouseMoveRaw(Int2(target.x - centerInt.x, target.y - centerInt.y))
                 }
             }
         }
     }
 
-    @HostAccess.Export
     override fun stop() {
         running = false
     }

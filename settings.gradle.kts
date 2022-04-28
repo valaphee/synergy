@@ -15,15 +15,12 @@
  */
 
 rootProject.name = "synergy"
+
 include("synergy")
-
 include("synergy-api")
-
 include("synergy-cv")
 include("synergy-input")
-
 include("synergy-ngdp")
-
 include("synergy-proxy")
 include("synergy-proxy-bgs")
 include("synergy-proxy-http")

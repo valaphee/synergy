@@ -37,7 +37,7 @@ open class HidMouse(
     id: UUID,
     scripts: List<URL>,
     @get:JsonProperty("sensitivity") val sensitivity: Float,
-    @get:JsonProperty("epsilon") val epsilon: Int
+    @get:JsonProperty("precision") val precision: Int
 ) : Mouse(id, scripts) {
     private val moves: IntArray
 
@@ -56,7 +56,7 @@ open class HidMouse(
 
     override suspend fun mouseMove(target: Int2) {
         var current = MouseInfo.getPointerInfo().location
-        while (pow(target.x - current.x, 2) + pow(target.y - current.y, 2) > epsilon) {
+        while (pow(target.x - current.x, 2) + pow(target.y - current.y, 2) > precision) {
             mouseMoveRaw(Int2(target.x - current.x, target.y - current.y))
             delay(1L)
             current = MouseInfo.getPointerInfo().location
