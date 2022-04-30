@@ -40,5 +40,5 @@ class Casc(
 
     fun add(data: ByteArray) = Key(MessageDigest.getInstance("MD5").digest(data))
 
-    fun remove(key: Key) = Unit
+    fun remove(key: Key): Unit = TODO()
 }

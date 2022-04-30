@@ -47,7 +47,7 @@ class McbePackDecryptSubcommand : Subcommand("mcbe-pack-decrypt", "Decrypt pack"
             File(inputPath, "contents.json").inputStream().use { inputStream ->
                 inputStream.skip(0x100)
                 File(outputPath, "contents.json").outputStream().use { outputStream ->
-                    val cipher = key.encodeToByteArray().let { Cipher.getInstance("AES/CFB8/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(it, "AES"), IvParameterSpec(it.copyOf(16))) } }
+                    val cipher = key.toByteArray().let { Cipher.getInstance("AES/CFB8/NoPadding").apply { init(Cipher.DECRYPT_MODE, SecretKeySpec(it, "AES"), IvParameterSpec(it.copyOf(16))) } }
                     val buffer = ByteArray(64)
                     var bytesRead: Int
                     while (inputStream.read(buffer).also { bytesRead = it } != -1) cipher?.let { outputStream.write(it.update(buffer, 0, bytesRead)) } ?: outputStream.write(buffer, 0, bytesRead)

@@ -22,10 +22,10 @@ fun String.asHexStringToByteArray() = ByteArray(length / 2) { (Character.digit(t
 
 fun ByteArray.toHexString(): String {
     val bytes = ByteArray(size * 2)
-    forEachIndexed { j, value ->
+    forEachIndexed { i, value ->
         val _value = value.toInt() and 0xFF
-        bytes[j * 2] = hexDigits[_value ushr 4]
-        bytes[j * 2 + 1] = hexDigits[_value and 0x0F]
+        bytes[i * 2] = hexDigits[_value ushr 4]
+        bytes[i * 2 + 1] = hexDigits[_value and 0x0F]
     }
     return String(bytes, StandardCharsets.UTF_8)
 }

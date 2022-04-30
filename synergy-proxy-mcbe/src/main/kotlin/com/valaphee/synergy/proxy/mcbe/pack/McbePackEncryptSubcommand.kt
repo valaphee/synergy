@@ -56,7 +56,7 @@ class McbePackEncryptSubcommand : Subcommand("mcbe-pack-encrypt", "Encrypt pack"
 
             val content = Content(1, inputPath.walkTopDown().filter { it.isFile }.map {
                 val file = it.relativeTo(inputPath).path.replace('\\', '/')
-                Content.Entry(file, if (ignore.contains(file)) null else random.nextKey().encodeToByteArray())
+                Content.Entry(file, if (ignore.contains(file)) null else random.nextKey().toByteArray())
             }.toList())
             content.content.forEach {
                 it.key?.let { _ -> log.info("Encrypting {}, using key {}", it.path, it.key) } ?: log.info("Copying {}", it.path)
@@ -83,7 +83,7 @@ class McbePackEncryptSubcommand : Subcommand("mcbe-pack-encrypt", "Encrypt pack"
             outputBuffer.writerIndex(0x100)
             ObjectMapper.writeValue(File(inputPath, "contents.json"), content)
             File(inputPath, "contents.json").inputStream().use { inputStream ->
-                val cipher = key.encodeToByteArray().let { Cipher.getInstance("AES/CFB8/NoPadding").apply { init(Cipher.ENCRYPT_MODE, SecretKeySpec(it, "AES"), IvParameterSpec(it.copyOf(16))) } }
+                val cipher = key.toByteArray().let { Cipher.getInstance("AES/CFB8/NoPadding").apply { init(Cipher.ENCRYPT_MODE, SecretKeySpec(it, "AES"), IvParameterSpec(it.copyOf(16))) } }
                 val buffer = ByteArray(64)
                 var bytesRead: Int
                 while (inputStream.read(buffer).also { bytesRead = it } != -1) outputBuffer.writeBytes(cipher.update(buffer, 0, bytesRead))

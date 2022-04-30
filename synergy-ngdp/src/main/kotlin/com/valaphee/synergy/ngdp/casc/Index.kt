@@ -46,7 +46,7 @@ class Index(
             check(index.readLongLE() == 0x4000000000)
             index.skipBytes(16 - ((8 + headerSize) % 16))
             val entriesSize = index.readIntLE()
-            /*check(*/index.readIntLE()/* == index.hashLookup3(length = entriesSize).first)*/
+            /*check(*/index.readIntLE()/* == index.hashLookup3(length = entriesSize).first) TODO*/
             repeat(entriesSize / (keySize + locationSize + lengthSize)) {
                 val reference = Reference(index, keySize, locationSize, lengthSize, segmentBits)
                 val referenceBucket = reference.key.toBucket()
@@ -86,7 +86,7 @@ class Index(
             entries[bucket]?.forEach { index.writeBytes(it.toBuffer()) }
             val entriesSize = index.writerIndex() - entriesOffset
             index.setIntLE(entriesSizeIndex, entriesSize)
-            index.setIntLE(entriesHashIndex, index.hashLookup3(entriesOffset, entriesSize).first)
+            index.setIntLE(entriesHashIndex, index.hashLookup3(entriesOffset, entriesSize).first) // TODO
             val pad = index.writerIndex() % 65536
             if (pad != 0) index.writeZero(65536 - pad)
             File(shadowMemory.path, String.format("%02x%08x.idx", bucket, version)).writeBytes(ByteBufUtil.getBytes(index))

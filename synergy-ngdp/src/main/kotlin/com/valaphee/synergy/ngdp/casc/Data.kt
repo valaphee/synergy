@@ -39,8 +39,8 @@ class Data(
         }.copyOf(9)) == reference.key)
         check(dataHeader.readIntLE() == reference.length)
         crossLink = dataHeader.readUnsignedShortLE() and 0b1 == 1
-        dataHeader.readIntLE()
-        dataHeader.readIntLE()
+        /*check(*/dataHeader.readIntLE()/*) TODO*/
+        /*check(*/dataHeader.readIntLE()/*) TODO*/
     }
 
     val inputStream get() = if (!crossLink) Channels.newInputStream(data.apply { seek(reference.offset.toLong() + HeaderSize) }.channel) else null

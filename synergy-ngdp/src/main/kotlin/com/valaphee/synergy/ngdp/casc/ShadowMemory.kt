@@ -64,7 +64,7 @@ class ShadowMemory(
         /*shadowMemory.writeBytes("${when (path.uri.scheme) {
             "file" -> "Global"
             else -> TODO(path.uri.scheme)
-        }}\\${path.uri.path.removePrefix("/")}".encodeToByteArray().copyOf(0x100)) TODO*/
+        }}\\${path.uri.path.removePrefix("/")}".toByteArray().copyOf(0x100)) TODO*/
         val blockSizeIndex = shadowMemory.writerIndex()
         shadowMemory.writeIntLE(0)
         val blockOffsetIndex = shadowMemory.writerIndex()

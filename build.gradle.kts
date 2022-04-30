@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("com.github.johnrengelman.shadow") version "7.0.0"
     id("com.palantir.git-version") version "0.12.3"
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.6.21"
     signing
 }
 
