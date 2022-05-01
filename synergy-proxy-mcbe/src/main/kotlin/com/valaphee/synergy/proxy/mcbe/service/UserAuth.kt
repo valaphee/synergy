@@ -22,19 +22,19 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * @author Kevin Ludwig
  */
 class UserAuth(
-    @get:JsonProperty("AuthorizationToken") val authorizationToken: AuthorizationToken
+    @get:JsonProperty("AuthorizationToken") val authorizationToken: AuthorizationToken?
 ) {
     class AuthorizationToken(
-        @get:JsonProperty("DisplayClaims") val claim: Claim,
-        @get:JsonProperty("Token") val token: String
+        @get:JsonProperty("DisplayClaims") val claim: Claim?,
+        @get:JsonProperty("Token") val token: String?
     ) {
         class Claim(
-            @get:JsonProperty("xui") val userInfo: List<UserInfo>
+            @get:JsonProperty("xui") val userInfo: List<UserInfo>?
         ) {
             class UserInfo(
                 @get:JsonProperty("gtg") val userName: String?,
                 @get:JsonProperty("xid") val xboxUserId: String?,
-                @get:JsonProperty("uhs") val userHash: String
+                @get:JsonProperty("uhs") val userHash: String?
             )
         }
     }

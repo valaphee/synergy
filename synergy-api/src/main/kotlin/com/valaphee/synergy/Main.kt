@@ -31,6 +31,7 @@ import com.valaphee.synergy.component.ComponentService
 import com.valaphee.synergy.component.ComponentServiceImpl
 import com.valaphee.synergy.config.Config
 import com.valaphee.synergy.input.WindowsHookSubcommand
+import com.valaphee.synergy.proxy.mcbe.auth.DefaultAuth
 import com.valaphee.synergy.proxy.mcbe.pack.McbePackDecryptSubcommand
 import com.valaphee.synergy.proxy.mcbe.pack.McbePackEncryptSubcommand
 import io.ktor.http.ContentType
@@ -59,10 +60,14 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.io.IoBuilder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
+import java.security.KeyPairGenerator
 import java.security.Security
+import java.security.spec.ECGenParameterSpec
 import java.util.UUID
 
 fun main(arguments: Array<String>) {
+    DefaultAuth(KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()).authJws
+    return
     Security.addProvider(BouncyCastleProvider())
 
     ObjectMapper.registerModule(ProtobufModule())

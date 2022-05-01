@@ -22,5 +22,5 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * @author Kevin Ludwig
  */
 class DeviceAuth(
-    @get:JsonProperty("Token") val token: String
+    @get:JsonProperty("Token") val token: String?
 )

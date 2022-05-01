@@ -28,6 +28,11 @@ import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.close
 import io.ktor.utils.io.core.readBytes
 import io.ktor.utils.io.core.toByteArray
+import io.netty.buffer.ByteBufUtil
+import io.netty.buffer.Unpooled
+import org.bouncycastle.asn1.ASN1Integer
+import org.bouncycastle.asn1.ASN1Sequence
+import java.math.BigInteger
 import java.security.KeyPair
 import java.util.Base64
 
@@ -52,11 +57,36 @@ class Signature(
         override fun install(plugin: Signature, scope: HttpClient) {
             scope.requestPipeline.intercept(HttpRequestPipeline.Render) { payload ->
                 if (payload is OutputStreamContent) {
-                    val bodyChannel = ByteChannel()
-                    payload.writeTo(bodyChannel)
-                    val signature = GoSlice().apply { GoSignature.Instance.GenerateSignature(plugin.keyPair.private.encoded.toGoSlice(), context.method.value.toByteArray().toGoSlice(), context.url.encodedPath.toByteArray().toGoSlice(), (context.headers["Authorization"] ?: "").toByteArray().toGoSlice(), bodyChannel.readRemaining().readBytes().toGoSlice(), this) }
-                    bodyChannel.close()
-                    context.header("Signature", Base64.getEncoder().encodeToString(signature.toByteArray()))
+                    val now = (System.currentTimeMillis() + 11644473600000L) * 10000L
+                    val hash = Unpooled.buffer()
+                    try {
+                        hash.writeInt(0x01)
+                        hash.writeByte(0x00)
+                        hash.writeLong(now)
+                        hash.writeByte(0x00)
+                        hash.writeBytes(context.method.value.toByteArray())
+                        hash.writeByte(0x00)
+                        hash.writeBytes(context.url.encodedPath.toByteArray())
+                        hash.writeByte(0x00)
+                        context.headers["Authorization"]?.let { hash.writeBytes(it.toByteArray()) }
+                        hash.writeByte(0x00)
+                        val bodyChannel = ByteChannel()
+                        payload.writeTo(bodyChannel)
+                        hash.writeBytes(bodyChannel.readRemaining().readBytes())
+                        bodyChannel.close()
+                        hash.writeByte(0x00)
+                        val signature = (ASN1Sequence.fromByteArray(java.security.Signature.getInstance("SHA256withECDSA").apply {
+                            initSign(plugin.keyPair.private)
+                            update(ByteBufUtil.getBytes(hash).also { hash.clear() })
+                        }.sign()) as ASN1Sequence)
+                        hash.writeInt(0x01)
+                        hash.writeLong(now)
+                        hash.writeBytes((signature.getObjectAt(0) as ASN1Integer).positiveValue.toUnsignedByteArray())
+                        hash.writeBytes((signature.getObjectAt(1) as ASN1Integer).positiveValue.toUnsignedByteArray())
+                        context.header("Signature", Base64.getEncoder().encodeToString(ByteBufUtil.getBytes(hash)))
+                    } finally {
+                        hash.release()
+                    }
                 }
                 proceed()
             }
@@ -64,5 +94,12 @@ class Signature(
     }
 }
 
-
-
+fun BigInteger.toUnsignedByteArray(): ByteArray {
+    val array = toByteArray()
+    if (array[0].toInt() == 0) {
+        val newArray = ByteArray(array.size - 1)
+        System.arraycopy(array, 1, newArray, 0, newArray.size)
+        return newArray
+    }
+    return array
+}

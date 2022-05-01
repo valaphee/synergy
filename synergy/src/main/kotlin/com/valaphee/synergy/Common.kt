@@ -71,4 +71,7 @@ enum class UnderlyingNetworking(
 }
 
 val ObjectMapper: ObjectMapper = jacksonObjectMapper().registerModule(SimpleModule().addSerializer(Float2::class, Float2Serializer).addDeserializer(Float2::class, Float2Deserializer).addSerializer(Float3::class, Float3Serializer).addDeserializer(Float3::class, Float3Deserializer).addSerializer(Int3::class, Int3Serializer).addDeserializer(Int3::class, Int3Deserializer).addSerializer(Int4::class, Int4Serializer).addDeserializer(Int4::class, Int4Deserializer)).disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-val HttpClient = HttpClient(OkHttp) { install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(ObjectMapper)) } }
+val HttpClient = HttpClient(OkHttp) {
+    expectSuccess = false
+    install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(ObjectMapper)) }
+}

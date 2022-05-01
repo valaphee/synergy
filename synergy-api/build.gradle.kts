@@ -31,7 +31,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-iostreams:2.17.2")
     implementation("org.apache.logging.log4j:log4j-jul:2.17.2")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.2")
-    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
     implementation("org.graalvm.js:js:22.0.0.2")
     implementation("org.graalvm.sdk:graal-sdk:22.0.0.2")
     implementation("org.graalvm.truffle:truffle-api:22.0.0.2")

@@ -23,7 +23,8 @@ import java.util.UUID
 /**
  * @author Kevin Ludwig
  */
-abstract class HttpMessage(
+abstract class
+HttpMessage(
     emitterId: UUID,
     emittedAt: Long,
     @get:JsonProperty("headers") val headers: Map<String, String>

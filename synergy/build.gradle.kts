@@ -13,5 +13,6 @@ dependencies {
     api("net.java.dev.jna:jna:5.11.0")
     api("net.java.dev.jna:jna-platform:5.11.0")
     api("org.apache.logging.log4j:log4j-api:2.17.2")
+    api("org.bouncycastle:bcpkix-jdk15on:1.70")
     api("org.jetbrains.kotlinx:kotlinx-cli:0.3.4")
 }
