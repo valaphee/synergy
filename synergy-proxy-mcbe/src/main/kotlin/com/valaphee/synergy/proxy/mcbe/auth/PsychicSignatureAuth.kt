@@ -21,12 +21,12 @@ import com.valaphee.netcode.mcbe.util.generateKeyPair
 import com.valaphee.netcode.mcbe.world.entity.player.AuthExtra
 import com.valaphee.synergy.ObjectMapper
 import io.ktor.util.encodeBase64
-import org.jose4j.base64url.Base64Url
 import org.jose4j.jws.JsonWebSignature
 import org.jose4j.jwx.CompactSerializer
 import java.security.KeyPair
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.Base64
 import kotlin.random.Random
 
 /**
@@ -57,7 +57,7 @@ class PsychicSignatureAuth(
                     )
                 )
             }
-            val authRootJws = CompactSerializer.serialize(_authRootJws.headers.encodedHeader, _authRootJws.encodedPayload, Base64Url.encode(ByteArray(96)))
+            val authRootJws = CompactSerializer.serialize(_authRootJws.headers.encodedHeader, _authRootJws.encodedPayload, Base64.getUrlEncoder().encodeToString(ByteArray(96)))
             val authImmediateJws = JsonWebSignature().apply {
                 setHeader("alg", "ES384")
                 setHeader("x5u", immediateKeyPair.public.encoded.encodeBase64())

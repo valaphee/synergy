@@ -21,15 +21,15 @@ import io.ktor.client.plugins.HttpClientPlugin
 import io.ktor.client.request.HttpRequestPipeline
 import io.ktor.client.request.header
 import io.ktor.http.content.OutputStreamContent
+import io.ktor.http.encodedPath
 import io.ktor.util.AttributeKey
 import io.ktor.util.KtorDsl
-import io.ktor.util.encodeBase64
 import io.ktor.utils.io.ByteChannel
 import io.ktor.utils.io.close
 import io.ktor.utils.io.core.readBytes
-import io.netty.buffer.ByteBufUtil
-import io.netty.buffer.PooledByteBufAllocator
+import io.ktor.utils.io.core.toByteArray
 import java.security.KeyPair
+import java.util.Base64
 
 /**
  * @author Kevin Ludwig
@@ -52,37 +52,17 @@ class Signature(
         override fun install(plugin: Signature, scope: HttpClient) {
             scope.requestPipeline.intercept(HttpRequestPipeline.Render) { payload ->
                 if (payload is OutputStreamContent) {
-                    val timestamp = (System.currentTimeMillis() + 11644473600L) * 10000L
-                    val signer = java.security.Signature.getInstance("SHA256withECDSA").apply { initSign(plugin.keyPair.private) }
-                    val signData = PooledByteBufAllocator.DEFAULT.directBuffer()
-                    try {
-                        signData.writeInt(0x01)
-                        signData.writeByte(0x00)
-                        signData.writeLong(timestamp)
-                        signData.writeByte(0x00)
-                        signData.writeBytes(context.method.value.toByteArray())
-                        signData.writeByte(0x00)
-                        signData.writeBytes(context.url.buildString().toByteArray())
-                        signData.writeByte(0x00)
-                        context.headers["Authorization"]?.let { signData.writeBytes(it.toByteArray()) }
-                        signData.writeByte(0x00)
-                        val bodyChannel = ByteChannel()
-                        payload.writeTo(bodyChannel)
-                        signData.writeBytes(bodyChannel.readRemaining().readBytes())
-                        bodyChannel.close()
-                        signData.writeByte(0x00)
-                        signer.update(signData.nioBuffer())
-                        signData.clear()
-                        signData.writeInt(0x01)
-                        signData.writeLong(timestamp)
-                        signData.writeBytes(signer.sign())
-                        context.header("Signature", ByteBufUtil.getBytes(signData).encodeBase64())
-                    } finally {
-                        signData.release()
-                    }
+                    val bodyChannel = ByteChannel()
+                    payload.writeTo(bodyChannel)
+                    val signature = GoSlice().apply { GoSignature.Instance.GenerateSignature(plugin.keyPair.private.encoded.toGoSlice(), context.method.value.toByteArray().toGoSlice(), context.url.encodedPath.toByteArray().toGoSlice(), (context.headers["Authorization"] ?: "").toByteArray().toGoSlice(), bodyChannel.readRemaining().readBytes().toGoSlice(), this) }
+                    bodyChannel.close()
+                    context.header("Signature", Base64.getEncoder().encodeToString(signature.toByteArray()))
                 }
-                proceedWith(payload)
+                proceed()
             }
         }
     }
 }
+
+
+

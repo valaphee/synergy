@@ -58,7 +58,7 @@ class FrontendHandler(
                     channel.pipeline().addLast(BackendHandler(context.channel()))
                 }
             })
-            .option(RakNet.MTU, 1_464)
+            .option(RakNet.MTU, 1_172)
             .option(RakNet.PROTOCOL_VERSION, 10)
             .localAddress(connection.viaHost, connection.viaPort)
             .remoteAddress(connection.remoteHost, connection.remotePort)

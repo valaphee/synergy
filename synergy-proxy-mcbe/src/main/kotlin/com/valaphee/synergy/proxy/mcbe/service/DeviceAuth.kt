@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    implementation("com.valaphee:netcode-mcbe:1.0.0.0")
-}
+package com.valaphee.synergy.proxy.mcbe.service
+
+import com.fasterxml.jackson.annotation.JsonProperty
+
+/**
+ * @author Kevin Ludwig
+ */
+class DeviceAuth(
+    @get:JsonProperty("Token") val token: String
+)

@@ -31,7 +31,6 @@ import com.valaphee.synergy.component.ComponentService
 import com.valaphee.synergy.component.ComponentServiceImpl
 import com.valaphee.synergy.config.Config
 import com.valaphee.synergy.input.WindowsHookSubcommand
-import com.valaphee.synergy.proxy.bgs.security.BgsSecurityPatchSubcommand
 import com.valaphee.synergy.proxy.mcbe.pack.McbePackDecryptSubcommand
 import com.valaphee.synergy.proxy.mcbe.pack.McbePackEncryptSubcommand
 import io.ktor.http.ContentType
@@ -95,7 +94,7 @@ fun main(arguments: Array<String>) {
     val argumentParser = ArgParser("synergy")
     val host by argumentParser.option(ArgType.String, "host", "H", "Host").default("localhost")
     val port by argumentParser.option(ArgType.Int, "port", "p", "Port").default(8080)
-    argumentParser.subcommands(BgsSecurityPatchSubcommand().apply { injector.injectMembers(this) }, WindowsHookSubcommand(), McbePackDecryptSubcommand(), McbePackEncryptSubcommand())
+    argumentParser.subcommands(WindowsHookSubcommand(), McbePackDecryptSubcommand(), McbePackEncryptSubcommand())
     argumentParser.parse(arguments)
 
     System.setIn(null)

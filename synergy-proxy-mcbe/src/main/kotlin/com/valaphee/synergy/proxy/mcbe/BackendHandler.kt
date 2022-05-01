@@ -51,7 +51,7 @@ class BackendHandler(
     private var version = latestProtocolVersion
     private val keyPair = generateKeyPair()
     private lateinit var clientPublicKey: PublicKey
-    private val auth = DefaultAuth(keyPair)
+    private val auth = DefaultAuth(keyPair).apply { version = "1.18.30" }
 
     override fun channelInactive(context: ChannelHandlerContext) {
         if (inboundChannel.isActive) inboundChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)

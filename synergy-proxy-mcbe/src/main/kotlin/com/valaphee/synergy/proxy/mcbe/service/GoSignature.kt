@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    implementation("com.valaphee:netcode-mcbe:1.0.0.0")
+package com.valaphee.synergy.proxy.mcbe.service
+
+import com.sun.jna.Library
+import com.sun.jna.Native
+
+/**
+ * @author Kevin Ludwig
+ */
+interface GoSignature : Library {
+    fun GetPublicKeyXY(derKey: GoSlice, x: GoSlice, y: GoSlice)
+
+    fun GenerateSignature(derKey: GoSlice, method: GoSlice, url: GoSlice, authorization: GoSlice, body: GoSlice, result: GoSlice)
+
+    companion object {
+        val Instance: GoSignature = Native.load(Native.extractFromResourcePath("/signature.dll").path, GoSignature::class.java)
+    }
 }
