@@ -17,13 +17,14 @@
 package com.valaphee.synergy.proxy.mcbe.auth
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.valaphee.netcode.mcbe.util.generateKeyPair
 import com.valaphee.netcode.mcbe.world.entity.player.AuthExtra
 import com.valaphee.synergy.ObjectMapper
 import io.ktor.util.encodeBase64
 import org.jose4j.jws.JsonWebSignature
 import org.jose4j.jwx.CompactSerializer
 import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.spec.ECGenParameterSpec
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Base64
@@ -40,7 +41,7 @@ class PsychicSignatureAuth(
     override val authJws: String
         get() = _authJws ?: run {
             val authRootKey = "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8ELkixyLcwlZryUQcu1TvPOmI2B7vX83ndnWRUaXm74wFfa5f/lwQNTfrLVHa2PmenpGI6JhIMUJaWZrjmMj90NoKNFSNBuKdm8rYiXsfaz3K36x/1U26HpG0ZxK/V1V"
-            val immediateKeyPair = generateKeyPair()
+            val immediateKeyPair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp384r1")) }.generateKeyPair()
             val _authRootJws = JsonWebSignature().apply {
                 setHeader("alg", "ES384")
                 setHeader("x5u", authRootKey)

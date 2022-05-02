@@ -18,5 +18,4 @@ dependencies {
     implementation(project(":synergy"))
     implementation(project(":synergy-proxy"))
     implementation("com.valaphee:netcode-mcbe:1.0.0.0")
-    implementation("io.ktor:ktor-client-logging:2.0.1")
 }

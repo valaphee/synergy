@@ -16,6 +16,7 @@
 
 package com.valaphee.synergy.proxy.mcbe
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.valaphee.netcode.mcbe.latestProtocolVersion
 import com.valaphee.netcode.mcbe.network.EncryptionInitializer
 import com.valaphee.netcode.mcbe.network.PacketBuffer
@@ -25,13 +26,9 @@ import com.valaphee.netcode.mcbe.network.packet.ServerToClientHandshakePacket
 import com.valaphee.netcode.mcbe.network.packet.WorldPacket
 import com.valaphee.netcode.mcbe.util.Registries
 import com.valaphee.netcode.mcbe.util.Registry
-import com.valaphee.netcode.mcbe.util.generateKeyPair
-import com.valaphee.netcode.mcbe.util.parseAuthJws
-import com.valaphee.netcode.mcbe.util.parseServerToClientHandshakeJws
-import com.valaphee.netcode.mcbe.util.parseUserJws
 import com.valaphee.netcode.mcbe.world.entity.player.User
+import com.valaphee.synergy.ObjectMapper
 import com.valaphee.synergy.proxy.mcbe.auth.DefaultAuth
-import io.ktor.util.encodeBase64
 import io.netty.buffer.Unpooled
 import io.netty.channel.Channel
 import io.netty.channel.ChannelDuplexHandler
@@ -39,8 +36,16 @@ import io.netty.channel.ChannelFuture
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
+import org.jose4j.jwa.AlgorithmConstraints
 import org.jose4j.jws.JsonWebSignature
+import org.jose4j.jwt.consumer.JwtConsumerBuilder
+import java.security.KeyFactory
+import java.security.KeyPairGenerator
 import java.security.PublicKey
+import java.security.SecureRandom
+import java.security.spec.ECGenParameterSpec
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 /**
  * @author Kevin Ludwig
@@ -49,7 +54,7 @@ class BackendHandler(
     private val inboundChannel: Channel
 ) : ChannelDuplexHandler() {
     private var version = latestProtocolVersion
-    private val keyPair = generateKeyPair()
+    private val keyPair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp384r1")) }.generateKeyPair()
     private lateinit var clientPublicKey: PublicKey
     private val auth = DefaultAuth(keyPair).apply { version = "1.18.30" }
 
@@ -64,14 +69,25 @@ class BackendHandler(
                 inboundChannel.pipeline()[PacketCodec::class.java].version = version
                 context.pipeline()[PacketCodec::class.java].version = version
 
-                val (_, verificationKey, _) = parseAuthJws(message.authJws)
-                clientPublicKey = verificationKey
-                val (_, user) = parseUserJws(message.userJws, verificationKey)
+                val authJwsChain = (ObjectMapper.readValue<Map<*, *>>(message.authJws)["chain"] as List<*>).associateBy { KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode(JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").setSkipSignatureVerification().build().process(it as String).joseObjects.single().headers.getStringHeaderValue("x5u")))) }
+                var authJwsKey: PublicKey? = null
+                authJwsChain[rootKey]?.let {
+                    var authJws: Pair<PublicKey, String>? = rootKey to it as String
+                    val authJwsKeys = mutableSetOf(authJws!!.first)
+                    while (authJws != null) {
+                        val _authJws = JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").setVerificationKey(authJws.first).build().processToClaims(authJws.second)
+                        val authJwsPayload = ObjectMapper.readValue<Map<*, *>>(_authJws.rawJson)
+                        val _authJwsKey = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode((authJwsPayload["identityPublicKey"] as String))))
+                        if (_authJwsKey != rootKey) authJwsKey = _authJwsKey
+                        authJws = if (authJwsKeys.add(_authJwsKey)) authJwsChain[_authJwsKey]?.let { _authJwsKey to it as String } else null
+                    }
+                }
+                clientPublicKey = authJwsKey!!
                 LoginPacket(
                     message.protocolVersion, auth.authJws, JsonWebSignature().apply {
                         setHeader("alg", "ES384")
-                        setHeader("x5u", keyPair.public.encoded.encodeBase64())
-                        payload = McbeProxy.jsonObjectMapper.writeValueAsString(user.copy(operatingSystem = User.OperatingSystem.Android))
+                        setHeader("x5u", Base64.getEncoder().encodeToString(keyPair.public.encoded))
+                        payload = McbeProxy.jsonObjectMapper.writeValueAsString(ObjectMapper.readValue<User>(JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").setVerificationKey(authJwsKey!!).build().processToClaims(message.userJws).rawJson).copy(operatingSystem = User.OperatingSystem.Android))
                         key = keyPair.private
                     }.compactSerialization
                 )
@@ -82,11 +98,17 @@ class BackendHandler(
 
     override fun channelRead(context: ChannelHandlerContext, message: Any) {
         if (message is ServerToClientHandshakePacket) {
-            val (serverPublicKey, salt) = parseServerToClientHandshakeJws(message.jws)
-            val encryptionInitializer = EncryptionInitializer(keyPair, clientPublicKey, true, salt)
-            inboundChannel.write(encryptionInitializer.serverToClientHandshakePacket)
-            inboundChannel.pipeline().addLast(encryptionInitializer)
-            context.pipeline().addLast(EncryptionInitializer(keyPair, serverPublicKey, true, salt))
+            val jws = JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").setSkipSignatureVerification().build().process(message.jws)
+            val clientSalt = ByteArray(16).apply(random::nextBytes)
+            inboundChannel.write(ServerToClientHandshakePacket(JsonWebSignature().apply {
+                setHeader("alg", "ES384")
+                setHeader("x5u", Base64.getEncoder().encodeToString(keyPair.public.encoded))
+                setHeader("typ", "JWT")
+                payload = ObjectMapper.writeValueAsString(mapOf("salt" to Base64.getEncoder().encodeToString(clientSalt)))
+                key = keyPair.private
+            }.compactSerialization))
+            inboundChannel.pipeline().addLast(EncryptionInitializer(keyPair, clientPublicKey, true, clientSalt))
+            context.pipeline().addLast(EncryptionInitializer(keyPair, KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode(jws.joseObjects.single().headers.getStringHeaderValue("x5u")))), true, Base64.getDecoder().decode(ObjectMapper.readValue<Map<*, *>>(jws.jwtClaims.rawJson)["salt"] as String)))
         } else inboundChannel.write(when (message) {
             is WorldPacket -> {
                 val registries = Registries(Registry(), Registry())
@@ -109,5 +131,10 @@ class BackendHandler(
     override fun exceptionCaught(context: ChannelHandlerContext, cause: Throwable) {
         cause.printStackTrace()
         /*if (context.channel().isActive) context.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE)*/
+    }
+
+    companion object {
+        private val rootKey = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(Base64.getDecoder().decode("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8ELkixyLcwlZryUQcu1TvPOmI2B7vX83ndnWRUaXm74wFfa5f/lwQNTfrLVHa2PmenpGI6JhIMUJaWZrjmMj90NoKNFSNBuKdm8rYiXsfaz3K36x/1U26HpG0ZxK/V1V")))
+        private val random = SecureRandom()
     }
 }

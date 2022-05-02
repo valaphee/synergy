@@ -33,7 +33,7 @@ import java.net.URI
 class OAuth20Authenticator {
     private var oauth20Token: OAuth20Token? = null
 
-    val accessToken = oauth20Token?.accessToken
+    val accessToken get() = oauth20Token?.accessToken
 
     suspend fun run() {
         val oauth20ConnectRequest = HttpClient.submitForm("https://login.live.com/oauth20_connect.srf", Parameters.build {
