@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    api("com.valaphee:netcode-mcbe:1.0.0.1")
-}
+package com.valaphee.synergy.proxy.mcbe
+
+import com.valaphee.synergy.proxy.Proxy
+
+/**
+ * @author Kevin Ludwig
+ */
+class McbeProxy : Proxy

@@ -44,8 +44,8 @@ import java.util.UUID
 /**
  * @author Kevin Ludwig
  */
-class Aim(
-    id: UUID,
+open class Aim(
+    id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
     sensitivity: Float,
     precision: Int,

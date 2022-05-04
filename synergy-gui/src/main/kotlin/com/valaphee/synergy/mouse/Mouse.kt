@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    api("com.valaphee:netcode-mcbe:1.0.0.1")
-}
+package com.valaphee.synergy.mouse
+
+import com.valaphee.synergy.component.Component
+import java.util.UUID
+
+/**
+ * @author Kevin Ludwig
+ */
+abstract class Mouse(
+    id: UUID,
+    scripts: List<String>
+) : Component(id, scripts)

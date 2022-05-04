@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    api("com.valaphee:netcode-mcbe:1.0.0.1")
-}
+package com.valaphee.synergy.keyboard
+
+import java.util.UUID
+
+/**
+ * @author Kevin Ludwig
+ */
+class RobotKeyboard(
+    id: UUID = UUID.randomUUID(),
+    scripts: List<String> = emptyList()
+) : Keyboard(id, scripts)

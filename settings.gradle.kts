@@ -19,6 +19,7 @@ rootProject.name = "synergy"
 include("synergy")
 include("synergy-api")
 include("synergy-cv")
+include("synergy-gui")
 include("synergy-input")
 include("synergy-ngdp")
 include("synergy-proxy")

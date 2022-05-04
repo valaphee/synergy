@@ -34,7 +34,7 @@ import kotlin.math.abs
  * @author Kevin Ludwig
  */
 open class HidMouse(
-    id: UUID,
+    id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
     @get:JsonProperty("sensitivity") val sensitivity: Float,
     @get:JsonProperty("precision") val precision: Int

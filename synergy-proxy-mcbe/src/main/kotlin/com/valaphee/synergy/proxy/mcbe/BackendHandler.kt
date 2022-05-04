@@ -84,7 +84,7 @@ class BackendHandler(
                 }
                 clientPublicKey = authJwsKey!!
                 LoginPacket(
-                    message.protocolVersion, auth.authJws, JsonWebSignature().apply {
+                    message.protocolVersion, auth.jws, JsonWebSignature().apply {
                         setHeader("alg", "ES384")
                         setHeader("x5u", Base64.getEncoder().encodeToString(keyPair.public.encoded))
                         payload = McbeProxy.jsonObjectMapper.writeValueAsString(ObjectMapper.readValue<User>(JwtConsumerBuilder().setJwsAlgorithmConstraints(AlgorithmConstraints.ConstraintType.PERMIT, "ES384").setVerificationKey(authJwsKey!!).build().processToClaims(message.userJws).rawJson).copy(operatingSystem = User.OperatingSystem.Android))

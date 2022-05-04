@@ -18,9 +18,16 @@ package com.valaphee.synergy.component
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import java.net.URL
+import javafx.beans.property.SimpleListProperty
+import javafx.event.EventTarget
+import javafx.scene.control.cell.TextFieldListCell
+import tornadofx.field
+import tornadofx.fieldset
+import tornadofx.getValue
+import tornadofx.listview
+import tornadofx.textfield
+import tornadofx.toObservable
 import java.util.UUID
-import kotlin.reflect.jvm.jvmName
 
 /**
  * @author Kevin Ludwig
@@ -28,7 +35,21 @@ import kotlin.reflect.jvm.jvmName
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
 open class Component(
     @get:JsonProperty("id") val id: UUID = UUID.randomUUID(),
-    @get:JsonProperty("scripts") val scripts: List<URL>,
+    scripts: List<String> = emptyList(),
 ) {
-    @get:JsonProperty("type") val type get() = this::class.jvmName
+    protected val scriptsProperty = SimpleListProperty(scripts.toObservable())
+    @get:JsonProperty("scripts") val scripts: MutableList<String> by scriptsProperty
+
+    open fun EventTarget.addForm() {
+        fieldset {
+            field("Id") { textfield(this@Component.id.toString()) { isEditable = false } }
+            field("Scripts") {
+                listview(scriptsProperty) {
+                    prefHeight = (4 * 24 + 2).toDouble()
+                    isEditable = true
+                    cellFactory = TextFieldListCell.forListView()
+                }
+            }
+        }
+    }
 }

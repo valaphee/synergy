@@ -14,8 +14,23 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    api("com.valaphee:netcode-mcbe:1.0.0.1")
+package com.valaphee.synergy
+
+import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
+import javafx.scene.image.Image
+import tornadofx.App
+import tornadofx.launch
+import kotlin.system.exitProcess
+
+/**
+ * @author Kevin Ludwig
+ */
+class Main : App(Image(Main::class.java.getResourceAsStream("/app.png")), MainView::class)
+
+fun main(arguments: Array<String>) {
+    SvgImageLoaderFactory.install()
+
+    launch<Main>(arguments)
+
+    exitProcess(0)
 }

@@ -83,9 +83,9 @@ class McbeProxy : Proxy {
     override fun getChildHandler(connection: Connection) = object : ChannelInitializer<Channel>() {
         override fun initChannel(channel: Channel) {
             channel.pipeline().addLast(UserDataCodec.NAME, userDataCodec)
-            channel.pipeline().addLast(Compressor.NAME, Compressor(7))
-            channel.pipeline().addLast(Decompressor.NAME, Decompressor())
-            channel.pipeline().addLast(PacketCodec.NAME,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
+            channel.pipeline().addLast(Compressor.Name, Compressor(7))
+            channel.pipeline().addLast(Decompressor.Name, Decompressor())
+            channel.pipeline().addLast(PacketCodec.Name,  PacketCodec({ PacketBuffer(it, jsonObjectMapper, nbtLeObjectMapper, nbtLeVarIntObjectMapper, nbtLeVarIntNoWrapObjectMapper) }, false))
             channel.pipeline().addLast(FrontendHandler(connection))
         }
     }

@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    api("com.valaphee:netcode-mcbe:1.0.0.1")
+package com.valaphee.synergy.util
+
+import javafx.util.StringConverter
+
+/**
+ * @author Kevin Ludwig
+ */
+object IntStringConverter : StringConverter<Number>() {
+    override fun toString(`object`: Number?) = `object`?.toString() ?: ""
+
+    override fun fromString(string: String?) = string?.toIntOrNull()
 }

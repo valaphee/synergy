@@ -23,8 +23,8 @@ import java.util.UUID
 /**
  * @author Kevin Ludwig
  */
-class RobotKeyboard(
-    id: UUID,
+open class RobotKeyboard(
+    id: UUID = UUID.randomUUID(),
     scripts: List<URL>
 ) : Keyboard(id, scripts) {
     override fun keyPress(key: Key): Boolean {

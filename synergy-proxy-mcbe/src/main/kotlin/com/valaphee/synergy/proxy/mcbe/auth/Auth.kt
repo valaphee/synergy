@@ -20,5 +20,5 @@ package com.valaphee.synergy.proxy.mcbe.auth
  * @author Kevin Ludwig
  */
 interface Auth {
-    val authJws: String
+    val jws: String
 }

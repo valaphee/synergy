@@ -24,8 +24,8 @@ import java.util.UUID
 /**
  * @author Kevin Ludwig
  */
-class RobotMouse(
-    id: UUID,
+open class RobotMouse(
+    id: UUID = UUID.randomUUID(),
     scripts: List<URL>
 ) : Mouse(id, scripts) {
     override suspend fun mouseMove(target: Int2) {

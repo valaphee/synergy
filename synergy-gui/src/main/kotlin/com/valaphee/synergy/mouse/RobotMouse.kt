@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
-    api("com.valaphee:netcode-mcbe:1.0.0.1")
-}
+package com.valaphee.synergy.mouse
+
+import java.util.UUID
+
+/**
+ * @author Kevin Ludwig
+ */
+class RobotMouse(
+    id: UUID = UUID.randomUUID(),
+    scripts: List<String> = emptyList()
+) : Mouse(id, scripts)

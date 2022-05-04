@@ -27,8 +27,8 @@ import kotlin.concurrent.thread
 /**
  * @author Kevin Ludwig
  */
-class HidKeyboard(
-    id: UUID,
+open class HidKeyboard(
+    id: UUID = UUID.randomUUID(),
     scripts: List<URL>
 ) : Keyboard(id, scripts) {
     override fun keyPress(key: Key) = if (!keys.contains(key) && keys.size <= 6) {

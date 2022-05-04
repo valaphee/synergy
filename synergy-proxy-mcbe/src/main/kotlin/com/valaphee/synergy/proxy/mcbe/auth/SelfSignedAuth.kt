@@ -33,7 +33,7 @@ class SelfSignedAuth(
 ) : Auth {
     lateinit var authExtra: AuthExtra
     private var _authJws: String? = null
-    override val authJws: String
+    override val jws: String
         get() = _authJws ?: run {
             val authUserJws = JsonWebSignature().apply {
                 setHeader("alg", "ES384")
