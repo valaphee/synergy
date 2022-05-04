@@ -16,33 +16,55 @@
 
 package com.valaphee.synergy.component
 
+import com.valaphee.synergy.MainView
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import jfxtras.styles.jmetro.JMetro
 import jfxtras.styles.jmetro.JMetroStyleClass
 import jfxtras.styles.jmetro.Style
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tornadofx.View
 import tornadofx.action
 import tornadofx.button
 import tornadofx.buttonbar
 import tornadofx.form
 import tornadofx.vbox
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 /**
  * @author Kevin Ludwig
  */
 class ComponentAddView(
     name: String,
-    `class`: KClass<out Component>
+    component: Component
 ) : View("New $name") {
     override val root = vbox {
         JMetro(this, Style.DARK)
         styleClass.add(JMetroStyleClass.BACKGROUND)
         prefWidth = 600.0
 
-        form { with(`class`.createInstance()) { addForm() } }
+        form { with(component) { addForm() } }
         buttonbar {
-            button("Create")
+            button("Create") {
+                action {
+                    val mainView = find<MainView>()
+                    mainView.launch(Dispatchers.Main) {
+                        if (withContext(Dispatchers.Default) {
+                                MainView.HttpClient.post("http://localhost:8080/component") {
+                                    contentType(ContentType.Application.Json)
+                                    setBody(component)
+                                }.status == HttpStatusCode.OK
+                        }) {
+                            mainView.refresh()
+                            close()
+                        }
+                    }
+                }
+            }
             button("Cancel") { action { close() } }
         }
     }

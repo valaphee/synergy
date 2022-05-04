@@ -40,7 +40,7 @@ import java.util.UUID
  */
 class HidMouse(
     id: UUID = UUID.randomUUID(),
-    scripts: List<String>,
+    scripts: List<String> = emptyList(),
     sensitivity: Float = 1.0f,
     precision: Int = 16
 ) : Mouse(id, scripts) {

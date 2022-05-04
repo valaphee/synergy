@@ -54,7 +54,7 @@ class FrontendHandler(
                     channel.pipeline().addLast(Compressor.Name, Compressor(7))
                     channel.pipeline().addLast(Decompressor.Name, Decompressor())
                     channel.pipeline().addLast(PacketCodec.Name,  PacketCodec({ PacketBuffer(it, McbeProxy.jsonObjectMapper, McbeProxy.nbtLeObjectMapper, McbeProxy.nbtLeVarIntObjectMapper, McbeProxy.nbtLeVarIntNoWrapObjectMapper) }, true))
-                    channel.pipeline().addLast(EventEmitter())
+                    channel.pipeline().addLast(EventEmitter(connection))
                     channel.pipeline().addLast(BackendHandler(context.channel()))
                 }
             })

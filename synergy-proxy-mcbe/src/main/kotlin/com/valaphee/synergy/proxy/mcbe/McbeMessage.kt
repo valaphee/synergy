@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.proxy
+package com.valaphee.synergy.proxy.mcbe
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import javafx.event.EventTarget
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonTypeName
+import com.valaphee.synergy.Message
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
-interface Proxy {
-    fun EventTarget.addForm() = Unit
-}
+@JsonTypeName("mcbe")
+class McbeMessage(
+    emitterId: UUID,
+    emittedAt: Long,
+    @get:JsonProperty("toString") val toString: String,
+) : Message(emitterId, emittedAt)

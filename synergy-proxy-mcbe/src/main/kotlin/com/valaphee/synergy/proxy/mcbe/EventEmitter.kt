@@ -17,26 +17,30 @@
 package com.valaphee.synergy.proxy.mcbe
 
 import com.valaphee.netcode.mcbe.network.Packet
+import com.valaphee.synergy.messages
+import com.valaphee.synergy.proxy.Connection
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
-import org.apache.logging.log4j.LogManager
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Kevin Ludwig
  */
-class EventEmitter : ChannelDuplexHandler() {
+class EventEmitter(
+    private val connection: Connection
+) : ChannelDuplexHandler() {
     override fun channelRead(context: ChannelHandlerContext, message: Any?) {
-        if (message is Packet) log.info("In: {}", message)
+        if (message is Packet) emit(message)
         context.fireChannelRead(message)
     }
 
     override fun write(context: ChannelHandlerContext, message: Any?, promise: ChannelPromise?) {
-        if (message is Packet) log.info("Out: {}", message)
+        if (message is Packet) emit(message)
         context.write(message, promise)
     }
 
-    companion object {
-        private val log = LogManager.getLogger(EventEmitter::class.java)
+    private fun emit(packet: Packet) {
+        runBlocking { messages.emit(McbeMessage(connection.id, System.currentTimeMillis(), packet.toString())) }
     }
 }

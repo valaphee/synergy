@@ -42,6 +42,7 @@ import java.util.UUID
 class ProxyServer(
     id: UUID = UUID.randomUUID(),
     scripts: List<String> = emptyList(),
+    @get:JsonProperty("proxy") val proxy: Proxy,
     localHost: String? = null,
     localPort: Int? = null,
     remoteHost: String = "",
@@ -109,5 +110,6 @@ class ProxyServer(
                 }
             }
         }
+
     }
 }

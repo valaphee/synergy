@@ -28,6 +28,10 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolHandler
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
+import io.netty.handler.codec.http.websocketx.WebSocketVersion
+import java.net.URI
 
 /**
  * @author Kevin Ludwig
@@ -37,32 +41,6 @@ class FrontendHandler(
     private val connection: Connection,
 ) : ChannelInboundHandlerAdapter() {
     private var outboundChannel: Channel? = null
-
-    override fun channelActive(context: ChannelHandlerContext) {
-        outboundChannel = Bootstrap()
-            .group(context.channel().eventLoop())
-            .channel(context.channel()::class.java)
-            .handler(object : ChannelInitializer<SocketChannel>() {
-                override fun initChannel(channel: SocketChannel) {
-                    channel.pipeline().addLast(
-                        proxy.clientSslContext.newHandler(channel.alloc()),
-                        HttpClientCodec(),
-                        HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
-                        PacketCodec(BgsProxy.Services),
-                        EventEmitter(connection, BgsProxy.Services),
-                        BackendHandler(connection, context.channel())
-                    )
-                }
-            })
-            .localAddress(connection.viaHost, connection.viaPort)
-            .remoteAddress(connection.remoteHost, connection.remotePort)
-            .connect().addListener(object : ChannelFutureListener {
-                override fun operationComplete(future: ChannelFuture) {
-                    if (future.isSuccess) context.channel().read()
-                    else context.channel().close()
-                }
-            }).channel()
-    }
 
     override fun channelInactive(context: ChannelHandlerContext) {
         outboundChannel?.let { if (it.isActive) it.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE) }
@@ -75,6 +53,36 @@ class FrontendHandler(
                 else future.channel().close()
             }
         })
+    }
+
+    override fun userEventTriggered(context: ChannelHandlerContext, event: Any) {
+        if (event is WebSocketServerProtocolHandler.HandshakeComplete) {
+
+            outboundChannel = Bootstrap()
+                .group(context.channel().eventLoop())
+                .channel(context.channel()::class.java)
+                .handler(object : ChannelInitializer<SocketChannel>() {
+                    override fun initChannel(channel: SocketChannel) {
+                        channel.pipeline().addLast(
+                            proxy.clientSslContext.newHandler(channel.alloc()),
+                            HttpClientCodec(),
+                            HttpObjectAggregator(UShort.MAX_VALUE.toInt()),
+                            WebSocketClientProtocolHandler(URI(event.requestUri()), WebSocketVersion.V13, event.selectedSubprotocol(), false, event.requestHeaders(), UShort.MAX_VALUE.toInt()),
+                            PacketCodec(BgsProxy.Services),
+                            EventEmitter(connection, BgsProxy.Services),
+                            BackendHandler(connection, context.channel())
+                        )
+                    }
+                })
+                .localAddress(connection.viaHost, connection.viaPort)
+                .remoteAddress(connection.remoteHost, connection.remotePort)
+                .connect().addListener(object : ChannelFutureListener {
+                    override fun operationComplete(future: ChannelFuture) {
+                        if (future.isSuccess) context.channel().read()
+                        else context.channel().close()
+                    }
+                }).channel()
+        }
     }
 
     @Suppress("OVERRIDE_DEPRECATION")
