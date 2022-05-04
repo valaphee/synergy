@@ -9,6 +9,8 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":synergy-ngdp"))
+    implementation("com.google.inject:guice:5.1.0")
     implementation("de.codecentric.centerdevice:javafxsvg:1.3.0")
     implementation("io.ktor:ktor-client-content-negotiation:2.0.1")
     implementation("io.ktor:ktor-client-okhttp:2.0.1")

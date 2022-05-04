@@ -30,17 +30,17 @@ import tornadofx.label
 /**
  * @author Kevin Ludwig
  */
-class AboutView : View("About") {
+class About : View("About") {
     override val root = hbox {
         JMetro(this, Style.DARK)
         styleClass.add(JMetroStyleClass.BACKGROUND)
         setPrefSize(300.0, 100.0)
         alignment = Pos.CENTER
 
-        imageview(Image(AboutView::class.java.getResourceAsStream("/app.png")))
+        imageview(Image(About::class.java.getResourceAsStream("/app.png")))
         label(
             """
-                Synergy${AboutView::class.java.`package`.implementationVersion?.let { " $it" } ?: ""}
+                Synergy${About::class.java.`package`.implementationVersion?.let { " $it" } ?: ""}
                 Copyright (c) 2022, Valaphee.
             """.trimIndent()
         ) { textAlignment = TextAlignment.CENTER }

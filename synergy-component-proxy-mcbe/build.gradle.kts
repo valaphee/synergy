@@ -15,7 +15,6 @@
  */
 
 dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
+    api(project(":synergy-component-proxy"))
     api("com.valaphee:netcode-mcbe:1.0.0.1")
 }

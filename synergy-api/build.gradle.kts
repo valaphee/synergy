@@ -6,14 +6,14 @@
 plugins { id("com.github.johnrengelman.shadow") }
 
 dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-cv"))
-    implementation(project(":synergy-input"))
-    implementation(project(":synergy-proxy"))
-    /*implementation(project(":synergy-proxy-bgs"))*/
-    implementation(project(":synergy-proxy-http"))
-    implementation(project(":synergy-proxy-mcbe"))
-    implementation(project(":synergy-proxy-tcp"))
+    implementation(project(":synergy-component"))
+    implementation(project(":synergy-component-cv"))
+    implementation(project(":synergy-component-input"))
+    implementation(project(":synergy-component-proxy"))
+    /*implementation(project(":synergy-component-proxy-bgs"))*/
+    implementation(project(":synergy-component-proxy-http"))
+    implementation(project(":synergy-component-proxy-mcbe"))
+    implementation(project(":synergy-component-proxy-tcp"))
     implementation("com.fasterxml.jackson.module:jackson-module-guice:2.13.2")
     implementation("com.hubspot.jackson:jackson-datatype-protobuf:0.9.12")
     implementation("io.ktor:ktor-server-call-logging:2.0.1")

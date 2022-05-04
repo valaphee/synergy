@@ -16,7 +16,8 @@
 
 package com.valaphee.synergy.component
 
-import com.valaphee.synergy.MainView
+import com.valaphee.synergy.CoroutineScope
+import com.valaphee.synergy.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -38,7 +39,8 @@ import tornadofx.vbox
 /**
  * @author Kevin Ludwig
  */
-class ComponentAddView(
+class ComponentAdd(
+    components: Components,
     name: String,
     component: Component
 ) : View("New $name") {
@@ -51,16 +53,13 @@ class ComponentAddView(
         buttonbar {
             button("Create") {
                 action {
-                    val mainView = find<MainView>()
-                    mainView.launch(Dispatchers.Main) {
-                        if (withContext(Dispatchers.Default) {
-                                MainView.HttpClient.post("http://localhost:8080/component") {
-                                    contentType(ContentType.Application.Json)
-                                    setBody(component)
-                                }.status == HttpStatusCode.OK
-                        }) {
-                            mainView.refresh()
-                            close()
+                    CoroutineScope.launch {
+                        if (HttpClient.post("http://localhost:8080/component") {
+                                contentType(ContentType.Application.Json)
+                                setBody(component)
+                        }.status == HttpStatusCode.OK) {
+                            components.refresh()
+                            withContext(Dispatchers.Main) { close() }
                         }
                     }
                 }

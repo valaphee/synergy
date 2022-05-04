@@ -4,6 +4,6 @@
  */
 
 dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
+    api(project(":synergy-component"))
+    implementation("org.hid4java:hid4java:0.7.0")
 }

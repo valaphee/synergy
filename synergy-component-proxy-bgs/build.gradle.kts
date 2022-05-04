@@ -4,8 +4,7 @@
  */
 
 dependencies {
-    implementation(project(":synergy"))
-    implementation(project(":synergy-proxy"))
+    api(project(":synergy-component-proxy"))
     implementation("com.google.protobuf:protobuf-kotlin:3.20.1")
     implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
 }

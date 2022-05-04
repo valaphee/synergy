@@ -3,4 +3,4 @@
  * All rights reserved.
  */
 
-dependencies { implementation(project(":synergy")) }
+dependencies { api(project(":synergy-component-proxy")) }
