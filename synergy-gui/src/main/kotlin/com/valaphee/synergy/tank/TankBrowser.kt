@@ -39,13 +39,14 @@ import tornadofx.action
 import tornadofx.bindSelected
 import tornadofx.button
 import tornadofx.chooseDirectory
+import tornadofx.column
 import tornadofx.combobox
 import tornadofx.dynamicContent
 import tornadofx.hbox
 import tornadofx.hgrow
 import tornadofx.objectBinding
 import tornadofx.onChange
-import tornadofx.readonlyColumn
+import tornadofx.splitpane
 import tornadofx.style
 import tornadofx.tableview
 import tornadofx.textarea
@@ -59,36 +60,36 @@ import java.io.File
 /**
  * @author Kevin Ludwig
  */
-class Tank : Fragment("Tank") {
-    private lateinit var casc: Casc
+class TankBrowser : Fragment("Tank Browser") {
+    private lateinit var storage: Casc
     private lateinit var encoding: Encoding
-    private lateinit var cmf: ContentManifest
+    private lateinit var manifest: ContentManifest
 
     private val pathProperty = "".toProperty().apply {
         onChange {
-            casc = Casc(File(it, "data/casc/data"))
+            storage = Casc(File(it, "data/casc/data"))
 
             val buildInfo = TypedTable(File(it, ".build.info").readText())
             val buildKey = checkNotNull(buildInfo[0]["Build Key"])
             val buildConfig = Config(File(it, "data/casc/config/${buildKey.substring(0, 2)}/${buildKey.substring(2, 4)}/$buildKey").readText())
 
-            encoding = BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(casc[Key(checkNotNull(buildConfig["encoding"])[1])]).inputStream))).use { Encoding(it) }
+            encoding = BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[Key(checkNotNull(buildConfig["encoding"])[1])]).inputStream))).use { Encoding(it) }
 
-            cmfFilesProperty.clear()
-            cmfFilesProperty.addAll(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(casc[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(buildConfig["root"])[0])))[0]]).inputStream))).use { Table(it.readAllBytes().decodeToString()) }.entries.map { checkNotNull(it["FILENAME"]) to checkNotNull(it["MD5"]) }.filter { it.first.endsWith(".cmf") })
+            manifestsProperty.clear()
+            manifestsProperty.addAll(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(buildConfig["root"])[0])))[0]]).inputStream))).use { Table(it.readAllBytes().decodeToString()) }.entries.map { checkNotNull(it["FILENAME"]) to checkNotNull(it["MD5"]) }.filter { it.first.endsWith(".cmf") })
         }
     }
-    private val cmfFilesProperty = SimpleListProperty(mutableListOf<Pair<String, String>>().toObservable())
+    private val manifestsProperty = SimpleListProperty(mutableListOf<Pair<String, String>>().toObservable())
 
-    private val cmfDataProperty = SimpleListProperty(mutableListOf<ContentManifest.Data>().toObservable())
-    private val cmfDataEntryProperty = SimpleObjectProperty<ContentManifest.Data>()
+    private val dataProperty = SimpleListProperty(mutableListOf<ContentManifest.Data>().toObservable())
+    private val dataEntryProperty = SimpleObjectProperty<ContentManifest.Data>()
 
-    private val cmfFileProperty = SimpleObjectProperty<Pair<String, String>>()
-    private val cmfBinding: Binding<ContentManifest?> = cmfFileProperty.objectBinding { BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(casc[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(it!!.second))))[0]]).inputStream))).use { stream -> ContentManifest(checkNotNull(it.first).split('/').last(), stream) } }.apply {
+    private val manifestProperty = SimpleObjectProperty<Pair<String, String>>()
+    private val manifestBinding: Binding<ContentManifest?> = manifestProperty.objectBinding { BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(it!!.second))))[0]]).inputStream))).use { stream -> ContentManifest(checkNotNull(it.first).split('/').last(), stream) } }.apply {
         onChange {
             usagesProperty.clear()
             usagesProperty.add(null)
-            usagesProperty.addAll(it!!.data.map { it.guid.engine }.distinct().sorted())
+            usagesProperty.addAll(it!!.data.map { it.guid.usage }.distinct().sorted())
             typesProperty.clear()
             typesProperty.add(null)
             typesProperty.addAll(it.data.map { it.guid.type }.distinct().sorted())
@@ -122,32 +123,43 @@ class Tank : Fragment("Tank") {
             textfield(pathProperty) { hgrow = Priority.ALWAYS }
             button("...") { action { chooseDirectory()?.let { pathProperty.value = it.absolutePath } } }
         }
-        hbox {
-            combobox(cmfFileProperty, values = cmfFilesProperty) { cellFormat { text = it.first } }
-            combobox(usageProperty, values = usagesProperty) { cellFormat { text = String.format("%01X", it) } }
-            combobox(typeProperty, values = typesProperty) { cellFormat { text = String.format("%03X", it) } }
-            combobox(platformProperty, values = platformsProperty) { cellFormat { text = String.format("%01X", it) } }
-            combobox(regionProperty, values = regionsProperty) { cellFormat { text = String.format("%02X", it) } }
-            combobox(localeProperty, values = localesProperty) { cellFormat { text = String.format("%02X", it) } }
+        combobox(manifestProperty, values = manifestsProperty) {
+            maxWidth = Double.MAX_VALUE
+
+            cellFormat { text = it.first }
         }
-        hbox {
+        splitpane {
             vgrow = Priority.ALWAYS
 
-            tableview(cmfDataProperty) {
-                placeholder = Label("")
+            vbox {
+                tableview(dataProperty) {
+                    vgrow = Priority.ALWAYS
+                    placeholder = Label("")
 
-                readonlyColumn("Guid", ContentManifest.Data::guid) { tableColumnBaseSetWidth(this, 150.0) }
-                readonlyColumn("Size", ContentManifest.Data::size) { tableColumnBaseSetWidth(this, 80.0) }
+                    style { font = Font.font("monospaced", 8.0) }
 
-                bindSelected(cmfDataEntryProperty)
+                    column<ContentManifest.Data, String>("U") { String.format("%01X", it.value.guid.usage).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
+                    column<ContentManifest.Data, String>("T") { String.format("%03X", it.value.guid.type).toProperty() }.apply { tableColumnBaseSetWidth(this, 60.0) }
+                    column<ContentManifest.Data, String>("P") { String.format("%01X", it.value.guid.platform).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
+                    column<ContentManifest.Data, String>("R") { String.format("%02X", it.value.guid.region).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
+                    column<ContentManifest.Data, String>("L") { String.format("%02X", it.value.guid.locale).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
+                    column<ContentManifest.Data, String>("I") { String.format("%08X", it.value.guid.id).toProperty() }.apply { tableColumnBaseSetWidth(this, 100.0) }
+
+                    bindSelected(dataEntryProperty)
+                }
+                hbox {
+                    combobox(usageProperty, values = usagesProperty) { cellFormat { text = String.format("%01X", it) } }
+                    combobox(typeProperty, values = typesProperty) { cellFormat { text = String.format("%03X", it) } }
+                    combobox(platformProperty, values = platformsProperty) { cellFormat { text = String.format("%01X", it) } }
+                    combobox(regionProperty, values = regionsProperty) { cellFormat { text = String.format("%02X", it) } }
+                    combobox(localeProperty, values = localesProperty) { cellFormat { text = String.format("%02X", it) } }
+                }
             }
             vbox {
-                hgrow = Priority.ALWAYS
-
-                dynamicContent(cmfDataEntryProperty) {
+                dynamicContent(dataEntryProperty) {
                     it?.let {
                         encoding.getEKeysOrNull(it.cKey)?.let {
-                            textarea(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(casc[it[0]]).inputStream))).use { ByteBufUtil.prettyHexDump(Unpooled.wrappedBuffer(it.readAllBytes())) }) {
+                            textarea(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[it[0]]).inputStream))).use { ByteBufUtil.prettyHexDump(Unpooled.wrappedBuffer(it.readAllBytes())) }) {
                                 vgrow = Priority.ALWAYS
 
                                 style { font = Font.font("monospaced") }
@@ -165,9 +177,9 @@ class Tank : Fragment("Tank") {
         val platform = platformProperty.value
         val region = regionProperty.value
         val locale = localeProperty.value
-        cmfDataProperty.setAll(cmfBinding.value!!.data.filter {
+        dataProperty.setAll(manifestBinding.value!!.data.filter {
             val guid = it.guid
-            usage?.let { guid.engine == it } ?: true && type?.let { guid.type == it } ?: true && platform?.let { guid.platform == it } ?: true && region?.let { guid.region == it } ?: true && locale?.let { guid.locale == it } ?: true
+            usage?.let { guid.usage == it } ?: true && type?.let { guid.type == it } ?: true && platform?.let { guid.platform == it } ?: true && region?.let { guid.region == it } ?: true && locale?.let { guid.locale == it } ?: true
         })
     }
 

@@ -18,8 +18,8 @@ package com.valaphee.synergy
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Guice
-import com.valaphee.synergy.component.Components
-import com.valaphee.synergy.tank.Tank
+import com.valaphee.synergy.component.ComponentExplorer
+import com.valaphee.synergy.tank.TankBrowser
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -72,8 +72,8 @@ class Main : View("Synergy") {
         drawer {
             vgrow = Priority.ALWAYS
 
-            item(Components(), true)
-            item(Tank())
+            item(ComponentExplorer(), true)
+            item(TankBrowser())
         }
     }
 }

@@ -41,7 +41,7 @@ import tornadofx.vbox
  * @author Kevin Ludwig
  */
 class ComponentAdd(
-    components: Components,
+    componentExplorer: ComponentExplorer,
     name: String,
     component: Component
 ) : View("New $name") {
@@ -64,7 +64,7 @@ class ComponentAdd(
                                 contentType(ContentType.Application.Json)
                                 setBody(component)
                         }.status == HttpStatusCode.OK) {
-                            components.refresh()
+                            componentExplorer.refresh()
                             withContext(Dispatchers.Main) { close() }
                         }
                     }

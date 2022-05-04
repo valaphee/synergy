@@ -49,7 +49,7 @@ import tornadofx.vgrow
 /**
  * @author Kevin Ludwig
  */
-class Components : Fragment("Components") {
+class ComponentExplorer : Fragment("Component Explorer") {
     private val components = SimpleListProperty(mutableListOf<Component>().toObservable())
 
     override val root = vbox {
@@ -77,14 +77,14 @@ class Components : Fragment("Components") {
             fun contextMenu(selectedComponents: ObservableList<out Component>) = ContextMenu().apply {
                 if (selectedComponents.isEmpty()) {
                     menu("Add") {
-                        item("Component") { action { ComponentAdd(this@Components, "Component", Component()).openModal() } }
+                        item("Component") { action { ComponentAdd(this@ComponentExplorer, "Component", Component()).openModal() } }
                         menu("Input") {
-                            item("HID Keyboard") { action { ComponentAdd(this@Components, "Hid Keyboard", HidKeyboard()).openModal() } }
-                            item("Java Robot Keyboard") { action { ComponentAdd(this@Components, "Java Robot Keyboard", RobotKeyboard()).openModal() } }
-                            item("HID Mouse") { action { ComponentAdd(this@Components, "Hid Mouse", HidMouse()).openModal() } }
-                            item("Java Robot Mouse") { action { ComponentAdd(this@Components, "Java Robot Mouse", RobotMouse()).openModal() } }
+                            item("HID Keyboard") { action { ComponentAdd(this@ComponentExplorer, "Hid Keyboard", HidKeyboard()).openModal() } }
+                            item("Java Robot Keyboard") { action { ComponentAdd(this@ComponentExplorer, "Java Robot Keyboard", RobotKeyboard()).openModal() } }
+                            item("HID Mouse") { action { ComponentAdd(this@ComponentExplorer, "Hid Mouse", HidMouse()).openModal() } }
+                            item("Java Robot Mouse") { action { ComponentAdd(this@ComponentExplorer, "Java Robot Mouse", RobotMouse()).openModal() } }
                         }
-                        menu("Proxy") { item("Minecraft") { action { ComponentAdd(this@Components, "Minecraft Proxy", ProxyServer(proxy = McbeProxy())).openModal() } } }
+                        menu("Proxy") { item("Minecraft") { action { ComponentAdd(this@ComponentExplorer, "Minecraft Proxy", ProxyServer(proxy = McbeProxy())).openModal() } } }
                     }
                 }
                 else item("Remove") {
@@ -92,7 +92,7 @@ class Components : Fragment("Components") {
                         CoroutineScope.launch {
                             selectedComponents.map { launch { HttpClient.delete("http://localhost:8080/component/${it.id}") } }.joinAll()
 
-                            this@Components.refresh()
+                            this@ComponentExplorer.refresh()
                         }
                     }
                 }
@@ -101,7 +101,7 @@ class Components : Fragment("Components") {
             contextMenu = contextMenu(selectionModel.selectedItems)
             selectionModel.selectedItems.onChange { contextMenu = contextMenu(it.list) }
 
-            CoroutineScope.launch { this@Components.refresh() }
+            CoroutineScope.launch { this@ComponentExplorer.refresh() }
         })
     }
 

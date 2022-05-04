@@ -20,16 +20,14 @@ package com.valaphee.synergy.ngdp.tank.util
  * @author Kevin Ludwig
  */
 class Guid(
-    val engine: Int,
+    val usage: Int,
     val type: Int,
     val platform: Int,
     val region: Int,
     val locale: Int,
-    val index: Long
+    val id: Long
 ) {
     constructor(value: Long) : this((value ushr 60).toInt() and 0xF, (((value ushr 48).toInt() and 0xFFF).flip() shr 20) + 1, (value ushr 44).toInt() and 0xF, (value ushr 39).toInt() and 0x1F, (value ushr 32).toInt() and 0x1F, value and 0xFFFFFFFFL)
-
-    override fun toString() = String.format("%01X:%03X:%01X:%02X:%02X:%08X", engine, type, platform, region, locale, index)
 
     companion object {
         private fun Int.flip(): Int {
