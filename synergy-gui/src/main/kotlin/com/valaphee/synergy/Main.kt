@@ -19,6 +19,7 @@ package com.valaphee.synergy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Guice
 import com.valaphee.synergy.component.Components
+import com.valaphee.synergy.tank.Tank
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -59,9 +60,10 @@ val HttpClient = HttpClient(OkHttp) {
  */
 class Main : View("Synergy") {
     override val root = vbox {
+        setPrefSize(1000.0, 800.0)
+
         JMetro(this, Style.DARK)
         styleClass.add(JMetroStyleClass.BACKGROUND)
-        setPrefSize(1000.0, 800.0)
 
         menubar {
             menu("File") { item("Exit") { action { close() } } }
@@ -71,6 +73,7 @@ class Main : View("Synergy") {
             vgrow = Priority.ALWAYS
 
             item(Components(), true)
+            item(Tank())
         }
     }
 }

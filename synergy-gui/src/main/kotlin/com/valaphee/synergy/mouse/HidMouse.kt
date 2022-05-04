@@ -21,18 +21,29 @@ import com.valaphee.synergy.util.FloatStringConverter
 import com.valaphee.synergy.util.IntStringConverter
 import javafx.beans.property.SimpleFloatProperty
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.event.EventTarget
-import javafx.scene.control.cell.TextFieldListCell
+import javafx.scene.control.TabPane
+import javafx.scene.layout.Priority
+import tornadofx.action
 import tornadofx.bind
+import tornadofx.button
+import tornadofx.chooseFile
 import tornadofx.field
 import tornadofx.fieldset
 import tornadofx.filterInput
+import tornadofx.form
 import tornadofx.getValue
+import tornadofx.hbox
+import tornadofx.hgrow
 import tornadofx.isFloat
 import tornadofx.isInt
+import tornadofx.label
 import tornadofx.listview
 import tornadofx.setValue
+import tornadofx.tab
 import tornadofx.textfield
+import tornadofx.toProperty
+import tornadofx.vbox
+import java.io.File
 import java.util.UUID
 
 /**
@@ -50,28 +61,52 @@ class HidMouse(
     private val precisionProperty = SimpleIntegerProperty(precision)
     @get:JsonProperty("precision") var precision by precisionProperty
 
-    override fun EventTarget.addForm() {
-        fieldset {
-            field("Id") { textfield(this@HidMouse.id.toString()) { isEditable = false } }
-            field("Scripts") {
-                listview(scriptsProperty) {
-                    prefHeight = (4 * 24 + 2).toDouble()
-                    isEditable = true
-                    cellFactory = TextFieldListCell.forListView()
+    override fun TabPane.addForm() {
+        tab("Component") {
+            form {
+                fieldset {
+                    field("Id") { label(this@HidMouse.id.toString()) }
+                    field("Scripts") {
+                        vbox {
+                            listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
+                            hbox {
+                                val scriptProperty = "".toProperty()
+                                button("+") {
+                                    action {
+                                        scripts += scriptProperty.value
+                                        scriptProperty.value = ""
+                                    }
+                                }
+                                textfield(scriptProperty) { hgrow = Priority.ALWAYS }
+                                button("...") {
+                                    action {
+                                        val parentPath = if (scriptProperty.value.isEmpty()) null else File(scriptProperty.value).parentFile
+                                        chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.absolutePath }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            field("Sensitivity") {
-                textfield {
-                    bind(sensitivityProperty, converter = FloatStringConverter)
+        }
+        tab("Mouse") {
+            form {
+                fieldset {
+                    field("Sensitivity") {
+                        textfield {
+                            bind(sensitivityProperty, converter = FloatStringConverter)
 
-                    filterInput { it.controlNewText.isFloat() }
-                }
-            }
-            field("Precision") {
-                textfield {
-                    bind(precisionProperty, converter = IntStringConverter)
+                            filterInput { it.controlNewText.isFloat() }
+                        }
+                    }
+                    field("Precision") {
+                        textfield {
+                            bind(precisionProperty, converter = IntStringConverter)
 
-                    filterInput { it.controlNewText.isInt() }
+                            filterInput { it.controlNewText.isInt() }
+                        }
+                    }
                 }
             }
         }

@@ -19,21 +19,29 @@ package com.valaphee.synergy.proxy
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.valaphee.synergy.component.Component
 import com.valaphee.synergy.util.IntStringConverter
-import javafx.event.EventTarget
-import javafx.scene.control.cell.TextFieldListCell
+import javafx.scene.control.TabPane
 import javafx.scene.layout.Priority
+import tornadofx.action
 import tornadofx.bind
+import tornadofx.button
 import tornadofx.checkbox
+import tornadofx.chooseFile
 import tornadofx.field
 import tornadofx.fieldset
 import tornadofx.filterInput
+import tornadofx.form
 import tornadofx.getValue
+import tornadofx.hbox
 import tornadofx.hgrow
 import tornadofx.isInt
+import tornadofx.label
 import tornadofx.listview
 import tornadofx.setValue
+import tornadofx.tab
 import tornadofx.textfield
 import tornadofx.toProperty
+import tornadofx.vbox
+import java.io.File
 import java.util.UUID
 
 /**
@@ -68,48 +76,71 @@ class ProxyServer(
     private val viaPortProperty = viaPort.toProperty()
     @get:JsonProperty("via_port") var viaPort by viaPortProperty
 
-    override fun EventTarget.addForm() {
-        fieldset {
-            field("Id") { textfield(this@ProxyServer.id.toString()) { isEditable = false } }
-            field("Scripts") {
-                listview(scriptsProperty) {
-                    prefHeight = (4 * 24 + 2).toDouble()
-                    isEditable = true
-                    cellFactory = TextFieldListCell.forListView()
-                }
-            }
-            field("Local") {
-                checkbox()
-                textfield(localHostProperty) { hgrow = Priority.ALWAYS }
-                textfield {
-                    minWidth = 65.0
-                    maxWidth = 65.0
-
-                    filterInput { it.controlNewText.isInt() }
-                    bind(localPortProperty, converter = IntStringConverter)
-                }
-            }
-            field("Via") {
-                textfield(viaHostProperty) { hgrow = Priority.ALWAYS }
-                textfield {
-                    minWidth = 65.0
-                    maxWidth = 65.0
-
-                    filterInput { it.controlNewText.isInt() }
-                    bind(viaPortProperty, converter = IntStringConverter)
-                }
-            }
-            field("Remote") {
-                textfield(remoteHostProperty) { hgrow = Priority.ALWAYS }
-                textfield {
-                    minWidth = 65.0
-                    maxWidth = 65.0
-
-                    filterInput { it.controlNewText.isInt() }
-                    bind(remotePortProperty, converter = IntStringConverter)
+    override fun TabPane.addForm() {
+        tab("Component") {
+            form {
+                fieldset {
+                    field("Id") { label(this@ProxyServer.id.toString()) }
+                    field("Scripts") {
+                        vbox {
+                            listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
+                            hbox {
+                                val scriptProperty = "".toProperty()
+                                button("+") {
+                                    action {
+                                        scripts += scriptProperty.value
+                                        scriptProperty.value = ""
+                                    }
+                                }
+                                textfield(scriptProperty) { hgrow = Priority.ALWAYS }
+                                button("...") {
+                                    action {
+                                        val parentPath = if (scriptProperty.value.isEmpty()) null else File(scriptProperty.value).parentFile
+                                        chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.absolutePath }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+        tab("Proxy") {
+            form {
+                fieldset {
+                    field("Local") {
+                        checkbox()
+                        textfield(localHostProperty) { hgrow = Priority.ALWAYS }
+                        textfield {
+                            minWidth = 65.0
+                            maxWidth = 65.0
 
+                            filterInput { it.controlNewText.isInt() }
+                            bind(localPortProperty, converter = IntStringConverter)
+                        }
+                    }
+                    field("Via") {
+                        textfield(viaHostProperty) { hgrow = Priority.ALWAYS }
+                        textfield {
+                            minWidth = 65.0
+                            maxWidth = 65.0
+
+                            filterInput { it.controlNewText.isInt() }
+                            bind(viaPortProperty, converter = IntStringConverter)
+                        }
+                    }
+                    field("Remote") {
+                        textfield(remoteHostProperty) { hgrow = Priority.ALWAYS }
+                        textfield {
+                            minWidth = 65.0
+                            maxWidth = 65.0
+
+                            filterInput { it.controlNewText.isInt() }
+                            bind(remotePortProperty, converter = IntStringConverter)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

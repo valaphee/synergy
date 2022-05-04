@@ -32,10 +32,11 @@ import tornadofx.label
  */
 class About : View("About") {
     override val root = hbox {
-        JMetro(this, Style.DARK)
-        styleClass.add(JMetroStyleClass.BACKGROUND)
         setPrefSize(300.0, 100.0)
         alignment = Pos.CENTER
+
+        JMetro(this, Style.DARK)
+        styleClass.add(JMetroStyleClass.BACKGROUND)
 
         imageview(Image(About::class.java.getResourceAsStream("/app.png")))
         label(

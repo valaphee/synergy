@@ -23,6 +23,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import javafx.scene.control.TabPane
 import jfxtras.styles.jmetro.JMetro
 import jfxtras.styles.jmetro.JMetroStyleClass
 import jfxtras.styles.jmetro.Style
@@ -33,7 +34,7 @@ import tornadofx.View
 import tornadofx.action
 import tornadofx.button
 import tornadofx.buttonbar
-import tornadofx.form
+import tornadofx.tabpane
 import tornadofx.vbox
 
 /**
@@ -47,9 +48,14 @@ class ComponentAdd(
     override val root = vbox {
         JMetro(this, Style.DARK)
         styleClass.add(JMetroStyleClass.BACKGROUND)
+
         prefWidth = 600.0
 
-        form { with(component) { addForm() } }
+        tabpane {
+            tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+
+            with(component) { addForm() }
+        }
         buttonbar {
             button("Create") {
                 action {

@@ -19,14 +19,25 @@ package com.valaphee.synergy.component
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import javafx.beans.property.SimpleListProperty
-import javafx.event.EventTarget
-import javafx.scene.control.cell.TextFieldListCell
+import javafx.scene.control.TabPane
+import javafx.scene.layout.Priority
+import tornadofx.action
+import tornadofx.button
+import tornadofx.chooseFile
 import tornadofx.field
 import tornadofx.fieldset
+import tornadofx.form
 import tornadofx.getValue
+import tornadofx.hbox
+import tornadofx.hgrow
+import tornadofx.label
 import tornadofx.listview
+import tornadofx.tab
 import tornadofx.textfield
 import tornadofx.toObservable
+import tornadofx.toProperty
+import tornadofx.vbox
+import java.io.File
 import java.util.UUID
 
 /**
@@ -40,14 +51,32 @@ open class Component(
     protected val scriptsProperty = SimpleListProperty(scripts.toObservable())
     @get:JsonProperty("scripts") val scripts: MutableList<String> by scriptsProperty
 
-    open fun EventTarget.addForm() {
-        fieldset {
-            field("Id") { textfield(this@Component.id.toString()) { isEditable = false } }
-            field("Scripts") {
-                listview(scriptsProperty) {
-                    prefHeight = (4 * 24 + 2).toDouble()
-                    isEditable = true
-                    cellFactory = TextFieldListCell.forListView()
+    open fun TabPane.addForm() {
+        tab("Component") {
+            form {
+                fieldset {
+                    field("Id") { label(this@Component.id.toString()) }
+                    field("Scripts") {
+                        vbox {
+                            listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
+                            hbox {
+                                val scriptProperty = "".toProperty()
+                                button("+") {
+                                    action {
+                                        scripts += scriptProperty.value
+                                        scriptProperty.value = ""
+                                    }
+                                }
+                                textfield(scriptProperty) { hgrow = Priority.ALWAYS }
+                                button("...") {
+                                    action {
+                                        val parentPath = if (scriptProperty.value.isEmpty()) null else File(scriptProperty.value).parentFile
+                                        chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.absolutePath }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

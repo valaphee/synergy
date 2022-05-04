@@ -16,7 +16,6 @@
 
 package com.valaphee.synergy.component
 
-import com.google.inject.Singleton
 import com.valaphee.synergy.CoroutineScope
 import com.valaphee.synergy.HttpClient
 import com.valaphee.synergy.keyboard.HidKeyboard
@@ -39,7 +38,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tornadofx.Fragment
 import tornadofx.action
-import tornadofx.hbox
 import tornadofx.item
 import tornadofx.listview
 import tornadofx.menu
@@ -51,62 +49,60 @@ import tornadofx.vgrow
 /**
  * @author Kevin Ludwig
  */
-@Singleton
 class Components : Fragment("Components") {
     private val components = SimpleListProperty(mutableListOf<Component>().toObservable())
 
-    override val root = hbox {
-        vbox {
-            add(listview(components) {
-                vgrow = Priority.ALWAYS
-                setCellFactory {
-                    object : ListCell<Component>() {
-                        init {
-                            setOnMouseClicked {
-                                if (isEmpty) selectionModel.clearSelection()
+    override val root = vbox {
+        add(listview(components) {
+            vgrow = Priority.ALWAYS
 
-                                it.consume()
-                            }
+            setCellFactory {
+                object : ListCell<Component>() {
+                    init {
+                        setOnMouseClicked {
+                            if (isEmpty) selectionModel.clearSelection()
+
+                            it.consume()
                         }
+                    }
 
-                        override fun updateItem(item: Component?, empty: Boolean) {
-                            super.updateItem(item, empty)
+                    override fun updateItem(item: Component?, empty: Boolean) {
+                        super.updateItem(item, empty)
 
-                            text = if (empty || item == null) "" else item.id.toString()
+                        text = if (empty || item == null) "" else item.id.toString()
+                    }
+                }
+            }
+
+            fun contextMenu(selectedComponents: ObservableList<out Component>) = ContextMenu().apply {
+                if (selectedComponents.isEmpty()) {
+                    menu("Add") {
+                        item("Component") { action { ComponentAdd(this@Components, "Component", Component()).openModal() } }
+                        menu("Input") {
+                            item("HID Keyboard") { action { ComponentAdd(this@Components, "Hid Keyboard", HidKeyboard()).openModal() } }
+                            item("Java Robot Keyboard") { action { ComponentAdd(this@Components, "Java Robot Keyboard", RobotKeyboard()).openModal() } }
+                            item("HID Mouse") { action { ComponentAdd(this@Components, "Hid Mouse", HidMouse()).openModal() } }
+                            item("Java Robot Mouse") { action { ComponentAdd(this@Components, "Java Robot Mouse", RobotMouse()).openModal() } }
+                        }
+                        menu("Proxy") { item("Minecraft") { action { ComponentAdd(this@Components, "Minecraft Proxy", ProxyServer(proxy = McbeProxy())).openModal() } } }
+                    }
+                }
+                else item("Remove") {
+                    action {
+                        CoroutineScope.launch {
+                            selectedComponents.map { launch { HttpClient.delete("http://localhost:8080/component/${it.id}") } }.joinAll()
+
+                            this@Components.refresh()
                         }
                     }
                 }
+            }
 
-                fun contextMenu(selectedComponents: ObservableList<out Component>) = ContextMenu().apply {
-                    if (selectedComponents.isEmpty()) {
-                        menu("Add") {
-                            item("Component") { action { ComponentAdd(this@Components, "Component", Component()).openModal() } }
-                            menu("Input") {
-                                item("HID Keyboard") { action { ComponentAdd(this@Components, "Hid Keyboard", HidKeyboard()).openModal() } }
-                                item("Java Robot Keyboard") { action { ComponentAdd(this@Components, "Java Robot Keyboard", RobotKeyboard()).openModal() } }
-                                item("HID Mouse") { action { ComponentAdd(this@Components, "Hid Mouse", HidMouse()).openModal() } }
-                                item("Java Robot Mouse") { action { ComponentAdd(this@Components, "Java Robot Mouse", RobotMouse()).openModal() } }
-                            }
-                            menu("Proxy") { item("Minecraft") { action { ComponentAdd(this@Components, "Minecraft Proxy", ProxyServer(proxy = McbeProxy())).openModal() } } }
-                        }
-                    }
-                    else item("Remove") {
-                        action {
-                            CoroutineScope.launch {
-                                selectedComponents.map { launch { HttpClient.delete("http://localhost:8080/component/${it.id}") } }.joinAll()
+            contextMenu = contextMenu(selectionModel.selectedItems)
+            selectionModel.selectedItems.onChange { contextMenu = contextMenu(it.list) }
 
-                                this@Components.refresh()
-                            }
-                        }
-                    }
-                }
-
-                contextMenu = contextMenu(selectionModel.selectedItems)
-                selectionModel.selectedItems.onChange { contextMenu = contextMenu(it.list) }
-
-                CoroutineScope.launch { this@Components.refresh() }
-            })
-        }
+            CoroutineScope.launch { this@Components.refresh() }
+        })
     }
 
     suspend fun refresh() {
