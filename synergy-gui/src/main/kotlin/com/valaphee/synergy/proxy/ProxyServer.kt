@@ -76,7 +76,7 @@ class ProxyServer(
     private val viaPortProperty = viaPort.toProperty()
     @get:JsonProperty("via_port") var viaPort by viaPortProperty
 
-    override fun TabPane.addForm() {
+    override fun TabPane.onAdd() {
         tab("Component") {
             form {
                 fieldset {

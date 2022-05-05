@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.tank
+package com.valaphee.synergy.ngdp.tank
 
 import com.valaphee.synergy.ngdp.Config
 import com.valaphee.synergy.ngdp.Table
@@ -23,7 +23,9 @@ import com.valaphee.synergy.ngdp.blte.BlteInputStream
 import com.valaphee.synergy.ngdp.blte.KeepAliveInputStream
 import com.valaphee.synergy.ngdp.casc.Casc
 import com.valaphee.synergy.ngdp.tact.Encoding
-import com.valaphee.synergy.ngdp.tank.ContentManifest
+import com.valaphee.synergy.ngdp.tank.data.Data004TextureReader
+import com.valaphee.synergy.ngdp.tank.data.Data04DTexturePayloadReader
+import com.valaphee.synergy.ngdp.tank.data.Data0B2SFXReader
 import com.valaphee.synergy.ngdp.util.Key
 import io.netty.buffer.ByteBufUtil
 import io.netty.buffer.Unpooled
@@ -34,11 +36,14 @@ import javafx.scene.control.Label
 import javafx.scene.control.TableColumnBase
 import javafx.scene.layout.Priority
 import javafx.scene.text.Font
+import tornadofx.FileChooserMode
 import tornadofx.Fragment
 import tornadofx.action
 import tornadofx.bindSelected
 import tornadofx.button
+import tornadofx.buttonbar
 import tornadofx.chooseDirectory
+import tornadofx.chooseFile
 import tornadofx.column
 import tornadofx.combobox
 import tornadofx.dynamicContent
@@ -158,11 +163,32 @@ class TankBrowser : Fragment("Tank Browser") {
             vbox {
                 dynamicContent(dataEntryProperty) {
                     it?.let {
-                        encoding.getEKeysOrNull(it.cKey)?.let {
-                            textarea(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[it[0]]).inputStream))).use { ByteBufUtil.prettyHexDump(Unpooled.wrappedBuffer(it.readAllBytes())) }) {
-                                vgrow = Priority.ALWAYS
+                        encoding.getEKeysOrNull(it.cKey)?.let { eKey ->
+                            BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[eKey[0]]).inputStream))).use { stream ->
+                                val bytes = stream.readAllBytes()
+                                val buffer = Unpooled.wrappedBuffer(bytes)
+                                dataReaders[it.guid.type]?.let {
+                                    with(it.read(buffer)) {
+                                        onShow()
 
-                                style { font = Font.font("monospaced") }
+                                        buttonbar {
+                                            button("Save") { action { chooseFile(filters = emptyArray(), mode = FileChooserMode.Save).singleOrNull()?.writeBytes(bytes) } }
+                                            button("Replace")
+
+                                            onShowButtonBar()
+                                        }
+                                    }
+                                } ?: run {
+                                    textarea(ByteBufUtil.prettyHexDump(buffer)) {
+                                        vgrow = Priority.ALWAYS
+
+                                        style { font = Font.font("monospaced") }
+                                    }
+                                    buttonbar {
+                                        button("Save") { action { chooseFile(filters = emptyArray(), mode = FileChooserMode.Save).singleOrNull()?.writeBytes(bytes) } }
+                                        button("Replace")
+                                    }
+                                }
                             }
                         }
                     }
@@ -185,5 +211,10 @@ class TankBrowser : Fragment("Tank Browser") {
 
     companion object {
         private val tableColumnBaseSetWidth = TableColumnBase::class.java.getDeclaredMethod("setWidth", Double::class.java).apply { isAccessible = true }
+        private val dataReaders = mapOf(
+            0x004 to Data004TextureReader,
+            0x04D to Data04DTexturePayloadReader,
+            0x0B2 to Data0B2SFXReader,
+        )
     }
 }

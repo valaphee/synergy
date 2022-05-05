@@ -51,7 +51,7 @@ open class Component(
     protected val scriptsProperty = SimpleListProperty(scripts.toObservable())
     @get:JsonProperty("scripts") val scripts: MutableList<String> by scriptsProperty
 
-    open fun TabPane.addForm() {
+    open fun TabPane.onAdd() {
         tab("Component") {
             form {
                 fieldset {

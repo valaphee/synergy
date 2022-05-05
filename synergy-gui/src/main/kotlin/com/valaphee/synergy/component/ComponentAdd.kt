@@ -54,7 +54,7 @@ class ComponentAdd(
         tabpane {
             tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
 
-            with(component) { addForm() }
+            with(component) { onAdd() }
         }
         buttonbar {
             button("Create") {

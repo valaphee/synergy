@@ -106,11 +106,6 @@ class ComponentExplorer : Fragment("Component Explorer") {
     }
 
     suspend fun refresh() {
-        HttpClient.get("http://localhost:8080/component/").body<List<Component>>().also {
-            withContext(Dispatchers.Main) {
-                components.clear()
-                components.addAll(it)
-            }
-        }
+        HttpClient.get("http://localhost:8080/component/").body<List<Component>>().also { withContext(Dispatchers.Main) { components.setAll(it) } }
     }
 }

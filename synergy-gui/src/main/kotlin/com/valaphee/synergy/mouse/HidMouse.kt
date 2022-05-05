@@ -61,7 +61,7 @@ class HidMouse(
     private val precisionProperty = SimpleIntegerProperty(precision)
     @get:JsonProperty("precision") var precision by precisionProperty
 
-    override fun TabPane.addForm() {
+    override fun TabPane.onAdd() {
         tab("Component") {
             form {
                 fieldset {

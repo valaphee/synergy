@@ -19,7 +19,7 @@ package com.valaphee.synergy
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Guice
 import com.valaphee.synergy.component.ComponentExplorer
-import com.valaphee.synergy.tank.TankBrowser
+import com.valaphee.synergy.ngdp.tank.TankBrowser
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp

@@ -18,8 +18,17 @@ dependencies {
     implementation("io.netty:netty-buffer:4.1.76.Final")
     implementation("no.tornado:tornadofx:1.7.20")
     implementation("org.controlsfx:controlsfx:11.1.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.6.1")
     implementation("org.jfxtras:jmetro:11.6.15")
+    /*implementation(platform("org.lwjgl:lwjgl-bom:3.2.3"))
+    listOf("", "-glfw", "-opengl").forEach {
+        implementation("org.lwjgl", "lwjgl$it")
+        if (it != "-vulkan") {
+            runtimeOnly("org.lwjgl", "lwjgl$it", classifier = "natives-windows")
+            runtimeOnly("org.lwjgl", "lwjgl$it", classifier = "natives-linux")
+            runtimeOnly("org.lwjgl", "lwjgl$it", classifier = "natives-macos")
+        }
+    }*/
 }
 
 tasks {
