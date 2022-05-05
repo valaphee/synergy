@@ -19,7 +19,7 @@ package com.valaphee.synergy.component
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import javafx.beans.property.SimpleListProperty
-import javafx.scene.control.TabPane
+import javafx.event.EventTarget
 import javafx.scene.layout.Priority
 import tornadofx.action
 import tornadofx.button
@@ -32,8 +32,8 @@ import tornadofx.hbox
 import tornadofx.hgrow
 import tornadofx.label
 import tornadofx.listview
-import tornadofx.tab
 import tornadofx.textfield
+import tornadofx.titledpane
 import tornadofx.toObservable
 import tornadofx.toProperty
 import tornadofx.vbox
@@ -51,15 +51,18 @@ open class Component(
     protected val scriptsProperty = SimpleListProperty(scripts.toObservable())
     @get:JsonProperty("scripts") val scripts: MutableList<String> by scriptsProperty
 
-    open fun TabPane.onAdd() {
-        tab("Component") {
+    open fun EventTarget.config(new: Boolean) {
+        titledpane("Component") {
+            isExpanded = true
+
             form {
                 fieldset {
+                    field("Type") { label(this@Component::class.java.name) }
                     field("Id") { label(this@Component.id.toString()) }
                     field("Scripts") {
                         vbox {
                             listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
-                            hbox {
+                            if (new) hbox {
                                 val scriptProperty = "".toProperty()
                                 button("+") {
                                     action {

@@ -16,15 +16,13 @@
 
 package com.valaphee.synergy.ngdp.tank.data
 
-import com.valaphee.synergy.ngdp.tank.Data
-import com.valaphee.synergy.ngdp.tank.DataReader
-import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufUtil
+import io.netty.buffer.Unpooled
 
 /**
  * @author Kevin Ludwig
  */
-class Data004Texture(
+class teTexture(
     val flags: UShort,
     val mipMapCount: UByte,
     val format: Format,
@@ -162,11 +160,12 @@ class Data004Texture(
 /**
  * @author Kevin Ludwig
  */
-object Data004TextureReader : DataReader {
-    override fun read(buffer: ByteBuf): Data004Texture {
+object teTextureReader : DataReader {
+    override fun read(bytes: ByteArray): teTexture {
+        val buffer = Unpooled.wrappedBuffer(bytes)
         val flags = buffer.readShortLE().toUShort()
         val mipMapCount = buffer.readByte().toUByte()
-        val format = Data004Texture.Format.values()[buffer.readByte().toUByte().toInt()]
+        val format = teTexture.Format.values()[buffer.readByte().toUByte().toInt()]
         val surfaceCount = buffer.readByte().toUByte()
         val usage = buffer.readByte().toUByte()
         val payloadCount = buffer.readByte().toUByte()
@@ -177,6 +176,6 @@ object Data004TextureReader : DataReader {
         val unknown10 = buffer.readLongLE().toULong()
         val unknown18 = buffer.readLongLE().toULong()
         val data = ByteBufUtil.getBytes(buffer.readBytes(dataSize.toInt()))
-        return Data004Texture(flags, mipMapCount, format, surfaceCount, usage, payloadCount, unknown07, width, height, dataSize, unknown10, unknown18, data)
+        return teTexture(flags, mipMapCount, format, surfaceCount, usage, payloadCount, unknown07, width, height, dataSize, unknown10, unknown18, data)
     }
 }

@@ -16,29 +16,18 @@
 
 package com.valaphee.synergy.ngdp.tank.data
 
-import com.valaphee.synergy.ngdp.tank.Data
-import com.valaphee.synergy.ngdp.tank.DataReader
-import io.netty.buffer.ByteBuf
+import javafx.event.EventTarget
 
 /**
  * @author Kevin Ludwig
  */
-class Data04DTexturePayload(
-    val mipMapCount: UInt,
-    val surfaceCount: UInt,
-    val dataSize: UInt,
-    val headerSize: UInt
-) : Data
+interface Data {
+    fun EventTarget.preview() = Unit
+}
 
 /**
  * @author Kevin Ludwig
  */
-object Data04DTexturePayloadReader : DataReader {
-    override fun read(buffer: ByteBuf): Data04DTexturePayload {
-        val mipMapCount = buffer.readIntLE().toUInt()
-        val surfaceCount = buffer.readIntLE().toUInt()
-        val dataSize = buffer.readIntLE().toUInt()
-        val headerSize = buffer.readIntLE().toUInt()
-        return Data04DTexturePayload(mipMapCount, surfaceCount, dataSize, headerSize)
-    }
+interface DataReader {
+    fun read(bytes: ByteArray): Data
 }

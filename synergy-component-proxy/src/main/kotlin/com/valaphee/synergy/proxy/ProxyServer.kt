@@ -39,19 +39,19 @@ class ProxyServer(
     id: UUID = UUID.randomUUID(),
     scripts: List<URL>,
     @get:JsonProperty("proxy") val proxy: Proxy,
-    @get:JsonProperty("local_host") val localHost: String?,
-    @get:JsonProperty("local_port") val localPort: Int?,
-    @get:JsonProperty("remote_host") val remoteHost: String,
-    @get:JsonProperty("remote_port") val remotePort: Int,
+    @get:JsonProperty("local_host") val localHost: String,
+    @get:JsonProperty("local_port") val localPort: Int,
     @get:JsonProperty("via_host") val viaHost: String,
     @get:JsonProperty("via_port") val viaPort: Int,
+    @get:JsonProperty("remote_host") val remoteHost: String,
+    @get:JsonProperty("remote_port") val remotePort: Int
 ) : Component(id, scripts), StartAndStoppable {
     private var channel: Channel? = null
 
     @HostAccess.Export
     override fun start() {
         GlobalScope.launch {
-            if (localHost == null) {
+            if (localHost.isEmpty()) {
                 Shell32.INSTANCE.ShellExecute(null, "runas", "cmd.exe", "/S /C \"netsh int ip add address \"Loopback\" ${InetAddress.getByName(remoteHost).hostAddress}/32\"", null, 0)
                 delay(250)
             }
@@ -62,7 +62,7 @@ class ProxyServer(
                 .channelFactory(proxy.channelFactory)
                 .apply { proxy.getHandler(connection)?.let { handler(it) } }
                 .childHandler(proxy.getChildHandler(connection))
-                .localAddress(localHost ?: remoteHost, localPort ?: remotePort)
+                .localAddress(localHost.ifEmpty { remoteHost }, if (localPort != 0) localPort else remotePort)
                 .bind().channel()
         }
     }

@@ -70,7 +70,7 @@ class FrontendHandler(
                             WebSocketClientProtocolHandler(URI(event.requestUri()), WebSocketVersion.V13, event.selectedSubprotocol(), false, event.requestHeaders(), UShort.MAX_VALUE.toInt()),
                             PacketCodec(BgsProxy.Services),
                             EventEmitter(connection, BgsProxy.Services),
-                            BackendHandler(connection, context.channel())
+                            BackendHandler(context.channel())
                         )
                     }
                 })

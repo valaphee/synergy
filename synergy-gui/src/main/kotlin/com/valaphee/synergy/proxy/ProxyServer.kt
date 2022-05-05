@@ -19,12 +19,11 @@ package com.valaphee.synergy.proxy
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.valaphee.synergy.component.Component
 import com.valaphee.synergy.util.IntStringConverter
-import javafx.scene.control.TabPane
+import javafx.event.EventTarget
 import javafx.scene.layout.Priority
 import tornadofx.action
 import tornadofx.bind
 import tornadofx.button
-import tornadofx.checkbox
 import tornadofx.chooseFile
 import tornadofx.field
 import tornadofx.fieldset
@@ -33,12 +32,11 @@ import tornadofx.form
 import tornadofx.getValue
 import tornadofx.hbox
 import tornadofx.hgrow
-import tornadofx.isInt
 import tornadofx.label
 import tornadofx.listview
 import tornadofx.setValue
-import tornadofx.tab
 import tornadofx.textfield
+import tornadofx.titledpane
 import tornadofx.toProperty
 import tornadofx.vbox
 import java.io.File
@@ -51,12 +49,12 @@ class ProxyServer(
     id: UUID = UUID.randomUUID(),
     scripts: List<String> = emptyList(),
     @get:JsonProperty("proxy") val proxy: Proxy,
-    localHost: String? = null,
-    localPort: Int? = null,
-    remoteHost: String = "",
-    remotePort: Int = 0,
-    viaHost: String = "",
-    viaPort: Int = 0,
+    localHost: String,
+    localPort: Int,
+    viaHost: String,
+    viaPort: Int,
+    remoteHost: String,
+    remotePort: Int,
 ) : Component(id, scripts) {
     private val localHostProperty = localHost.toProperty()
     @get:JsonProperty("local_host") var localHost by localHostProperty
@@ -64,27 +62,30 @@ class ProxyServer(
     private val localPortProperty = localPort.toProperty()
     @get:JsonProperty("local_port") var localPort by localPortProperty
 
-    private val remoteHostProperty = remoteHost.toProperty()
-    @get:JsonProperty("remote_host") var remoteHost by remoteHostProperty
-
-    private val remotePortProperty = remotePort.toProperty()
-    @get:JsonProperty("remote_port") var remotePort by remotePortProperty
-
     private val viaHostProperty = viaHost.toProperty()
     @get:JsonProperty("via_host") var viaHost by viaHostProperty
 
     private val viaPortProperty = viaPort.toProperty()
     @get:JsonProperty("via_port") var viaPort by viaPortProperty
 
-    override fun TabPane.onAdd() {
-        tab("Component") {
+    private val remoteHostProperty = remoteHost.toProperty()
+    @get:JsonProperty("remote_host") var remoteHost by remoteHostProperty
+
+    private val remotePortProperty = remotePort.toProperty()
+    @get:JsonProperty("remote_port") var remotePort by remotePortProperty
+
+    override fun EventTarget.config(new: Boolean) {
+        titledpane("Component") {
+            isExpanded = true
+
             form {
                 fieldset {
+                    field("Type") { label(this@ProxyServer::class.java.name) }
                     field("Id") { label(this@ProxyServer.id.toString()) }
                     field("Scripts") {
                         vbox {
                             listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
-                            hbox {
+                            if (new) hbox {
                                 val scriptProperty = "".toProperty()
                                 button("+") {
                                     action {
@@ -105,39 +106,46 @@ class ProxyServer(
                 }
             }
         }
-        tab("Proxy") {
+        titledpane("Proxy") {
+            isExpanded = true
+
             form {
                 fieldset {
                     field("Local") {
-                        checkbox()
-                        textfield(localHostProperty) { hgrow = Priority.ALWAYS }
-                        textfield {
-                            minWidth = 65.0
-                            maxWidth = 65.0
+                        if (new) {
+                            textfield(localHostProperty) { hgrow = Priority.ALWAYS }
+                            textfield {
+                                minWidth = 65.0
+                                maxWidth = 65.0
 
-                            filterInput { it.controlNewText.isInt() }
-                            bind(localPortProperty, converter = IntStringConverter)
-                        }
+                                filterInput { it.controlNewText.toIntOrNull()?.let { it >= 0 && it <= UShort.MAX_VALUE.toInt() } ?: false }
+                                bind(localPortProperty, converter = IntStringConverter)
+                            }
+                        } else label("${localHostProperty.value}:${localPortProperty.value}")
                     }
                     field("Via") {
-                        textfield(viaHostProperty) { hgrow = Priority.ALWAYS }
-                        textfield {
-                            minWidth = 65.0
-                            maxWidth = 65.0
+                        if (new) {
+                            textfield(viaHostProperty) { hgrow = Priority.ALWAYS }
+                            textfield {
+                                minWidth = 65.0
+                                maxWidth = 65.0
 
-                            filterInput { it.controlNewText.isInt() }
-                            bind(viaPortProperty, converter = IntStringConverter)
-                        }
+                                filterInput { it.controlNewText.toIntOrNull()?.let { it >= 0 && it <= UShort.MAX_VALUE.toInt() } ?: false }
+                                bind(viaPortProperty, converter = IntStringConverter)
+                            }
+                        } else label("${viaHostProperty.value}:${viaPortProperty.value}")
                     }
                     field("Remote") {
-                        textfield(remoteHostProperty) { hgrow = Priority.ALWAYS }
-                        textfield {
-                            minWidth = 65.0
-                            maxWidth = 65.0
+                        if (new) {
+                            textfield(remoteHostProperty) { hgrow = Priority.ALWAYS }
+                            textfield {
+                                minWidth = 65.0
+                                maxWidth = 65.0
 
-                            filterInput { it.controlNewText.isInt() }
-                            bind(remotePortProperty, converter = IntStringConverter)
-                        }
+                                filterInput { it.controlNewText.toIntOrNull()?.let { it >= 1 && it <= UShort.MAX_VALUE.toInt() } ?: false }
+                                bind(remotePortProperty, converter = IntStringConverter)
+                            }
+                        } else label("${remoteHostProperty.value}:${remotePortProperty.value}")
                     }
                 }
             }

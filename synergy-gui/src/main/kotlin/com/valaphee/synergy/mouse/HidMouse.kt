@@ -21,7 +21,7 @@ import com.valaphee.synergy.util.FloatStringConverter
 import com.valaphee.synergy.util.IntStringConverter
 import javafx.beans.property.SimpleFloatProperty
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.scene.control.TabPane
+import javafx.event.EventTarget
 import javafx.scene.layout.Priority
 import tornadofx.action
 import tornadofx.bind
@@ -39,8 +39,8 @@ import tornadofx.isInt
 import tornadofx.label
 import tornadofx.listview
 import tornadofx.setValue
-import tornadofx.tab
 import tornadofx.textfield
+import tornadofx.titledpane
 import tornadofx.toProperty
 import tornadofx.vbox
 import java.io.File
@@ -61,15 +61,18 @@ class HidMouse(
     private val precisionProperty = SimpleIntegerProperty(precision)
     @get:JsonProperty("precision") var precision by precisionProperty
 
-    override fun TabPane.onAdd() {
-        tab("Component") {
+    override fun EventTarget.config(new: Boolean) {
+        titledpane("Component") {
+            isExpanded = true
+
             form {
                 fieldset {
+                    field("Type") { label(this@HidMouse::class.java.name) }
                     field("Id") { label(this@HidMouse.id.toString()) }
                     field("Scripts") {
                         vbox {
                             listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
-                            hbox {
+                            if (new) hbox {
                                 val scriptProperty = "".toProperty()
                                 button("+") {
                                     action {
@@ -90,22 +93,24 @@ class HidMouse(
                 }
             }
         }
-        tab("Mouse") {
+        titledpane("Mouse") {
+            isExpanded = true
+
             form {
                 fieldset {
                     field("Sensitivity") {
-                        textfield {
+                        if (new) textfield {
                             bind(sensitivityProperty, converter = FloatStringConverter)
 
                             filterInput { it.controlNewText.isFloat() }
-                        }
+                        } else label(sensitivityProperty)
                     }
                     field("Precision") {
-                        textfield {
+                        if (new) textfield {
                             bind(precisionProperty, converter = IntStringConverter)
 
                             filterInput { it.controlNewText.isInt() }
-                        }
+                        } else label(precisionProperty)
                     }
                 }
             }
