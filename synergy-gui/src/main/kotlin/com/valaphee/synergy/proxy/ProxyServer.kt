@@ -21,25 +21,17 @@ import com.valaphee.synergy.component.Component
 import com.valaphee.synergy.util.IntStringConverter
 import javafx.event.EventTarget
 import javafx.scene.layout.Priority
-import tornadofx.action
 import tornadofx.bind
-import tornadofx.button
-import tornadofx.chooseFile
 import tornadofx.field
 import tornadofx.fieldset
 import tornadofx.filterInput
 import tornadofx.form
 import tornadofx.getValue
-import tornadofx.hbox
 import tornadofx.hgrow
-import tornadofx.label
-import tornadofx.listview
 import tornadofx.setValue
 import tornadofx.textfield
 import tornadofx.titledpane
 import tornadofx.toProperty
-import tornadofx.vbox
-import java.io.File
 import java.util.UUID
 
 /**
@@ -74,78 +66,73 @@ class ProxyServer(
     private val remotePortProperty = remotePort.toProperty()
     @get:JsonProperty("remote_port") var remotePort by remotePortProperty
 
-    override fun EventTarget.config(new: Boolean) {
-        titledpane("Component") {
-            isExpanded = true
+    override fun config(eventTarget: EventTarget, edit: Boolean) {
+        super.config(eventTarget, edit)
+        with(eventTarget) {
+            titledpane("Proxy") {
+                // Properties
+                isExpanded = true
 
-            form {
-                fieldset {
-                    field("Type") { label(this@ProxyServer::class.java.name) }
-                    field("Id") { label(this@ProxyServer.id.toString()) }
-                    field("Scripts") {
-                        vbox {
-                            listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
-                            if (new) hbox {
-                                val scriptProperty = "".toProperty()
-                                button("+") {
-                                    action {
-                                        scripts += scriptProperty.value
-                                        scriptProperty.value = ""
-                                    }
-                                }
-                                textfield(scriptProperty) { hgrow = Priority.ALWAYS }
-                                button("...") {
-                                    action {
-                                        val parentPath = if (scriptProperty.value.isEmpty()) null else File(scriptProperty.value).parentFile
-                                        chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.absolutePath }
-                                    }
-                                }
+                // Children
+                form {
+                    fieldset {
+                        field("Local") {
+                            textfield(localHostProperty) {
+                                // Parent Properties
+                                hgrow = Priority.ALWAYS
+
+                                // Properties
+                                isEditable = edit
+                            }
+                            textfield {
+                                // Value
+                                bind(localPortProperty, converter = IntStringConverter)
+
+                                // Properties
+                                minWidth = 65.0
+                                maxWidth = 65.0
+                                filterInput { it.controlNewText.toIntOrNull()?.let { it in 0..UShort.MAX_VALUE.toInt() } ?: false }
+                                isEditable = edit
                             }
                         }
-                    }
-                }
-            }
-        }
-        titledpane("Proxy") {
-            isExpanded = true
+                        field("Via") {
+                            textfield(viaHostProperty) {
+                                // Parent Properties
+                                hgrow = Priority.ALWAYS
 
-            form {
-                fieldset {
-                    field("Local") {
-                        if (new) {
-                            textfield(localHostProperty) { hgrow = Priority.ALWAYS }
-                            textfield {
-                                minWidth = 65.0
-                                maxWidth = 65.0
-
-                                filterInput { it.controlNewText.toIntOrNull()?.let { it >= 0 && it <= UShort.MAX_VALUE.toInt() } ?: false }
-                                bind(localPortProperty, converter = IntStringConverter)
+                                // Properties
+                                isEditable = edit
                             }
-                        } else label("${localHostProperty.value}:${localPortProperty.value}")
-                    }
-                    field("Via") {
-                        if (new) {
-                            textfield(viaHostProperty) { hgrow = Priority.ALWAYS }
                             textfield {
-                                minWidth = 65.0
-                                maxWidth = 65.0
-
-                                filterInput { it.controlNewText.toIntOrNull()?.let { it >= 0 && it <= UShort.MAX_VALUE.toInt() } ?: false }
+                                // Value
                                 bind(viaPortProperty, converter = IntStringConverter)
-                            }
-                        } else label("${viaHostProperty.value}:${viaPortProperty.value}")
-                    }
-                    field("Remote") {
-                        if (new) {
-                            textfield(remoteHostProperty) { hgrow = Priority.ALWAYS }
-                            textfield {
+
+                                // Properties
                                 minWidth = 65.0
                                 maxWidth = 65.0
-
-                                filterInput { it.controlNewText.toIntOrNull()?.let { it >= 1 && it <= UShort.MAX_VALUE.toInt() } ?: false }
-                                bind(remotePortProperty, converter = IntStringConverter)
+                                filterInput { it.controlNewText.toIntOrNull()?.let { it in 0..UShort.MAX_VALUE.toInt() } ?: false }
+                                isEditable = edit
                             }
-                        } else label("${remoteHostProperty.value}:${remotePortProperty.value}")
+                        }
+                        field("Remote") {
+                            textfield(remoteHostProperty) {
+                                // Parent Properties
+                                hgrow = Priority.ALWAYS
+
+                                // Properties
+                                isEditable = edit
+                            }
+                            textfield {
+                                // Value
+                                bind(remotePortProperty, converter = IntStringConverter)
+
+                                // Properties
+                                minWidth = 65.0
+                                maxWidth = 65.0
+                                filterInput { it.controlNewText.toIntOrNull()?.let { it in 0..UShort.MAX_VALUE.toInt() } ?: false }
+                                isEditable = edit
+                            }
+                        }
                     }
                 }
             }

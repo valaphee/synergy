@@ -16,65 +16,81 @@
 
 package com.valaphee.synergy
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.google.inject.Guice
 import com.valaphee.synergy.component.ComponentExplorer
 import com.valaphee.synergy.ngdp.tank.TankBrowser
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.http.ContentType
-import io.ktor.serialization.jackson.JacksonConverter
+import javafx.geometry.Side
+import javafx.scene.control.TabPane
 import javafx.scene.image.Image
 import javafx.scene.layout.Priority
 import jfxtras.styles.jmetro.JMetro
 import jfxtras.styles.jmetro.JMetroStyleClass
 import jfxtras.styles.jmetro.Style
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import tornadofx.App
 import tornadofx.DIContainer
 import tornadofx.FX
 import tornadofx.View
 import tornadofx.action
-import tornadofx.drawer
 import tornadofx.item
 import tornadofx.launch
 import tornadofx.menu
 import tornadofx.menubar
+import tornadofx.tab
+import tornadofx.tabpane
 import tornadofx.vbox
 import tornadofx.vgrow
 import kotlin.reflect.KClass
 import kotlin.system.exitProcess
-
-val CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-val HttpClient = HttpClient(OkHttp) {
-    expectSuccess = false
-    install(ContentNegotiation) { register(ContentType.Application.Json, JacksonConverter(jacksonObjectMapper())) }
-}
 
 /**
  * @author Kevin Ludwig
  */
 class Main : View("Synergy") {
     override val root = vbox {
-        setPrefSize(1000.0, 800.0)
-
         JMetro(this, Style.DARK)
         styleClass.add(JMetroStyleClass.BACKGROUND)
 
+        // Properties
+        setPrefSize(1000.0, 800.0)
+
+        // Children
         menubar {
             menu("File") { item("Exit") { action { close() } } }
             menu("Help") { item("About") { action { find<About>().openModal(resizable = false) } } }
         }
-        drawer {
+        tabpane {
+            // Parent Properties
             vgrow = Priority.ALWAYS
 
-            item(ComponentExplorer(), true)
-            item(TankBrowser())
+            // Properties
+            side = Side.LEFT
+            tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+
+            // Children
+            tab(ComponentExplorer::class)
+            tab(TankBrowser::class)
         }
+        /*borderpane {
+            // Properties
+            vgrow = Priority.ALWAYS
+
+            // Children
+            center = listmenu(theme = "blue") {
+                item("Component Explorer") {
+                    whenSelected {
+                        this@vbox.children -= this@borderpane
+                        this@vbox.children += find<ComponentExplorer>().root
+                    }
+                }
+                item("Tank Browser") {
+                    whenSelected {
+                        this@vbox.children -= this@borderpane
+                        this@vbox.children += find<TankBrowser>().root
+                    }
+                }
+            }
+        }*/
     }
 }
 

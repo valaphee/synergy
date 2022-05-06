@@ -49,10 +49,11 @@ import tornadofx.chooseFile
 import tornadofx.column
 import tornadofx.combobox
 import tornadofx.dynamicContent
+import tornadofx.fixedWidth
 import tornadofx.hbox
 import tornadofx.hgrow
 import tornadofx.onChange
-import tornadofx.splitpane
+import tornadofx.smartResize
 import tornadofx.style
 import tornadofx.tableview
 import tornadofx.textarea
@@ -71,34 +72,7 @@ class TankBrowser : Fragment("Tank Browser") {
     private lateinit var encoding: Encoding
     /*private lateinit var data: List<ContentManifest.Data>*/
 
-    private val pathProperty = "".toProperty().apply {
-        onChange {
-            storage = Casc(File(it, "data/casc/data"))
-            val buildInfo = TypedTable(File(it, ".build.info").readText())
-            val buildKey = checkNotNull(buildInfo[0]["Build Key"])
-            val buildConfig = Config(File(it, "data/casc/config/${buildKey.substring(0, 2)}/${buildKey.substring(2, 4)}/$buildKey").readText())
-            encoding = BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[Key(checkNotNull(buildConfig["encoding"])[1])]).inputStream))).use { Encoding(it) }
-            manifestsProperty.setAll(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(buildConfig["root"])[0])))[0]]).inputStream))).use { Table(it.readAllBytes().decodeToString()) }.entries.map { checkNotNull(it["FILENAME"]) to checkNotNull(it["MD5"]) }.filter { it.first.endsWith(".cmf") })
-            /*data = manifestsProperty.flatMap { BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(it!!.second))))[0]]).inputStream))).use { stream -> ContentManifest(checkNotNull(it.first).split('/').last(), stream) }.data }
-
-            usagesProperty.clear()
-            usagesProperty.add(null)
-            usagesProperty.addAll(data.map { it.guid.usage }.distinct().sorted())
-            typesProperty.clear()
-            typesProperty.add(null)
-            typesProperty.addAll(data.map { it.guid.type }.distinct().sorted())
-            platformsProperty.clear()
-            platformsProperty.add(null)
-            platformsProperty.addAll(data.map { it.guid.platform }.distinct().sorted())
-            regionsProperty.clear()
-            regionsProperty.add(null)
-            regionsProperty.addAll(data.map { it.guid.region }.distinct().sorted())
-            localesProperty.clear()
-            localesProperty.add(null)
-            localesProperty.addAll(data.map { it.guid.locale }.distinct().sorted())
-            refresh()*/
-        }
-    }
+    private val pathProperty = "".toProperty()
     private val manifestsProperty = SimpleListProperty(mutableListOf<Pair<String, String>>().toObservable())
     private val manifestProperty = SimpleObjectProperty<Pair<String, String>>().apply {
         onChange {
@@ -126,6 +100,7 @@ class TankBrowser : Fragment("Tank Browser") {
     }
 
     private val dataProperty = SimpleListProperty(mutableListOf<ContentManifest.Data>().toObservable())
+
     private val _dataProperty = FilteredList(dataProperty)
     private val usagesProperty = SimpleListProperty(mutableListOf<Int?>().toObservable())
     private val usageProperty: SimpleObjectProperty<Int?> = SimpleObjectProperty<Int?>().apply { onChange { updateDataPredicate() } }
@@ -140,9 +115,41 @@ class TankBrowser : Fragment("Tank Browser") {
 
     private val dataEntryProperty = SimpleObjectProperty<ContentManifest.Data>()
 
-
     override val root = vbox {
+        // Properties
+        vgrow = Priority.ALWAYS
+
+        // Children
         hbox {
+            button("Load") {
+                action {
+                    val path = pathProperty.value
+                    storage = Casc(File(path, "data/casc/data"))
+                    val buildInfo = TypedTable(File(path, ".build.info").readText())
+                    val buildKey = checkNotNull(buildInfo[0]["Build Key"])
+                    val buildConfig = Config(File(path, "data/casc/config/${buildKey.substring(0, 2)}/${buildKey.substring(2, 4)}/$buildKey").readText())
+                    encoding = BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[Key(checkNotNull(buildConfig["encoding"])[1])]).inputStream))).use { Encoding(it) }
+                    manifestsProperty.setAll(BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(buildConfig["root"])[0])))[0]]).inputStream))).use { Table(it.readAllBytes().decodeToString()) }.entries.map { checkNotNull(it["FILENAME"]) to checkNotNull(it["MD5"]) }.filter { it.first.endsWith(".cmf") })
+                    /*data = manifestsProperty.flatMap { BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[checkNotNull(encoding.getEKeysOrNull(Key(checkNotNull(it!!.second))))[0]]).inputStream))).use { stream -> ContentManifest(checkNotNull(it.first).split('/').last(), stream) }.data }
+
+                    usagesProperty.clear()
+                    usagesProperty.add(null)
+                    usagesProperty.addAll(data.map { it.guid.usage }.distinct().sorted())
+                    typesProperty.clear()
+                    typesProperty.add(null)
+                    typesProperty.addAll(data.map { it.guid.type }.distinct().sorted())
+                    platformsProperty.clear()
+                    platformsProperty.add(null)
+                    platformsProperty.addAll(data.map { it.guid.platform }.distinct().sorted())
+                    regionsProperty.clear()
+                    regionsProperty.add(null)
+                    regionsProperty.addAll(data.map { it.guid.region }.distinct().sorted())
+                    localesProperty.clear()
+                    localesProperty.add(null)
+                    localesProperty.addAll(data.map { it.guid.locale }.distinct().sorted())
+                    refresh()*/
+                }
+            }
             textfield(pathProperty) { hgrow = Priority.ALWAYS }
             button("...") { action { chooseDirectory()?.let { pathProperty.value = it.absolutePath } } }
         }
@@ -151,7 +158,7 @@ class TankBrowser : Fragment("Tank Browser") {
 
             cellFormat { text = it.first }
         }
-        splitpane {
+        hbox {
             vgrow = Priority.ALWAYS
 
             vbox {
@@ -161,12 +168,13 @@ class TankBrowser : Fragment("Tank Browser") {
 
                     style { font = Font.font("monospaced", 8.0) }
 
-                    column<ContentManifest.Data, String>("U") { String.format("%01X", it.value.guid.usage).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
-                    column<ContentManifest.Data, String>("T") { String.format("%03X", it.value.guid.type).toProperty() }.apply { tableColumnBaseSetWidth(this, 60.0) }
-                    column<ContentManifest.Data, String>("P") { String.format("%01X", it.value.guid.platform).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
-                    column<ContentManifest.Data, String>("R") { String.format("%02X", it.value.guid.region).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
-                    column<ContentManifest.Data, String>("L") { String.format("%02X", it.value.guid.locale).toProperty() }.apply { tableColumnBaseSetWidth(this, 45.0) }
-                    column<ContentManifest.Data, String>("I") { String.format("%08X", it.value.guid.id).toProperty() }.apply { tableColumnBaseSetWidth(this, 100.0) }
+                    column<ContentManifest.Data, String>("U") { String.format("%01X", it.value.guid.usage).toProperty() }.apply { fixedWidth(45.0) }
+                    column<ContentManifest.Data, String>("T") { String.format("%03X", it.value.guid.type).toProperty() }.apply { fixedWidth(60.0) }
+                    column<ContentManifest.Data, String>("P") { String.format("%01X", it.value.guid.platform).toProperty() }.apply { fixedWidth(45.0) }
+                    column<ContentManifest.Data, String>("R") { String.format("%02X", it.value.guid.region).toProperty() }.apply { fixedWidth(45.0) }
+                    column<ContentManifest.Data, String>("L") { String.format("%02X", it.value.guid.locale).toProperty() }.apply { fixedWidth(45.0) }
+                    column<ContentManifest.Data, String>("I") { String.format("%08X", it.value.guid.id).toProperty() }.apply { fixedWidth(100.0) }
+                    smartResize()
 
                     bindSelected(dataEntryProperty)
                 }
@@ -179,6 +187,8 @@ class TankBrowser : Fragment("Tank Browser") {
                 }
             }
             vbox {
+                hgrow = Priority.ALWAYS
+
                 dynamicContent(dataEntryProperty) {
                     it?.let {
                         encoding.getEKeysOrNull(it.cKey)?.let { eKey ->
@@ -188,7 +198,7 @@ class TankBrowser : Fragment("Tank Browser") {
                                     textarea(ByteBufUtil.prettyHexDump(Unpooled.wrappedBuffer(bytes))) {
                                         vgrow = Priority.ALWAYS
 
-                                        style { font = Font.font("monospaced") }
+                                        style { font = Font.font("monospaced", 10.0) }
                                     }
                                     buttonbar { button("Save") { action { chooseFile(filters = arrayOf(FileChooser.ExtensionFilter("All Files", "*.*")), mode = FileChooserMode.Save).singleOrNull()?.writeBytes(bytes) } } }
                                 }

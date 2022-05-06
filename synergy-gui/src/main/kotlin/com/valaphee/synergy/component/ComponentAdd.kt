@@ -16,8 +16,8 @@
 
 package com.valaphee.synergy.component
 
-import com.valaphee.synergy.CoroutineScope
 import com.valaphee.synergy.HttpClient
+import com.valaphee.synergy.MainScope
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -49,11 +49,11 @@ class ComponentAdd(
 
         prefWidth = 600.0
 
-        with(component) { config(true) }
+        component.config(this, true)
         buttonbar {
             button("Create") {
                 action {
-                    CoroutineScope.launch {
+                    MainScope.launch {
                         if (HttpClient.post("http://localhost:8080/component") {
                                 contentType(ContentType.Application.Json)
                                 setBody(component)

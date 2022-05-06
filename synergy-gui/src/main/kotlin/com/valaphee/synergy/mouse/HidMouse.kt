@@ -22,28 +22,17 @@ import com.valaphee.synergy.util.IntStringConverter
 import javafx.beans.property.SimpleFloatProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventTarget
-import javafx.scene.layout.Priority
-import tornadofx.action
 import tornadofx.bind
-import tornadofx.button
-import tornadofx.chooseFile
 import tornadofx.field
 import tornadofx.fieldset
 import tornadofx.filterInput
 import tornadofx.form
 import tornadofx.getValue
-import tornadofx.hbox
-import tornadofx.hgrow
 import tornadofx.isFloat
 import tornadofx.isInt
-import tornadofx.label
-import tornadofx.listview
 import tornadofx.setValue
 import tornadofx.textfield
 import tornadofx.titledpane
-import tornadofx.toProperty
-import tornadofx.vbox
-import java.io.File
 import java.util.UUID
 
 /**
@@ -61,56 +50,36 @@ class HidMouse(
     private val precisionProperty = SimpleIntegerProperty(precision)
     @get:JsonProperty("precision") var precision by precisionProperty
 
-    override fun EventTarget.config(new: Boolean) {
-        titledpane("Component") {
-            isExpanded = true
+    override fun config(eventTarget: EventTarget, edit: Boolean) {
+        super.config(eventTarget, edit)
+        with(eventTarget) {
+            titledpane("Mouse") {
+                // Properties
+                isExpanded = true
 
-            form {
-                fieldset {
-                    field("Type") { label(this@HidMouse::class.java.name) }
-                    field("Id") { label(this@HidMouse.id.toString()) }
-                    field("Scripts") {
-                        vbox {
-                            listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
-                            if (new) hbox {
-                                val scriptProperty = "".toProperty()
-                                button("+") {
-                                    action {
-                                        scripts += scriptProperty.value
-                                        scriptProperty.value = ""
-                                    }
-                                }
-                                textfield(scriptProperty) { hgrow = Priority.ALWAYS }
-                                button("...") {
-                                    action {
-                                        val parentPath = if (scriptProperty.value.isEmpty()) null else File(scriptProperty.value).parentFile
-                                        chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.absolutePath }
-                                    }
-                                }
+                // Children
+                form {
+                    fieldset {
+                        field("Sensitivity") {
+                            textfield {
+                                // Value
+                                bind(sensitivityProperty, converter = FloatStringConverter)
+
+                                // Properties
+                                filterInput { it.controlNewText.isFloat() }
+                                isEditable = edit
                             }
                         }
-                    }
-                }
-            }
-        }
-        titledpane("Mouse") {
-            isExpanded = true
+                        field("Precision") {
+                            textfield {
+                                // Value
+                                bind(precisionProperty, converter = IntStringConverter)
 
-            form {
-                fieldset {
-                    field("Sensitivity") {
-                        if (new) textfield {
-                            bind(sensitivityProperty, converter = FloatStringConverter)
-
-                            filterInput { it.controlNewText.isFloat() }
-                        } else label(sensitivityProperty)
-                    }
-                    field("Precision") {
-                        if (new) textfield {
-                            bind(precisionProperty, converter = IntStringConverter)
-
-                            filterInput { it.controlNewText.isInt() }
-                        } else label(precisionProperty)
+                                // Properties
+                                filterInput { it.controlNewText.isInt() }
+                                isEditable = edit
+                            }
+                        }
                     }
                 }
             }

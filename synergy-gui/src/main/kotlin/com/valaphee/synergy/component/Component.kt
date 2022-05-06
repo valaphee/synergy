@@ -30,14 +30,14 @@ import tornadofx.form
 import tornadofx.getValue
 import tornadofx.hbox
 import tornadofx.hgrow
-import tornadofx.label
 import tornadofx.listview
 import tornadofx.textfield
 import tornadofx.titledpane
 import tornadofx.toObservable
 import tornadofx.toProperty
 import tornadofx.vbox
-import java.io.File
+import java.net.URI
+import java.nio.file.Paths
 import java.util.UUID
 
 /**
@@ -51,30 +51,38 @@ open class Component(
     protected val scriptsProperty = SimpleListProperty(scripts.toObservable())
     @get:JsonProperty("scripts") val scripts: MutableList<String> by scriptsProperty
 
-    open fun EventTarget.config(new: Boolean) {
-        titledpane("Component") {
-            isExpanded = true
+    open fun config(eventTarget: EventTarget, edit: Boolean) {
+        with(eventTarget) {
+            titledpane("Component") {
+                // Properties
+                isExpanded = true
 
-            form {
-                fieldset {
-                    field("Type") { label(this@Component::class.java.name) }
-                    field("Id") { label(this@Component.id.toString()) }
-                    field("Scripts") {
-                        vbox {
-                            listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
-                            if (new) hbox {
+                // Children
+                form {
+                    fieldset {
+                        field("Type") { textfield(this@Component::class.java.name) { isEditable = edit } }
+                        field("Id") { textfield(this@Component.id.toString()) { isEditable = edit } }
+                        field("Scripts") {
+                            vbox {
                                 val scriptProperty = "".toProperty()
-                                button("+") {
-                                    action {
-                                        scripts += scriptProperty.value
-                                        scriptProperty.value = ""
+                                listview(scriptsProperty) { prefHeight = (4 * 24 + 2).toDouble() }
+                                if (edit) hbox {
+                                    button("+") {
+                                        action {
+                                            val script = scriptProperty.value
+                                            if (script.isNotBlank()) {
+                                                scripts += script
+                                                scriptProperty.value = ""
+                                            }
+                                        }
                                     }
-                                }
-                                textfield(scriptProperty) { hgrow = Priority.ALWAYS }
-                                button("...") {
-                                    action {
-                                        val parentPath = if (scriptProperty.value.isEmpty()) null else File(scriptProperty.value).parentFile
-                                        chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.absolutePath }
+                                    textfield(scriptProperty) { hgrow = Priority.ALWAYS }
+                                    button("...") {
+                                        action {
+                                            val script = scriptProperty.value
+                                            val parentPath = if (script.isEmpty()) null else Paths.get(URI(script)).toFile()
+                                            chooseFile(filters = emptyArray(), initialDirectory = if (parentPath?.isDirectory == true) parentPath else null).firstOrNull()?.let { scriptProperty.value = it.toURI().toString() }
+                                        }
                                     }
                                 }
                             }
