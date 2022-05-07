@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.blte
+package com.valaphee.synergy.ngdp.blte.util
 
 import java.io.FilterInputStream
 import java.io.InputStream

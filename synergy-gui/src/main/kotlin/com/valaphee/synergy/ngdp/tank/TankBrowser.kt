@@ -20,12 +20,9 @@ import com.valaphee.synergy.ngdp.Config
 import com.valaphee.synergy.ngdp.Table
 import com.valaphee.synergy.ngdp.TypedTable
 import com.valaphee.synergy.ngdp.blte.BlteInputStream
-import com.valaphee.synergy.ngdp.blte.KeepAliveInputStream
+import com.valaphee.synergy.ngdp.blte.util.KeepAliveInputStream
 import com.valaphee.synergy.ngdp.casc.Casc
 import com.valaphee.synergy.ngdp.tact.Encoding
-import com.valaphee.synergy.ngdp.tank.data.WWiseMediaReader
-import com.valaphee.synergy.ngdp.tank.data.teTexturePayloadReader
-import com.valaphee.synergy.ngdp.tank.data.teTextureReader
 import com.valaphee.synergy.ngdp.util.Key
 import com.valaphee.synergy.ngdp.util.asHexStringToByteArray
 import io.netty.buffer.ByteBufUtil
@@ -34,7 +31,6 @@ import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.transformation.FilteredList
 import javafx.scene.control.Label
-import javafx.scene.control.TableColumnBase
 import javafx.scene.layout.Priority
 import javafx.scene.text.Font
 import javafx.stage.FileChooser
@@ -193,8 +189,8 @@ class TankBrowser : Fragment("Tank Browser") {
                     it?.let {
                         encoding.getEKeysOrNull(it.cKey)?.let { eKey ->
                             BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[eKey[0]]).inputStream)), keyring).use { stream ->
-                                val bytes = stream.readAllBytes()
-                                dataReaders[it.guid.type]?.let { with(it.read(bytes)) { preview() } } ?: run {
+                                run {
+                                    val bytes = stream.readAllBytes()
                                     textarea(ByteBufUtil.prettyHexDump(Unpooled.wrappedBuffer(bytes))) {
                                         vgrow = Priority.ALWAYS
 
@@ -223,7 +219,6 @@ class TankBrowser : Fragment("Tank Browser") {
     }
 
     companion object {
-        private val tableColumnBaseSetWidth = TableColumnBase::class.java.getDeclaredMethod("setWidth", Double::class.java).apply { isAccessible = true }
         private val typeNameById = mapOf(
             0x003 to "STUEntityDefinition",
             0x004 to "teTexture",
@@ -283,12 +278,5 @@ class TankBrowser : Fragment("Tank Browser") {
             0x0D0 to "STUVoiceConversation"
         )
         private val keyring = mapOf(Key("D7B2F07FE90A6E85") to "8A5F52A09DCB15B2EF76DA972885866C".asHexStringToByteArray())
-        private val dataReaders = mapOf(
-            0x004 to teTextureReader,
-            0x03F to WWiseMediaReader,
-            0x04D to teTexturePayloadReader,
-            0x0B2 to WWiseMediaReader,
-            0x0BB to WWiseMediaReader
-        )
     }
 }

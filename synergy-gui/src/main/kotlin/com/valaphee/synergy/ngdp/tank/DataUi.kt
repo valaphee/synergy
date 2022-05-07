@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-dependencies {
-    api(project(":synergy-component-proxy"))
-    implementation("com.google.protobuf:protobuf-kotlin:3.20.1")
-    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+package com.valaphee.synergy.ngdp.tank
+
+import javafx.event.EventTarget
+
+/**
+ * @author Kevin Ludwig
+ */
+interface DataUi<T : Data> {
+    fun show(eventTarget: EventTarget, data: T)
 }
-
-java.sourceSets.getByName("main").java.srcDir("build/generated/source/proto/main/java")
-
-/*protobuf { protobuf.protoc { artifact = "com.google.protobuf:protoc:3.19.4" } }*/

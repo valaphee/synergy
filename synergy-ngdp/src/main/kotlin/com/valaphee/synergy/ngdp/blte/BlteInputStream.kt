@@ -16,13 +16,13 @@
 
 package com.valaphee.synergy.ngdp.blte
 
+import com.igormaznitsa.jbbp.io.JBBPBitInputStream
 import com.valaphee.synergy.ngdp.util.Key
 import org.bouncycastle.crypto.engines.Salsa20Engine
 import org.bouncycastle.crypto.io.CipherInputStream
 import org.bouncycastle.crypto.params.KeyParameter
 import org.bouncycastle.crypto.params.ParametersWithIV
 import java.io.ByteArrayInputStream
-import java.io.DataInputStream
 import java.io.InputStream
 import java.security.MessageDigest
 import java.util.zip.InflaterInputStream
@@ -34,34 +34,26 @@ import kotlin.math.min
  * @author Kevin Ludwig
  */
 class BlteInputStream(
-    private val stream: DataInputStream,
+    private val stream: InputStream,
     private val keyring: Map<Key, ByteArray> = emptyMap()
 ) : InputStream() {
-    class Chunk(
-        val compressedSize: Int,
-        val uncompressedSize: Int,
-        val checksum: ByteArray
-    )
+    private val header = BlteHeader()
 
-    private val chunks: List<Chunk>
     private var chunkIndex = 0
-    private var chunk: Pair<Chunk, InputStream>?
+    private var chunk: Pair<BlteHeader.CHUNK, InputStream>?
     private var chunkPosition = 0
 
-    constructor(stream: InputStream, keyring: Map<Key, ByteArray> = emptyMap()) : this(DataInputStream(stream), keyring)
-
     init {
-        check(stream.readInt() == Magic)
-        val headerSize = stream.readInt()
-        check(stream.readUnsignedByte() == Flags)
-        chunks = List(stream.readUnsignedShort() shl 8 or stream.readUnsignedByte()) { Chunk(stream.readInt(), stream.readInt(), ByteArray(0x10).apply { stream.readFully(this) }) }
-        check(headerSize == 4 + 4 + 1 + 2 + 1 + chunks.size * (4 + 4 + 0x10))
+        header.read(JBBPBitInputStream(stream))
+        check(header.magic == 0x424C5445)
+        check(header.flags.code == 0xF)
+        check(header.size == 4 + 4 + 1 + 2 + 1 + header.chunk_count.code * (4 + 4 + 0x10))
         chunk = nextChunk()
     }
 
     override fun read(): Int {
         while (chunk != null) {
-            if (chunkPosition < chunk!!.first.uncompressedSize) {
+            if (chunkPosition < chunk!!.first.uncompressed_size) {
                 chunkPosition++
                 val value = chunk!!.second.read()
                 if (value != -1) return value
@@ -79,8 +71,8 @@ class BlteInputStream(
         else if (offset < 0 || length < 0 || length > bytes.size - offset) throw IndexOutOfBoundsException()
         else if (length == 0) return 0
         do {
-            if (chunkPosition < chunk!!.first.uncompressedSize) {
-                val bytesRead = chunk!!.second.read(bytes, offset, min(length, chunk!!.first.uncompressedSize - chunkPosition))
+            if (chunkPosition < chunk!!.first.uncompressed_size) {
+                val bytesRead = chunk!!.second.read(bytes, offset, min(length, chunk!!.first.uncompressed_size - chunkPosition))
                 if (bytesRead > 0) {
                     chunkPosition += bytesRead
                     return bytesRead
@@ -93,9 +85,9 @@ class BlteInputStream(
         return -1
     }
 
-    private fun nextChunk() = if (chunkIndex < chunks.size) {
-        val chunk = chunks[chunkIndex]
-        chunk to ByteArrayInputStream(stream.readNBytes(chunk.compressedSize).also { check(MessageDigest.getInstance("MD5").digest(it).contentEquals(chunk.checksum)) }).handleChunk().also { chunkIndex++ }
+    private fun nextChunk() = if (chunkIndex < header.chunk_count.code) {
+        val chunk = header.chunk[chunkIndex]
+        chunk to ByteArrayInputStream(stream.readNBytes(chunk.compressed_size).also { check(MessageDigest.getInstance("MD5").digest(it).contentEquals(chunk.checksum)) }).handleChunk().also { chunkIndex++ }
     } else null
 
     private fun InputStream.handleChunk(): InputStream = when (val mode = read().toChar()) {
@@ -129,10 +121,5 @@ class BlteInputStream(
         chunk?.second?.close()
         chunk = null
         stream.close()
-    }
-
-    companion object {
-        const val Magic = 0x424C5445 /* BLTE */
-        const val Flags = 0xF
     }
 }

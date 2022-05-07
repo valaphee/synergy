@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.ngdp.tank.data
+package com.valaphee.synergy.ngdp.tank
 
-import javafx.event.EventTarget
-
-/**
- * @author Kevin Ludwig
- */
-interface Data {
-    fun EventTarget.preview() = Unit
-}
+import com.igormaznitsa.jbbp.io.JBBPBitInputStream
+import com.igormaznitsa.jbbp.io.JBBPBitOutputStream
+import java.io.IOException
 
 /**
  * @author Kevin Ludwig
  */
-interface DataReader {
-    fun read(bytes: ByteArray): Data
+abstract class Data {
+    @Throws(IOException::class)
+    abstract fun read(`in`: JBBPBitInputStream): Data
+
+    @Throws(IOException::class)
+    abstract fun write(out: JBBPBitOutputStream): Data
 }

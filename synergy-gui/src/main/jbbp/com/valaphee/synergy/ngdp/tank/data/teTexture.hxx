@@ -1,0 +1,13 @@
+<ushort flags;
+<ubyte mip_map_count;
+<ubyte format;
+<ubyte surface_count;
+<ubyte usage;
+<ubyte payload_count;
+<ubyte unknown_07;
+<ubyte width;
+<ubyte height;
+<int data_size;
+<long unknown_10;
+<long unknown_18;
+<ubyte [data_size] data;

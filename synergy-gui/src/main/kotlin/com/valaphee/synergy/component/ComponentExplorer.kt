@@ -146,12 +146,7 @@ class ComponentExplorer : Fragment("Component Explorer") {
             tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
 
             // Children
-            tab("Detail") {
-                vbox {
-                    // Children
-                    dynamicContent(componentProperty) { it?.config(this, false) }
-                }
-            }
+            tab("Detail") { vbox { dynamicContent(componentProperty) { it?.config(this, false) } } }
             tab("JSON") {
                 textarea(componentProperty.stringBinding { it?.let { ObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(it) } ?: "" }) {
                     vgrow = Priority.ALWAYS
