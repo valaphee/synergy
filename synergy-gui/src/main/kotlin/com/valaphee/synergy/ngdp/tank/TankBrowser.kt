@@ -23,6 +23,9 @@ import com.valaphee.synergy.ngdp.blte.BlteInputStream
 import com.valaphee.synergy.ngdp.blte.util.KeepAliveInputStream
 import com.valaphee.synergy.ngdp.casc.Casc
 import com.valaphee.synergy.ngdp.tact.Encoding
+import com.valaphee.synergy.ngdp.tank.data.WWiseMediaReader
+import com.valaphee.synergy.ngdp.tank.data.teTexturePayloadReader
+import com.valaphee.synergy.ngdp.tank.data.teTextureReader
 import com.valaphee.synergy.ngdp.util.Key
 import com.valaphee.synergy.ngdp.util.asHexStringToByteArray
 import io.netty.buffer.ByteBufUtil
@@ -189,8 +192,8 @@ class TankBrowser : Fragment("Tank Browser") {
                     it?.let {
                         encoding.getEKeysOrNull(it.cKey)?.let { eKey ->
                             BlteInputStream(KeepAliveInputStream(checkNotNull(checkNotNull(storage[eKey[0]]).inputStream)), keyring).use { stream ->
-                                run {
-                                    val bytes = stream.readAllBytes()
+                                val bytes = stream.readAllBytes()
+                                dataReaders[it.guid.type]?.read(bytes)?.show(this) ?: run {
                                     textarea(ByteBufUtil.prettyHexDump(Unpooled.wrappedBuffer(bytes))) {
                                         vgrow = Priority.ALWAYS
 
@@ -278,5 +281,12 @@ class TankBrowser : Fragment("Tank Browser") {
             0x0D0 to "STUVoiceConversation"
         )
         private val keyring = mapOf(Key("D7B2F07FE90A6E85") to "8A5F52A09DCB15B2EF76DA972885866C".asHexStringToByteArray())
+        private val dataReaders = mapOf(
+            0x004 to teTextureReader,
+            0x03F to WWiseMediaReader,
+            0x04D to teTexturePayloadReader,
+            0x0B2 to WWiseMediaReader,
+            0x0BB to WWiseMediaReader
+        )
     }
 }

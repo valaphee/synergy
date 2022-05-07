@@ -16,17 +16,18 @@
 
 package com.valaphee.synergy.ngdp.tank
 
-import com.igormaznitsa.jbbp.io.JBBPBitInputStream
-import com.igormaznitsa.jbbp.io.JBBPBitOutputStream
-import java.io.IOException
+import javafx.event.EventTarget
 
 /**
  * @author Kevin Ludwig
  */
-abstract class Data {
-    @Throws(IOException::class)
-    abstract fun read(`in`: JBBPBitInputStream): Data
+interface Data {
+    fun show(eventTarget: EventTarget) = Unit
+}
 
-    @Throws(IOException::class)
-    abstract fun write(out: JBBPBitOutputStream): Data
+/**
+ * @author Kevin Ludwig
+ */
+interface DataReader {
+    fun read(bytes: ByteArray): Data
 }

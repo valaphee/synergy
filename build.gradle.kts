@@ -24,8 +24,6 @@ plugins {
     signing
 }
 
-buildscript { dependencies { classpath("com.igormaznitsa:jbbp:2.0.3") } }
-
 allprojects {
     repositories {
         mavenCentral()

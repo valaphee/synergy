@@ -95,7 +95,7 @@ class Index(
 
     companion object {
         const val Version = 7
-        val CrossLinkKeySuffix = "99bd34280ef31a".asHexStringToByteArray()
+        val CrossLinkKeySuffix = "99BD34280EF31A".asHexStringToByteArray()
 
         fun Key.toBucket(): Int {
             val value = bytes.fold(0) { value, byte -> value xor (byte.toInt() and 0xFF) }
