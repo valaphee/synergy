@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
-
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
-
-/**
- * @author Kevin Ludwig
- */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+dependencies {
+    api(project(":synergy-module"))
+    implementation("org.hid4java:hid4java:0.7.0")
+}

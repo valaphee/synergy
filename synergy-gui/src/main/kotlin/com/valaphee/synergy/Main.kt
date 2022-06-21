@@ -17,7 +17,7 @@
 package com.valaphee.synergy
 
 import com.google.inject.Guice
-import com.valaphee.synergy.component.ComponentExplorer
+import com.valaphee.synergy.module.ComponentExplorer
 import com.valaphee.synergy.ngdp.tank.TankBrowser
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory
 import javafx.geometry.Side

@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.mouse
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.valaphee.foundry.math.Int2
 import com.valaphee.synergy.module.Module
-import java.io.File
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+abstract class Mouse : Module() {
+    abstract suspend fun mouseMove(target: Int2)
+
+    abstract fun mouseMoveRaw(move: Int2)
+
+    abstract fun mousePress(button: Int)
+
+    abstract fun mouseRelease(button: Int)
+}

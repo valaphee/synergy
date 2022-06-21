@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.block
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+class Value(
+    override val id: UUID = UUID.randomUUID(),
+    override val `in`: Map<String, Block>,
+    @get:JsonProperty("value") val value: Any
+) : Block() {
+    override suspend fun evaluate() = value
+}

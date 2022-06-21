@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.keyboard.block
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.valaphee.synergy.ObjectMapper
+import com.valaphee.synergy.block.Block
+import com.valaphee.synergy.keyboard.Keyboard
+import com.valaphee.synergy.module.block.ModuleBlock
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+data class KeyRelease(
+    override val id: UUID = UUID.randomUUID(),
+    override val `in`: Map<String, Block>,
+    override val module: Keyboard
+) : ModuleBlock() {
+    override suspend fun evaluate() = module.keyRelease(ObjectMapper.convertValue(requireNotNull(`in`["key"]).evaluate()))
+}

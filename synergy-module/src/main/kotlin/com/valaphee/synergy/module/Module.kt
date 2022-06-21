@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.module
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.annotation.ObjectIdGenerators
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+@JsonIdentityInfo(property = "id", generator = ObjectIdGenerators.PropertyGenerator::class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "type")
+abstract class Module {
+    @get:JsonProperty("id") abstract val id: UUID
+}

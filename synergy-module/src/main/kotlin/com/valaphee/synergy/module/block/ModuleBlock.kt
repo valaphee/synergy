@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.module.block
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.valaphee.synergy.block.Block
 import com.valaphee.synergy.module.Module
-import java.io.File
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+abstract class ModuleBlock : Block() {
+    @get:JsonProperty("module") abstract val module: Module
+}

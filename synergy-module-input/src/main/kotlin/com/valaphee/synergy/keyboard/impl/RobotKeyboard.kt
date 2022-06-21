@@ -14,16 +14,30 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.keyboard.impl
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
+import com.valaphee.synergy.keyboard.Key
+import com.valaphee.synergy.keyboard.Keyboard
+import java.awt.Robot
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+class RobotKeyboard(
+    override val id: UUID = UUID.randomUUID()
+) : Keyboard() {
+    override fun keyPress(key: Key): Boolean {
+        robot.keyPress(key.vkCode)
+        return true
+    }
+
+    override fun keyRelease(key: Key): Boolean {
+        robot.keyRelease(key.vkCode)
+        return true
+    }
+
+    companion object {
+        private val robot = Robot()
+    }
+}

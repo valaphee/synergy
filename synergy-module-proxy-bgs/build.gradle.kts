@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+dependencies {
+    api(project(":synergy-module-proxy"))
+    implementation("com.google.protobuf:protobuf-kotlin:3.20.1")
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+}
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
+java.sourceSets.getByName("main").java.srcDir("build/generated/source/proto/main/java")
 
-/**
- * @author Kevin Ludwig
- */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+/*protobuf { protobuf.protoc { artifact = "com.google.protobuf:protoc:3.19.4" } }*/

@@ -14,16 +14,34 @@
  * limitations under the License.
  */
 
-package com.valaphee.synergy.config
+package com.valaphee.synergy.mouse.impl
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.valaphee.synergy.module.Module
-import java.io.File
+import com.valaphee.foundry.math.Int2
+import com.valaphee.synergy.mouse.Mouse
+import java.awt.Robot
+import java.util.UUID
 
 /**
  * @author Kevin Ludwig
  */
-data class Config(
-    @get:JsonProperty("key-store") val keyStore: File = File(File(System.getProperty("user.home"), ".valaphee/synergy"), "key_store.pfx"),
-    @get:JsonProperty("components") val components: List<Module> = emptyList(),
-)
+class RobotMouse(
+    override val id: UUID = UUID.randomUUID()
+) : Mouse() {
+    override suspend fun mouseMove(target: Int2) {
+        robot.mouseMove(target.x, target.y)
+    }
+
+    override fun mouseMoveRaw(move: Int2) = TODO()
+
+    override fun mousePress(button: Int) {
+        robot.mousePress(button)
+    }
+
+    override fun mouseRelease(button: Int) {
+        robot.mouseRelease(button)
+    }
+
+    companion object {
+        private val robot = Robot()
+    }
+}
